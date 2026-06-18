@@ -58,8 +58,7 @@ export default function HeroSection({
                 alt=""
                 width={260}
                 height={256}
-                priority
-                quality={100}
+                quality={85}
                 className="h-[1em] w-auto object-contain pointer-events-none shrink-0"
                 aria-hidden="true"
               />
@@ -91,7 +90,7 @@ export default function HeroSection({
         </div>
       </div>
 
-      <div className="w-full animate-fade-in [animation-delay:100ms]">
+      <div className="w-full">
         <HeroVideo />
       </div>
 

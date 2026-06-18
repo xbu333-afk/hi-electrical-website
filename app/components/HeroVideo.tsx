@@ -1,17 +1,45 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
   HERO_VIDEO_ARIA_LABEL,
   HERO_VIDEO_POSTER,
+  HERO_VIDEO_POSTER_HEIGHT,
+  HERO_VIDEO_POSTER_WIDTH,
   HERO_VIDEO_SRC,
 } from "@/lib/hero-video";
 
 export default function HeroVideo() {
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setShouldLoadVideo(true);
+            observer.disconnect();
+          }
+        },
+        { rootMargin: "120px" }
+      );
+      observer.observe(container);
+      return () => observer.disconnect();
+    }
+
+    setShouldLoadVideo(true);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadVideo) return;
+
     const video = videoRef.current;
     if (!video) return;
 
@@ -42,32 +70,38 @@ export default function HeroVideo() {
       video.removeEventListener("error", markPaused);
       window.clearTimeout(timeout);
     };
-  }, []);
+  }, [shouldLoadVideo]);
 
   return (
-    <div className="relative w-full">
-      <video
-        ref={videoRef}
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        poster={HERO_VIDEO_POSTER}
-        aria-label={HERO_VIDEO_ARIA_LABEL}
-        className="block w-full h-auto"
-      >
-        <source src={HERO_VIDEO_SRC} type="video/mp4" />
-      </video>
+    <div ref={containerRef} className="relative w-full bg-slate-100">
+      <Image
+        src={HERO_VIDEO_POSTER}
+        alt={HERO_VIDEO_ARIA_LABEL}
+        width={HERO_VIDEO_POSTER_WIDTH}
+        height={HERO_VIDEO_POSTER_HEIGHT}
+        priority
+        sizes="100vw"
+        quality={80}
+        className={`block w-full h-auto transition-opacity duration-300 ${
+          playing ? "opacity-0" : "opacity-100"
+        }`}
+      />
 
-      {!playing && (
-        <img
-          src={HERO_VIDEO_POSTER}
-          alt={HERO_VIDEO_ARIA_LABEL}
-          className="absolute inset-0 block w-full h-auto pointer-events-none"
-          decoding="async"
-          fetchPriority="high"
-        />
+      {shouldLoadVideo && (
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          aria-label={HERO_VIDEO_ARIA_LABEL}
+          className={`absolute inset-0 block w-full h-auto transition-opacity duration-300 ${
+            playing ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <source src={HERO_VIDEO_SRC} type="video/mp4" />
+        </video>
       )}
     </div>
   );

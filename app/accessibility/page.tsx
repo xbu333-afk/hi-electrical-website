@@ -53,6 +53,9 @@ export default function AccessibilityPage() {
       <div className="bg-slate-50 py-10 md:py-14">
         <article className="max-w-3xl mx-auto px-6">
           <section aria-labelledby="accessibility-intro">
+            <h2 id="accessibility-intro" className="sr-only">
+              רקע והתחייבות לנגישות
+            </h2>
             <p className={P}>
               באתר <strong className="text-slate-900">ח.י שירותי חשמל</strong> אנו רואים חשיבות
               עליונה בהנגשת התכנים והשירותים הדיגיטליים לכלל הגולשים, כולל אנשים עם מוגבלויות.
