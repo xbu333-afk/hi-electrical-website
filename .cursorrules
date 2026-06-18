@@ -1,0 +1,6 @@
+# RULES FOR AI DEVELOPMENT:
+
+1. GLOBAL CHANGES REQUIRE PERMISSION: If a task requires editing multiple files (e.g., updating the Navbar or Global CSS), you must FIRST list the files you intend to change and ask for my confirmation.
+2. NO "INVISIBLE" CHANGES: You are forbidden from refactoring code that is not related to the immediate task. 
+3. PRESERVE INTENT: When you work on a file, do not touch lines of code that are not part of the requested feature. 
+4. CONTEXT AWARENESS: If I give a command like "Update all pages", you are allowed to proceed globally, but ONLY after showing me a summary of the plan.
