@@ -77,11 +77,11 @@ export default function ContactSection({
           {PHONE_DISPLAY}
         </a>
 
-        <div className="mt-10 pt-8 border-t border-emerald-500 flex flex-wrap justify-center gap-6 text-sm">
-          <Link href="/cities" className="text-emerald-100 hover:text-white transition-colors underline underline-offset-2">
+        <div className="mt-10 pt-8 border-t border-emerald-500/80 flex flex-wrap justify-center gap-4 sm:gap-6 text-sm">
+          <Link href="/cities" className="text-emerald-100 hover:text-white transition-colors underline underline-offset-2 px-2">
             {labels.contactServiceAreas}
           </Link>
-          <Link href="/articles" className="text-emerald-100 hover:text-white transition-colors underline underline-offset-2">
+          <Link href="/articles" className="text-emerald-100 hover:text-white transition-colors underline underline-offset-2 px-2">
             {labels.contactArticles}
           </Link>
         </div>

@@ -161,7 +161,7 @@ export default function PressCarousel() {
           <button
             type="button"
             onClick={goPrev}
-            className="absolute top-1/2 -translate-y-1/2 right-2 md:-right-5 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200 text-slate-700 shadow-md hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors"
+            className="absolute top-1/2 -translate-y-1/2 right-2 md:-right-5 z-10 btn-icon rounded-full bg-white border border-gray-200 text-slate-700 shadow-md hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors"
             aria-label="שקף קודם"
             aria-controls={CAROUSEL_ID}
           >
@@ -171,7 +171,7 @@ export default function PressCarousel() {
           <button
             type="button"
             onClick={goNext}
-            className="absolute top-1/2 -translate-y-1/2 left-2 md:-left-5 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200 text-slate-700 shadow-md hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors"
+            className="absolute top-1/2 -translate-y-1/2 left-2 md:-left-5 z-10 btn-icon rounded-full bg-white border border-gray-200 text-slate-700 shadow-md hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors"
             aria-label="שקף הבא"
             aria-controls={CAROUSEL_ID}
           >
@@ -192,12 +192,17 @@ export default function PressCarousel() {
                 aria-label={`עבור לשקף ${i + 1}: ${s.caption}`}
                 aria-controls={CAROUSEL_ID}
                 onClick={() => goTo(i)}
-                className={`h-2.5 rounded-full transition-all ${
-                  i === index
-                    ? "w-8 bg-emerald-600"
-                    : "w-2.5 bg-slate-300 hover:bg-emerald-300"
-                }`}
-              />
+                className="carousel-dot"
+              >
+                <span
+                  className={`block h-2.5 rounded-full transition-all ${
+                    i === index
+                      ? "w-8 bg-emerald-600"
+                      : "w-2.5 bg-slate-300 hover:bg-emerald-300"
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
             ))}
           </div>
         </>
