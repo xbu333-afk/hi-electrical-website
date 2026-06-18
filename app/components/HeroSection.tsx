@@ -54,10 +54,11 @@ export default function HeroSection({
                 <span className="font-extrabold">{labels.heroBrandSecondary}</span>
               </span>
               <Image
-                src="/images/logo-hero-display@2x.png"
+                src="/images/logo-hero-display@2x.webp"
                 alt=""
                 width={260}
                 height={256}
+                sizes="(max-width: 640px) 48px, 64px"
                 quality={85}
                 className="h-[1em] w-auto object-contain pointer-events-none shrink-0"
                 aria-hidden="true"

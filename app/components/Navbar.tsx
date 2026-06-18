@@ -65,11 +65,12 @@ export default function Navbar() {
             aria-label="ח.י שירותי חשמל — יש על מי לסמוך"
           >
             <Image
-              src="/images/yatza-tzadik-logo.avif"
+              src="/images/yatza-tzadik-logo.webp"
               alt=""
-              width={48}
-              height={48}
-              className="object-contain shrink-0"
+              width={96}
+              height={101}
+              sizes="48px"
+              className="object-contain shrink-0 w-12 h-12"
               aria-hidden="true"
             />
             <span className="flex flex-col items-start leading-tight min-w-0">

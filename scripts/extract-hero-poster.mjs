@@ -5,10 +5,12 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const ffmpegPath = require("ffmpeg-static");
+const sharp = require("sharp");
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const input = path.join(root, "public/videos/yatza-tzadik-hero.mp4");
-const output = path.join(root, "public/images/yatza-tzadik-hero-poster.jpg");
+const tempJpg = path.join(root, "public/images/yatza-tzadik-hero-poster.jpg");
+const output = path.join(root, "public/images/yatza-tzadik-hero-poster.webp");
 const seconds = Number(process.argv[2] ?? 2);
 
 if (!ffmpegPath) {
@@ -30,7 +32,7 @@ const result = spawnSync(
     "-update",
     "1",
     "-y",
-    output,
+    tempJpg,
   ],
   { stdio: "inherit" },
 );
@@ -39,4 +41,8 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
 
-console.log(`Poster saved: public/images/yatza-tzadik-hero-poster.jpg @ ${seconds}s`);
+await sharp(tempJpg)
+  .webp({ quality: 82, effort: 4 })
+  .toFile(output);
+
+console.log(`Poster saved: public/images/yatza-tzadik-hero-poster.webp @ ${seconds}s`);

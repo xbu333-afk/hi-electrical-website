@@ -96,8 +96,8 @@ export default function PressCarousel() {
     <Image
       src={slide.src}
       alt={slide.alt}
-      width={1200}
-      height={1600}
+      width={slide.width}
+      height={slide.height}
       className="w-full h-auto object-contain max-h-[70vh] rounded-xl"
       sizes="(max-width: 768px) 100vw, 768px"
       priority={index === 0}

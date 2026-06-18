@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Heebo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/app/components/Navbar";
-import Footer from "@/app/components/Footer";
-import FloatingContactBar from "@/app/components/FloatingContactBar";
+import {
+  LazyFloatingContactBar,
+  LazyFooter,
+} from "@/app/components/LazyLayoutChrome";
 import LazyGoogleTagManager from "@/app/components/LazyGoogleTagManager";
 import LazyScrollToTop from "@/app/components/LazyScrollToTop";
 
@@ -69,9 +71,9 @@ export default function RootLayout({
           {children}
         </main>
 
-        <Footer />
+        <LazyFooter />
 
-        <FloatingContactBar />
+        <LazyFloatingContactBar />
       </body>
     </html>
   );

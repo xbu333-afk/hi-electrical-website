@@ -167,11 +167,10 @@ export default function HomePage() {
             />
             <div className="relative aspect-[3/4] w-full rounded-3xl overflow-hidden shadow-xl border border-gray-100">
               <Image
-                src="/images/yehuda-haim-etgar.png"
+                src="/images/yehuda-haim-etgar.webp"
                 alt="יהודה חכמוב וחיים אתגר — יצאת צדיק"
                 fill
-                priority
-                sizes="(max-width: 640px) 280px, 280px"
+                sizes="280px"
                 className="object-cover"
               />
             </div>

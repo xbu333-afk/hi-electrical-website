@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "extract-hero-poster": "node scripts/extract-hero-poster.mjs"
+    "extract-hero-poster": "node scripts/extract-hero-poster.mjs",
+    "convert-images": "node scripts/convert-images-to-webp.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.9",

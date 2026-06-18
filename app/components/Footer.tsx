@@ -18,11 +18,12 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2.5 mb-3">
               <Image
-                src="/images/yatza-tzadik-logo.avif"
+                src="/images/yatza-tzadik-logo.webp"
                 alt=""
-                width={48}
-                height={48}
-                className="object-contain shrink-0"
+                width={96}
+                height={101}
+                sizes="48px"
+                className="object-contain shrink-0 w-12 h-12"
                 aria-hidden="true"
               />
               <div className="text-slate-900 font-extrabold text-sm tracking-tight leading-tight">

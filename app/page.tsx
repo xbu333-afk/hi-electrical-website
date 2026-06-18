@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import HeroSection from "@/app/components/HeroSection";
-import CredentialsSection from "@/app/components/CredentialsSection";
-import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
-import ReviewsSection from "@/app/components/ReviewsSection";
-import ContactSection from "@/app/components/ContactSection";
-import TrustStatement from "@/app/components/TrustStatement";
-import PressSection from "@/app/components/PressSection";
+import {
+  LazyContactSection,
+  LazyCredentialsSection,
+  LazyPressSection,
+  LazyReviewsSection,
+  LazyTrustStatement,
+  LazyYatzaTzadikBlock,
+} from "@/app/components/LazyHomeSections";
 
 export const metadata: Metadata = {
   title: "יהודה חכמוב | הנדסאי חשמל מוסמך — חשמלאי יצאת צדיק",
@@ -35,13 +37,9 @@ export default function HomePage() {
     <>
       <HeroSection />
 
-      <CredentialsSection />
+      <LazyCredentialsSection />
 
-      <div className="bg-slate-50 border-b border-gray-100 pb-10 md:pb-14">
-        <div className="max-w-4xl mx-auto px-6">
-          <YatzaTzadikVideo />
-        </div>
-      </div>
+      <LazyYatzaTzadikBlock />
 
       {/* ══════════════════════════════════════════════════════
           3. ABOUT — מי אנחנו
@@ -169,13 +167,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <ReviewsSection />
+      <LazyReviewsSection />
 
-      <TrustStatement />
+      <LazyTrustStatement />
 
-      <PressSection />
+      <LazyPressSection />
 
-      <ContactSection />
+      <LazyContactSection />
     </>
   );
 }
