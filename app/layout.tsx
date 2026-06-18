@@ -7,8 +7,9 @@ import {
   LazyFloatingContactBar,
   LazyFooter,
 } from "@/app/components/LazyLayoutChrome";
-import LazyGoogleTagManager from "@/app/components/LazyGoogleTagManager";
 import LazyScrollToTop from "@/app/components/LazyScrollToTop";
+// GTM + analytics deferred into a separate JS chunk via client wrapper
+import DeferredGoogleTagManager from "@/app/components/DeferredGoogleTagManager";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -22,6 +23,7 @@ const gveretLevin = localFont({
   variable: "--font-gveret-levin",
   display: "swap",
   weight: "400",
+  preload: false, // decorative tagline font — not needed for FCP
 });
 
 export const metadata: Metadata = {
@@ -64,7 +66,7 @@ export default function RootLayout({
       className={`${heebo.variable} ${gveretLevin.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased">
-        <LazyGoogleTagManager />
+        <DeferredGoogleTagManager />
 
         {/* Skip-to-content — ת"י 5568 AA */}
         <a

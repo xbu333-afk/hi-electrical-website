@@ -37,9 +37,13 @@ export default function HomePage() {
     <>
       <HeroSection />
 
-      <LazyCredentialsSection />
+      <div className="below-fold">
+        <LazyCredentialsSection />
+      </div>
 
-      <LazyYatzaTzadikBlock />
+      <div className="below-fold">
+        <LazyYatzaTzadikBlock />
+      </div>
 
       {/* ══════════════════════════════════════════════════════
           3. ABOUT — מי אנחנו
@@ -47,7 +51,7 @@ export default function HomePage() {
       <section
         id="about"
         aria-labelledby="about-heading"
-        className="bg-white py-16 md:py-24 scroll-mt-20"
+        className="bg-white py-16 md:py-24 scroll-mt-20 below-fold"
       >
         <div className="max-w-3xl mx-auto px-6">
           <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
@@ -167,13 +171,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <LazyReviewsSection />
+      <div className="below-fold">
+        <LazyReviewsSection />
+      </div>
 
-      <LazyTrustStatement />
+      <div className="below-fold">
+        <LazyTrustStatement />
+      </div>
 
-      <LazyPressSection />
+      <div className="below-fold">
+        <LazyPressSection />
+      </div>
 
-      <LazyContactSection />
+      <div className="below-fold">
+        <LazyContactSection />
+      </div>
     </>
   );
 }

@@ -1,20 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { isNightServiceHours } from "@/lib/night-service";
+import { useIsNight } from "@/lib/use-is-night";
 import { PHONE } from "@/lib/site";
 import { getUiLabels, type UiLocale } from "@/lib/ui-labels";
 
 export default function HeroNightSosLink({ locale = "he" }: { locale?: UiLocale }) {
   const labels = getUiLabels(locale);
-  const [isNight, setIsNight] = useState(false);
-
-  useEffect(() => {
-    const update = () => setIsNight(isNightServiceHours());
-    update();
-    const id = window.setInterval(update, 60_000);
-    return () => window.clearInterval(id);
-  }, []);
+  const isNight = useIsNight();
 
   if (!isNight) return null;
 

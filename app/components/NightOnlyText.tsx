@@ -1,23 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { isNightServiceHours } from "@/lib/night-service";
+import { useIsNight } from "@/lib/use-is-night";
 
 type NightOnlyTextProps = {
   children: React.ReactNode;
 };
 
 export default function NightOnlyText({ children }: NightOnlyTextProps) {
-  const [isNight, setIsNight] = useState(false);
-
-  useEffect(() => {
-    const update = () => setIsNight(isNightServiceHours());
-    update();
-    const id = window.setInterval(update, 60_000);
-    return () => window.clearInterval(id);
-  }, []);
-
+  const isNight = useIsNight();
   if (!isNight) return null;
-
   return <>{children}</>;
 }

@@ -72,13 +72,14 @@
   to   { transform: scaleX(1); opacity: 1; }
 }
 
-.hero-svc-draw       { stroke-dasharray: 80; animation: hero-svc-draw 4.5s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
-.hero-svc-draw-slow  { stroke-dasharray: 60; animation: hero-svc-draw-slow 5s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
-.hero-svc-glow       { animation: hero-svc-glow 3.5s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
-.hero-svc-halo       { animation: hero-svc-halo 4s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
-.hero-svc-slide      { animation: hero-svc-slide 3s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
-.hero-svc-dash       { animation: hero-svc-dash 2.5s linear infinite; }
-.hero-svc-ring       { animation: hero-svc-ring 4s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+/* Delayed 2s so animations don't compete with LCP paint on mobile */
+.hero-svc-draw       { stroke-dasharray: 80; animation: hero-svc-draw 4.5s cubic-bezier(0.45, 0, 0.55, 1) 2s infinite; }
+.hero-svc-draw-slow  { stroke-dasharray: 60; animation: hero-svc-draw-slow 5s cubic-bezier(0.45, 0, 0.55, 1) 2s infinite; }
+.hero-svc-glow       { animation: hero-svc-glow 3.5s ease-in-out 2s infinite; transform-origin: center; transform-box: fill-box; }
+.hero-svc-halo       { animation: hero-svc-halo 4s ease-in-out 2s infinite; transform-origin: center; transform-box: fill-box; }
+.hero-svc-slide      { animation: hero-svc-slide 3s ease-in-out 2s infinite; transform-origin: center; transform-box: fill-box; }
+.hero-svc-dash       { animation: hero-svc-dash 2.5s linear 2s infinite; }
+.hero-svc-ring       { animation: hero-svc-ring 4s ease-in-out 2s infinite; transform-origin: center; transform-box: fill-box; }
 .hero-svc-line       { animation: hero-svc-line 1.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 /* Hero — שלט תלוי יצאת צדיק */
@@ -89,7 +90,7 @@
   align-items: center;
   white-space: nowrap;
   pointer-events: none;
-  animation: hero-sign-sway 5s ease-in-out infinite;
+  animation: hero-sign-sway 5s ease-in-out 2s infinite;
   transform-origin: top center;
 }
 
@@ -301,4 +302,12 @@ footer nav a,
 /* טקסט משני קטן — AA על רקע בהיר */
 .text-xs.text-slate-500 {
   color: #475569;
+}
+
+/* ── Below-fold render deferral ────────────────────────────── */
+/* Skips paint/layout for off-screen sections on mobile.       */
+/* contain-intrinsic-size reserves height to prevent CLS.      */
+.below-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 420px;
 }
