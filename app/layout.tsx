@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Heebo } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "@/app/components/Navbar";
 import {
@@ -13,7 +14,14 @@ const heebo = Heebo({
   subsets: ["hebrew", "latin"],
   variable: "--font-heebo",
   display: "swap",
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const gveretLevin = localFont({
+  src: "./fonts/GveretLevin-Regular.ttf",
+  variable: "--font-gveret-levin",
+  display: "swap",
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -50,7 +58,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="he" dir="rtl" className={`${heebo.variable} h-full`}>
+    <html
+      lang="he"
+      dir="rtl"
+      className={`${heebo.variable} ${gveretLevin.variable} h-full`}
+    >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased">
         <LazyGoogleTagManager />
 

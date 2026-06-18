@@ -15,7 +15,7 @@ export default function HeroVideo() {
         alt={HERO_VIDEO_ARIA_LABEL}
         width={HERO_VIDEO_POSTER_WIDTH}
         height={HERO_VIDEO_POSTER_HEIGHT}
-        priority
+        priority={true}
         sizes="100vw"
         quality={85}
         className="block w-full h-auto"
