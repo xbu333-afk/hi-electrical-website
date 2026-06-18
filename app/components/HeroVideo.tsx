@@ -10,32 +10,51 @@ import {
   HERO_VIDEO_SRC,
 } from "@/lib/hero-video";
 
+function deferUntilPageReady(onReady: () => void): () => void {
+  let cancelled = false;
+
+  const schedule = (): (() => void) => {
+    const run = () => {
+      if (!cancelled) onReady();
+    };
+
+    if (typeof requestIdleCallback !== "undefined") {
+      const idleId = requestIdleCallback(run, { timeout: 3000 });
+      return () => cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = setTimeout(run, 1);
+    return () => clearTimeout(timeoutId);
+  };
+
+  let cancelSchedule: (() => void) | undefined;
+
+  if (document.readyState === "complete") {
+    cancelSchedule = schedule();
+  } else {
+    const onLoad = () => {
+      cancelSchedule = schedule();
+    };
+    window.addEventListener("load", onLoad, { once: true });
+    return () => {
+      cancelled = true;
+      window.removeEventListener("load", onLoad);
+      cancelSchedule?.();
+    };
+  }
+
+  return () => {
+    cancelled = true;
+    cancelSchedule?.();
+  };
+}
+
 export default function HeroVideo() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [playing, setPlaying] = useState(false);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    if ("IntersectionObserver" in window) {
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setShouldLoadVideo(true);
-            observer.disconnect();
-          }
-        },
-        { rootMargin: "120px" }
-      );
-      observer.observe(container);
-      return () => observer.disconnect();
-    }
-
-    setShouldLoadVideo(true);
-  }, []);
+  useEffect(() => deferUntilPageReady(() => setShouldLoadVideo(true)), []);
 
   useEffect(() => {
     if (!shouldLoadVideo) return;
@@ -73,7 +92,7 @@ export default function HeroVideo() {
   }, [shouldLoadVideo]);
 
   return (
-    <div ref={containerRef} className="relative w-full bg-slate-100">
+    <div className="relative w-full bg-slate-100">
       <Image
         src={HERO_VIDEO_POSTER}
         alt={HERO_VIDEO_ARIA_LABEL}
@@ -81,7 +100,7 @@ export default function HeroVideo() {
         height={HERO_VIDEO_POSTER_HEIGHT}
         priority
         sizes="100vw"
-        quality={80}
+        quality={85}
         className={`block w-full h-auto transition-opacity duration-300 ${
           playing ? "opacity-0" : "opacity-100"
         }`}
@@ -94,7 +113,7 @@ export default function HeroVideo() {
           loop
           muted
           playsInline
-          preload="metadata"
+          preload="none"
           aria-label={HERO_VIDEO_ARIA_LABEL}
           className={`absolute inset-0 block w-full h-auto transition-opacity duration-300 ${
             playing ? "opacity-100" : "opacity-0"
