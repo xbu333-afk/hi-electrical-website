@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import HeroSection from "@/app/components/HeroSection";
-import YatzaTzadikVideo from "@/app/components/YatzaTzadikVideo";
-import ReviewsCarousel from "@/app/components/ReviewsCarousel";
+import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
+import LazyReviewsCarousel from "@/app/components/LazyReviewsCarousel";
 import PressSection from "@/app/components/PressSection";
 import ContactSection from "@/app/components/ContactSection";
 import { WHATSAPP_HREF } from "@/lib/site";
@@ -342,7 +342,7 @@ export default function RussianPage() {
               <span className="text-slate-400 text-sm">589 отзывов в Google</span>
             </div>
           </div>
-          <ReviewsCarousel reviews={RU_REVIEWS} />
+          <LazyReviewsCarousel reviews={RU_REVIEWS} />
         </div>
       </section>
 

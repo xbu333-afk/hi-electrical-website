@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import HeroSection from "@/app/components/HeroSection";
 import CredentialsSection from "@/app/components/CredentialsSection";
-import YatzaTzadikVideo from "@/app/components/YatzaTzadikVideo";
+import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
 import CityAboutSection from "@/app/components/CityAboutSection";
 import ReviewsSection from "@/app/components/ReviewsSection";
 import ContactSection from "@/app/components/ContactSection";

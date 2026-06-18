@@ -1,16 +1,27 @@
+import { initDataLayer, requestGtmLoad } from "@/lib/gtm-loader";
+
+function ensureDataLayer(): unknown[] | null {
+  if (typeof window === "undefined") return null;
+  initDataLayer();
+  return (window as Window & { dataLayer: unknown[] }).dataLayer;
+}
+
 export const sendGTMEvent = (
   eventName: string,
   eventData: Record<string, unknown> = {}
 ) => {
-  if (typeof window !== "undefined" && (window as Window & { dataLayer?: unknown[] }).dataLayer) {
-    (window as Window & { dataLayer: unknown[] }).dataLayer.push({
-      event: eventName,
-      ...eventData,
-    });
-  }
+  const dataLayer = ensureDataLayer();
+  if (!dataLayer) return;
+
+  dataLayer.push({
+    event: eventName,
+    ...eventData,
+  });
 };
 
 export const trackPhoneClick = (location: string, href?: string) => {
+  requestGtmLoad();
+
   sendGTMEvent("phone_call_click", {
     conversion_type: "phone",
     click_location: location,
@@ -20,6 +31,8 @@ export const trackPhoneClick = (location: string, href?: string) => {
 };
 
 export const trackWhatsAppClick = (location: string, href?: string) => {
+  requestGtmLoad();
+
   sendGTMEvent("whatsapp_click", {
     conversion_type: "whatsapp",
     click_location: location,

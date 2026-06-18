@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { GoogleTagManager } from "@next/third-parties/google";
 import { Heebo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import FloatingContactBar from "@/app/components/FloatingContactBar";
-import ScrollToTop from "@/app/components/ScrollToTop";
-import AnalyticsClickTracker from "@/app/components/AnalyticsClickTracker";
+import LazyGoogleTagManager from "@/app/components/LazyGoogleTagManager";
+import LazyScrollToTop from "@/app/components/LazyScrollToTop";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -51,8 +50,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" className={`${heebo.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased">
-        <GoogleTagManager gtmId="GTM-NCBBQJT" />
-        <AnalyticsClickTracker />
+        <LazyGoogleTagManager />
 
         {/* Skip-to-content — ת"י 5568 AA */}
         <a
@@ -64,7 +62,7 @@ export default function RootLayout({
 
         <Navbar />
 
-        <ScrollToTop />
+        <LazyScrollToTop />
 
         {/* pb-24 on mobile keeps content above the floating contact button */}
         <main id="main-content" className="flex-1 pb-24 md:pb-0" tabIndex={-1}>

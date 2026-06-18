@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import HeroSection from "@/app/components/HeroSection";
 import CredentialsSection from "@/app/components/CredentialsSection";
-import YatzaTzadikVideo from "@/app/components/YatzaTzadikVideo";
+import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
 import ReviewsSection from "@/app/components/ReviewsSection";
 import ContactSection from "@/app/components/ContactSection";
 import TrustStatement from "@/app/components/TrustStatement";

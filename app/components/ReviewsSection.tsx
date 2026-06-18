@@ -1,4 +1,4 @@
-import ReviewsCarousel from "@/app/components/ReviewsCarousel";
+import LazyReviewsCarousel from "@/app/components/LazyReviewsCarousel";
 import {
   GOOGLE_AVERAGE_RATING,
   GOOGLE_REVIEWS,
@@ -52,7 +52,7 @@ export default function ReviewsSection() {
           </div>
         </div>
 
-        <ReviewsCarousel reviews={GOOGLE_REVIEWS} />
+        <LazyReviewsCarousel reviews={GOOGLE_REVIEWS} />
       </div>
     </section>
   );
