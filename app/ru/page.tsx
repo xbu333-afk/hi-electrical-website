@@ -151,7 +151,7 @@ const RU_REVIEWS: GoogleReview[] = [
 
 function Stars({ count = 5 }: { count?: number }) {
   return (
-    <div className="flex gap-0.5" aria-label={`Рейтинг: ${count} звёзд`}>
+    <div className="flex gap-0.5" role="img" aria-label={`Рейтинг: ${count} звёзд`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <svg
           key={i}

@@ -7,7 +7,7 @@ const INTERVAL_MS = 5500;
 
 function Stars({ count = 5 }: { count?: number }) {
   return (
-    <div className="flex gap-0.5" aria-label={`דירוג: ${count} כוכבים`}>
+    <div className="flex gap-0.5" role="img" aria-label={`דירוג: ${count} כוכבים`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <svg
           key={i}
