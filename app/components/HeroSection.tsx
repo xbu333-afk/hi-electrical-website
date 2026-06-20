@@ -58,6 +58,7 @@ export default function HeroSection({
                 alt=""
                 width={260}
                 height={256}
+                priority={true}
                 sizes="(max-width: 640px) 48px, 64px"
                 quality={85}
                 className="h-[1em] w-auto object-contain pointer-events-none shrink-0"
