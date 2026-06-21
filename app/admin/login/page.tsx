@@ -2,30 +2,47 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const errorMsg = searchParams.get("error");
+  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   async function signInWithGoogle() {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    setLocalError(null);
+    setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/admin/auth/callback`,
-      },
-    });
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (error) {
-      console.error("[login] OAuth error:", error.message);
-      alert("שגיאה: " + error.message);
+    if (!supabaseUrl || !supabaseKey) {
+      setLocalError("משתני סביבה חסרים — NEXT_PUBLIC_SUPABASE_URL / ANON_KEY");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/admin/auth/callback`,
+          skipBrowserRedirect: false,
+        },
+      });
+      if (error) {
+        setLocalError(error.message);
+        setLoading(false);
+      }
+    } catch (e) {
+      setLocalError(String(e));
+      setLoading(false);
     }
   }
+
+  const displayError = localError ?? (errorMsg ? decodeURIComponent(errorMsg) : null);
 
   return (
     <div
@@ -41,20 +58,25 @@ function LoginContent() {
           </p>
         </div>
 
-        {errorMsg && (
-          <div className="bg-red-950 border border-red-700 text-red-300 text-xs rounded-lg px-4 py-3 text-right">
-            <strong>שגיאת התחברות:</strong>
+        {displayError && (
+          <div className="bg-red-950 border border-red-700 text-red-300 text-xs rounded-lg px-4 py-3 text-right break-all">
+            <strong>שגיאה:</strong>
             <br />
-            {decodeURIComponent(errorMsg)}
+            {displayError}
           </div>
         )}
 
         <button
           onClick={signInWithGoogle}
-          className="w-full flex items-center justify-center gap-3 bg-white text-slate-900 font-semibold py-3 px-5 rounded-xl hover:bg-slate-100 transition"
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-3 bg-white text-slate-900 font-semibold py-3 px-5 rounded-xl hover:bg-slate-100 transition disabled:opacity-50"
         >
-          <GoogleIcon />
-          התחבר עם Google
+          {loading ? (
+            <span className="animate-spin text-lg">⏳</span>
+          ) : (
+            <GoogleIcon />
+          )}
+          {loading ? "מתחבר..." : "התחבר עם Google"}
         </button>
 
         <p className="text-slate-600 text-xs">גישה מורשית לבעל האתר בלבד</p>
