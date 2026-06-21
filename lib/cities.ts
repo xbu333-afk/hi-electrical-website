@@ -6,6 +6,8 @@ export type ServiceArea = {
 export const serviceAreas: ServiceArea[] = [
   { name: "פתח תקווה",      slug: "petah-tikva" },
   { name: "רמת גן",         slug: "ramat-gan" },
+  { name: "גבעתיים",        slug: "givatayim" },
+  { name: "שוהם",           slug: "shoham" },
   { name: "הרצליה",         slug: "herzliya" },
   { name: "כפר סבא",        slug: "kfar-saba" },
   { name: "רעננה",          slug: "raanana" },

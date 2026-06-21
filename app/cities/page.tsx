@@ -31,7 +31,7 @@ export default function CitiesPage() {
               >
                 חשמלאי מוסמך
                 <br />
-                ב-26 ערים ויישובים
+                ב-30 ערים ויישובים
               </h1>
             </div>
             <p className="text-slate-500 text-sm md:text-base max-w-xs leading-relaxed md:text-left">
