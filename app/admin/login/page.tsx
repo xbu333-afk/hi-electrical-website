@@ -25,7 +25,7 @@ function LoginContent() {
 
     try {
       const supabase = createBrowserClient(supabaseUrl, supabaseKey);
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/admin/auth/callback`,
@@ -34,6 +34,11 @@ function LoginContent() {
       });
       if (error) {
         setLocalError(error.message);
+        setLoading(false);
+      } else if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        setLocalError("Google OAuth לא מופעל ב-Supabase — כנס ל-Authentication → Providers → Google ותפעיל אותו");
         setLoading(false);
       }
     } catch (e) {
