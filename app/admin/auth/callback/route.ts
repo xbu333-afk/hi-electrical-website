@@ -34,7 +34,9 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error("[admin/auth/callback] session error:", error.message);
-    return NextResponse.redirect(new URL("/admin/login", request.url));
+    const loginUrl = new URL("/admin/login", request.url);
+    loginUrl.searchParams.set("error", encodeURIComponent(error.message));
+    return NextResponse.redirect(loginUrl);
   }
 
   const {

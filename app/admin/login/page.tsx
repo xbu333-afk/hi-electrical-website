@@ -1,20 +1,30 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function AdminLoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const errorMsg = searchParams.get("error");
+
   async function signInWithGoogle() {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/admin/auth/callback`,
       },
     });
+
+    if (error) {
+      console.error("[login] OAuth error:", error.message);
+      alert("שגיאה: " + error.message);
+    }
   }
 
   return (
@@ -31,6 +41,14 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
+        {errorMsg && (
+          <div className="bg-red-950 border border-red-700 text-red-300 text-xs rounded-lg px-4 py-3 text-right">
+            <strong>שגיאת התחברות:</strong>
+            <br />
+            {decodeURIComponent(errorMsg)}
+          </div>
+        )}
+
         <button
           onClick={signInWithGoogle}
           className="w-full flex items-center justify-center gap-3 bg-white text-slate-900 font-semibold py-3 px-5 rounded-xl hover:bg-slate-100 transition"
@@ -42,6 +60,14 @@ export default function AdminLoginPage() {
         <p className="text-slate-600 text-xs">גישה מורשית לבעל האתר בלבד</p>
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }
 
