@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Heebo } from "next/font/google";
 import localFont from "next/font/local";
 import { Suspense } from "react";
+import { headers } from "next/headers";
 import "./globals.css";
 import Navbar from "@/app/components/Navbar";
 import {
@@ -9,7 +10,6 @@ import {
   LazyFooter,
 } from "@/app/components/LazyLayoutChrome";
 import LazyScrollToTop from "@/app/components/LazyScrollToTop";
-// GTM + analytics deferred into a separate JS chunk via client wrapper
 import DeferredGoogleTagManager from "@/app/components/DeferredGoogleTagManager";
 import VisitorTracker from "@/app/components/VisitorTracker";
 
@@ -58,43 +58,47 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const h = await headers();
+  const isAdmin = h.get("x-is-admin") === "1";
+
   return (
     <html
       lang="he"
       dir="rtl"
       className={`${heebo.variable} ${gveretLevin.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased">
-        <DeferredGoogleTagManager />
-        {/* useSearchParams inside VisitorTracker requires a Suspense boundary */}
-        <Suspense fallback={null}>
-          <VisitorTracker />
-        </Suspense>
+      {isAdmin ? (
+        // Admin pages — bare body, no site chrome
+        <body className="h-full bg-slate-950">{children}</body>
+      ) : (
+        // Public site — full layout with navbar/footer
+        <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased">
+          <DeferredGoogleTagManager />
+          <Suspense fallback={null}>
+            <VisitorTracker />
+          </Suspense>
 
-        {/* Skip-to-content — ת"י 5568 AA */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-[200] focus:bg-emerald-600 focus:text-white focus:font-bold focus:px-5 focus:py-3 focus:rounded-xl focus:shadow-lg"
-        >
-          דלג לתוכן הראשי
-        </a>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-[200] focus:bg-emerald-600 focus:text-white focus:font-bold focus:px-5 focus:py-3 focus:rounded-xl focus:shadow-lg"
+          >
+            דלג לתוכן הראשי
+          </a>
 
-        <Navbar />
+          <Navbar />
+          <LazyScrollToTop />
 
-        <LazyScrollToTop />
+          <main id="main-content" className="flex-1 pb-24 md:pb-0" tabIndex={-1}>
+            {children}
+          </main>
 
-        {/* pb-24 on mobile keeps content above the floating contact button */}
-        <main id="main-content" className="flex-1 pb-24 md:pb-0" tabIndex={-1}>
-          {children}
-        </main>
-
-        <LazyFooter />
-
-        <LazyFloatingContactBar />
-      </body>
+          <LazyFooter />
+          <LazyFloatingContactBar />
+        </body>
+      )}
     </html>
   );
 }

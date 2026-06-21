@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const ALLOWED_EMAIL = "xbu333@gmail.com";
 
-// Routes under /admin that don't require an active session
 const PUBLIC_ADMIN_PATHS = [
   "/admin/login",
   "/admin/auth/callback",
@@ -13,12 +12,17 @@ const PUBLIC_ADMIN_PATHS = [
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Skip auth for public admin pages and non-admin routes
+  // For all /admin routes — inject header so root layout hides site chrome
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-is-admin", "1");
+
+  // Public admin pages — no auth check needed
   if (PUBLIC_ADMIN_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  let response = NextResponse.next({ request });
+  // Protected admin pages — verify session
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.SUPABASE_URL!,
@@ -32,7 +36,9 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          response = NextResponse.next({ request });
+          response = NextResponse.next({
+            request: { headers: requestHeaders },
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
@@ -41,19 +47,16 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh session (required for SSR token rotation)
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Not authenticated — redirect to login
   if (!user) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/admin/login";
     return NextResponse.redirect(loginUrl);
   }
 
-  // Wrong email — redirect to unauthorized
   if (user.email !== ALLOWED_EMAIL) {
     await supabase.auth.signOut();
     const unauthorizedUrl = request.nextUrl.clone();
