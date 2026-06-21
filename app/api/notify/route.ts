@@ -13,6 +13,7 @@ type NotifyPayload = {
   visitor_id: string;
   page_path: string;
   source: "mumooman" | "organic";
+  send_pushover?: boolean;
   log_id?: number;
   duration?: number;
   clicked_action?: boolean;
@@ -34,7 +35,6 @@ export async function POST(req: NextRequest) {
     // ── EXIT event ───────────────────────────────────────────────────────────
     if (body.event === "exit") {
       if (body.log_id) {
-        // Fire-and-forget — don't fail the response if DB is down
         updateVisitorLog(body.log_id, {
           duration: body.duration,
           clicked_action: body.clicked_action,
@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
     }
 
     // ── ENTER event ──────────────────────────────────────────────────────────
-    // DB logging — fire-and-forget so Pushover always sends even if DB fails
     let log_id: number | undefined;
     try {
       log_id = await insertVisitorLog({
@@ -58,7 +57,6 @@ export async function POST(req: NextRequest) {
       console.error("[notify] DB insert failed (non-fatal):", dbErr);
     }
 
-    // Count today visits for competitor detection (default 1 if DB fails)
     let todayCount = 1;
     try {
       todayCount = await countTodayVisitsByIp(ip);
@@ -70,18 +68,20 @@ export async function POST(req: NextRequest) {
       body.page_path.startsWith(p)
     );
 
-    // Pushover — always send regardless of DB status
-    const notification = buildVisitorNotification({
-      source: body.source,
-      pagePath: body.page_path,
-      ip,
-      visitorId: body.visitor_id,
-      todayCount,
-      isEmergencyPage,
-    });
-    sendPushover(notification).catch((e) =>
-      console.error("[notify] pushover failed:", e)
-    );
+    // Send Pushover only on first page of the session
+    if (body.send_pushover !== false) {
+      const notification = buildVisitorNotification({
+        source: body.source,
+        pagePath: body.page_path,
+        ip,
+        visitorId: body.visitor_id,
+        todayCount,
+        isEmergencyPage,
+      });
+      sendPushover(notification).catch((e) =>
+        console.error("[notify] pushover failed:", e)
+      );
+    }
 
     return Response.json({ ok: true, log_id });
   } catch (err) {

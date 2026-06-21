@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const VISITOR_ID_KEY = "hi_elec_vid";
+const SESSION_NOTIFIED_KEY = "hi_elec_notified";
 
 function getOrCreateVisitorId(): string {
   try {
@@ -18,10 +19,24 @@ function getOrCreateVisitorId(): string {
   }
 }
 
+function isFirstVisitThisSession(): boolean {
+  try {
+    if (sessionStorage.getItem(SESSION_NOTIFIED_KEY)) return false;
+    sessionStorage.setItem(SESSION_NOTIFIED_KEY, "1");
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 function detectSource(searchParams: URLSearchParams): "mumooman" | "organic" {
   const utm = searchParams.get("utm_medium") ?? "";
   const gclid = searchParams.get("gclid");
-  if (gclid || utm.toLowerCase().includes("cpc") || utm.toLowerCase().includes("paid")) {
+  if (
+    gclid ||
+    utm.toLowerCase().includes("cpc") ||
+    utm.toLowerCase().includes("paid")
+  ) {
     return "mumooman";
   }
   return "organic";
@@ -51,7 +66,9 @@ export default function VisitorTracker() {
     }
     document.addEventListener("click", handleClick);
 
-    // Enter event
+    // Only send Pushover on the FIRST page of each session
+    const sendPushover = isFirstVisitThisSession();
+
     fetch("/api/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -60,6 +77,7 @@ export default function VisitorTracker() {
         visitor_id: visitorId,
         page_path: pathname,
         source,
+        send_pushover: sendPushover,
       }),
     })
       .then((r) => r.json())
@@ -68,7 +86,6 @@ export default function VisitorTracker() {
       })
       .catch(() => {});
 
-    // Exit event
     function sendExit() {
       const duration = Math.round((Date.now() - enterTimeRef.current) / 1000);
       const payload = JSON.stringify({
@@ -81,9 +98,11 @@ export default function VisitorTracker() {
         clicked_action: clickedRef.current,
       });
 
-      // Use sendBeacon for reliability on page unload
       if (navigator.sendBeacon) {
-        navigator.sendBeacon("/api/notify", new Blob([payload], { type: "application/json" }));
+        navigator.sendBeacon(
+          "/api/notify",
+          new Blob([payload], { type: "application/json" })
+        );
       } else {
         fetch("/api/notify", {
           method: "POST",
