@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 
 interface VisitorRow {
@@ -13,7 +13,7 @@ interface VisitorRow {
 }
 
 async function getRecentLogs(): Promise<VisitorRow[]> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("visitor_logs")
     .select("*")
     .order("created_at", { ascending: false })
@@ -30,7 +30,7 @@ async function getSuspiciousIps(): Promise<Set<string>> {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("visitor_logs")
     .select("ip_address")
     .gte("created_at", startOfDay.toISOString());

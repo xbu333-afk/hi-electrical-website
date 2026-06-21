@@ -17,7 +17,7 @@
  * alter table visitor_logs enable row level security;
  */
 
-import { supabaseAdmin } from "./supabase";
+import { getSupabaseAdmin } from "./supabase";
 
 export interface VisitorLogEntry {
   visitor_id: string;
@@ -31,7 +31,7 @@ export interface VisitorLogEntry {
 export async function insertVisitorLog(
   entry: VisitorLogEntry
 ): Promise<number | undefined> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("visitor_logs")
     .insert({
       visitor_id: entry.visitor_id,
@@ -51,7 +51,7 @@ export async function updateVisitorLog(
   id: number,
   updates: Partial<Pick<VisitorLogEntry, "duration" | "clicked_action">>
 ): Promise<void> {
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from("visitor_logs")
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -63,7 +63,7 @@ export async function countTodayVisitsByIp(ip: string): Promise<number> {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  const { count, error } = await supabaseAdmin
+  const { count, error } = await getSupabaseAdmin()
     .from("visitor_logs")
     .select("id", { count: "exact", head: true })
     .eq("ip_address", ip)
