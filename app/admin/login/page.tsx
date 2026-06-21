@@ -52,7 +52,7 @@ function LoginContent() {
   return (
     <div
       dir="rtl"
-      className="min-h-screen bg-slate-950 flex items-center justify-center p-6"
+      className="fixed inset-0 z-[999] bg-slate-950 flex items-center justify-center p-6"
     >
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 w-full max-w-sm text-center space-y-6">
         <div className="space-y-1">

@@ -103,7 +103,7 @@ export default async function AnalyticsDashboard() {
   return (
     <div
       dir="rtl"
-      className="min-h-screen bg-slate-950 text-slate-100 p-6 font-sans"
+      className="fixed inset-0 z-[999] overflow-auto bg-slate-950 text-slate-100 p-6 font-sans"
     >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
