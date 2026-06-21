@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const VISITOR_ID_KEY = "hi_elec_vid";
-const SESSION_NOTIFIED_KEY = "hi_elec_notified";
 
 function getOrCreateVisitorId(): string {
   try {
@@ -16,16 +15,6 @@ function getOrCreateVisitorId(): string {
     return id;
   } catch {
     return crypto.randomUUID();
-  }
-}
-
-function isFirstVisitThisSession(): boolean {
-  try {
-    if (sessionStorage.getItem(SESSION_NOTIFIED_KEY)) return false;
-    sessionStorage.setItem(SESSION_NOTIFIED_KEY, "1");
-    return true;
-  } catch {
-    return true;
   }
 }
 
@@ -48,6 +37,8 @@ export default function VisitorTracker() {
   const logIdRef = useRef<number | null>(null);
   const enterTimeRef = useRef<number>(Date.now());
   const clickedRef = useRef<boolean>(false);
+  // Track if Pushover was sent this session to avoid spam on navigation
+  const pushoverSentRef = useRef<boolean>(false);
 
   useEffect(() => {
     const visitorId = getOrCreateVisitorId();
@@ -55,7 +46,10 @@ export default function VisitorTracker() {
     enterTimeRef.current = Date.now();
     clickedRef.current = false;
 
-    // Track phone / WhatsApp link clicks
+    // Send Pushover only once per browser session (first page load)
+    const sendPushover = !pushoverSentRef.current;
+    if (sendPushover) pushoverSentRef.current = true;
+
     function handleClick(e: MouseEvent) {
       const target = (e.target as HTMLElement).closest("a");
       if (!target) return;
@@ -65,9 +59,6 @@ export default function VisitorTracker() {
       }
     }
     document.addEventListener("click", handleClick);
-
-    // Only send Pushover on the FIRST page of each session
-    const sendPushover = isFirstVisitThisSession();
 
     fetch("/api/notify", {
       method: "POST",

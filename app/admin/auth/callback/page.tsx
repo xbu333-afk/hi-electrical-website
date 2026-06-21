@@ -1,6 +1,6 @@
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -11,25 +11,24 @@ export default function AuthCallbackPage() {
   const [status, setStatus] = useState("🔄 מאמת...");
 
   useEffect(() => {
-    const supabase = createBrowserClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { flowType: "pkce", autoRefreshToken: true, persistSession: true } }
     );
 
     async function handleCallback() {
-      // Get the code from URL
       const url = new URL(window.location.href);
       const code = url.searchParams.get("code");
       const errorDesc = url.searchParams.get("error_description");
 
       if (errorDesc) {
-        setStatus("❌ " + decodeURIComponent(errorDesc));
+        setStatus("❌ " + decodeURIComponent(errorDesc.replace(/\+/g, " ")));
         setTimeout(() => router.push("/admin/login"), 3000);
         return;
       }
 
       if (!code) {
-        // Check if session already exists (e.g. implicit flow)
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user.email === ALLOWED_EMAIL) {
           router.replace("/admin/analytics");
@@ -39,11 +38,11 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      // Exchange code for session — runs in browser so PKCE verifier is available
+      setStatus("🔑 מחליף קוד...");
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error || !data.session) {
-        setStatus("❌ שגיאה: " + (error?.message ?? "לא התקבל session"));
+        setStatus("❌ " + (error?.message ?? "שגיאה לא ידועה"));
         setTimeout(() => router.push("/admin/login"), 3000);
         return;
       }
@@ -54,6 +53,7 @@ export default function AuthCallbackPage() {
         return;
       }
 
+      setStatus("✅ מתחבר...");
       router.replace("/admin/analytics");
     }
 
@@ -61,7 +61,7 @@ export default function AuthCallbackPage() {
   }, [router]);
 
   return (
-    <div className="fixed inset-0 z-[999] bg-slate-950 flex items-center justify-center text-white text-xl">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white text-xl" dir="rtl">
       {status}
     </div>
   );
