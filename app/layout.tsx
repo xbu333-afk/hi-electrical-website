@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Heebo } from "next/font/google";
 import localFont from "next/font/local";
+import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/app/components/Navbar";
 import {
@@ -10,6 +11,7 @@ import {
 import LazyScrollToTop from "@/app/components/LazyScrollToTop";
 // GTM + analytics deferred into a separate JS chunk via client wrapper
 import DeferredGoogleTagManager from "@/app/components/DeferredGoogleTagManager";
+import VisitorTracker from "@/app/components/VisitorTracker";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -67,6 +69,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased">
         <DeferredGoogleTagManager />
+        {/* useSearchParams inside VisitorTracker requires a Suspense boundary */}
+        <Suspense fallback={null}>
+          <VisitorTracker />
+        </Suspense>
 
         {/* Skip-to-content — ת"י 5568 AA */}
         <a
