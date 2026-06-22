@@ -1,9 +1,6 @@
 export default function UnauthorizedPage() {
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen bg-slate-950 flex items-center justify-center p-6"
-    >
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6" dir="rtl">
       <div className="bg-slate-900 border border-red-900/50 rounded-2xl p-10 w-full max-w-sm text-center space-y-4">
         <div className="text-5xl">🚫</div>
         <h1 className="text-xl font-bold text-white">אין הרשאה</h1>

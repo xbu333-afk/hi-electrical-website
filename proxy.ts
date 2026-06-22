@@ -1,30 +1,59 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_ADMIN_PATHS = ["/admin/login"];
+const ALLOWED_EMAIL = "xbu333@gmail.com";
+
+const PUBLIC_PATHS = [
+  "/admin/login",
+  "/admin/auth/callback",
+  "/admin/unauthorized",
+];
 
 export async function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  const { pathname } = request.nextUrl;
 
-  // Inject header so root layout renders bare body for admin pages
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-is-admin", "1");
+  // Inject header → root layout renders bare body (no navbar/footer)
+  const reqHeaders = new Headers(request.headers);
+  reqHeaders.set("x-is-admin", "1");
 
-  // Public admin pages — no auth needed
-  if (PUBLIC_ADMIN_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
+  // Public admin pages — no session check
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next({ request: { headers: reqHeaders } });
   }
 
-  // Check password cookie
-  const cookie = request.cookies.get("admin-auth")?.value;
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  // Protected pages — verify Supabase session
+  let response = NextResponse.next({ request: { headers: reqHeaders } });
 
-  if (!adminPassword || cookie !== adminPassword) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/admin/login";
-    return NextResponse.redirect(loginUrl);
+  const supabase = createServerClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (list) => {
+          list.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request: { headers: reqHeaders } });
+          list.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  if (user.email !== ALLOWED_EMAIL) {
+    return NextResponse.redirect(new URL("/admin/unauthorized", request.url));
+  }
+
+  return response;
 }
 
 export const config = {

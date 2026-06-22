@@ -37,7 +37,6 @@ export default function VisitorTracker() {
   const logIdRef = useRef<number | null>(null);
   const enterTimeRef = useRef<number>(Date.now());
   const clickedRef = useRef<boolean>(false);
-  // Track if Pushover was sent this session to avoid spam on navigation
   const pushoverSentRef = useRef<boolean>(false);
 
   useEffect(() => {
@@ -46,20 +45,38 @@ export default function VisitorTracker() {
     enterTimeRef.current = Date.now();
     clickedRef.current = false;
 
-    // Send Pushover only once per browser session (first page load)
+    // Send Pushover only on the first page of the session
     const sendPushover = !pushoverSentRef.current;
     if (sendPushover) pushoverSentRef.current = true;
 
+    // ── Click tracking ───────────────────────────────────────────────────────
     function handleClick(e: MouseEvent) {
-      const target = (e.target as HTMLElement).closest("a");
-      if (!target) return;
-      const href = target.getAttribute("href") ?? "";
-      if (href.startsWith("tel:") || href.startsWith("https://wa.me")) {
-        clickedRef.current = true;
-      }
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href") ?? "";
+      if (!href.startsWith("tel:") && !href.startsWith("https://wa.me")) return;
+      if (clickedRef.current) return; // send only once per page
+
+      clickedRef.current = true;
+
+      // Immediate click event → updates DB row + Pushover "יצר קשר"
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "click",
+          visitor_id: visitorId,
+          page_path: pathname,
+          source,
+          log_id: logIdRef.current,
+        }),
+        keepalive: true,
+      }).catch(() => {});
     }
+
     document.addEventListener("click", handleClick);
 
+    // ── Enter event ──────────────────────────────────────────────────────────
     fetch("/api/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -77,18 +94,15 @@ export default function VisitorTracker() {
       })
       .catch(() => {});
 
+    // ── Exit event ───────────────────────────────────────────────────────────
     function sendExit() {
       const duration = Math.round((Date.now() - enterTimeRef.current) / 1000);
       const payload = JSON.stringify({
         event: "exit",
-        visitor_id: visitorId,
-        page_path: pathname,
-        source,
         log_id: logIdRef.current,
         duration,
         clicked_action: clickedRef.current,
       });
-
       if (navigator.sendBeacon) {
         navigator.sendBeacon(
           "/api/notify",

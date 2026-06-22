@@ -1,3 +1,5 @@
+import { formatPageLabel } from "./page-labels";
+
 export type PushoverPriority = -2 | -1 | 0 | 1 | 2;
 
 interface PushoverParams {
@@ -5,8 +7,6 @@ interface PushoverParams {
   message: string;
   priority?: PushoverPriority;
   sound?: string;
-  url?: string;
-  url_title?: string;
 }
 
 export async function sendPushover(params: PushoverParams): Promise<void> {
@@ -14,7 +14,7 @@ export async function sendPushover(params: PushoverParams): Promise<void> {
   const user = process.env.PUSHOVER_USER_KEY;
 
   if (!token || !user) {
-    console.warn("[pushover] tokens missing — skipping notification");
+    console.warn("[pushover] tokens missing — skipping");
     return;
   }
 
@@ -27,10 +27,8 @@ export async function sendPushover(params: PushoverParams): Promise<void> {
   };
 
   if (params.sound) body.sound = params.sound;
-  if (params.url) body.url = params.url;
-  if (params.url_title) body.url_title = params.url_title;
 
-  // Emergency priority (2) requires retry + expire
+  // Emergency priority requires retry + expire
   if (params.priority === 2) {
     body.retry = 30;
     body.expire = 300;
@@ -42,63 +40,102 @@ export async function sendPushover(params: PushoverParams): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("[pushover] API error:", text);
-    }
+    if (!res.ok) console.error("[pushover] API error:", await res.text());
   } catch (err) {
     console.error("[pushover] fetch failed:", err);
   }
 }
 
-/** Build a Pushover notification for a new visitor. */
+// ── Notification builders ────────────────────────────────────────────────────
+
+function lines(...parts: (string | null | undefined)[]): string {
+  return parts.filter(Boolean).join("\n") as string;
+}
+
+/** Sent immediately when a visitor clicks tel: or WhatsApp. */
+export function buildClickNotification(opts: {
+  pagePath: string;
+  ip: string;
+  source: "mumooman" | "organic";
+}) {
+  return {
+    title: "📞 הלקוח יצר קשר!",
+    message: lines(
+      `עמוד: ${formatPageLabel(opts.pagePath)}`,
+      `מקור: ${opts.source === "mumooman" ? "ממומן (גוגל אדס)" : "אורגני"}`,
+      `IP: ${opts.ip}`
+    ),
+    priority: 1 as PushoverPriority,
+    sound: "incoming",
+  };
+}
+
+/** Sent on page enter. */
 export function buildVisitorNotification(opts: {
   source: "mumooman" | "organic";
   pagePath: string;
   ip: string;
-  visitorId: string;
   todayCount: number;
   isEmergencyPage: boolean;
 }) {
   const { source, pagePath, ip, todayCount, isEmergencyPage } = opts;
-
   const isPaid = source === "mumooman";
   const isSuspect = todayCount > 2;
+  const pageLabel = formatPageLabel(pagePath);
+  const sourceLabel = isPaid ? "ממומן (גוגל אדס)" : "אורגני";
+  const countLine = todayCount > 1 ? `כניסות היום מאותו IP: ${todayCount}` : null;
 
-  // ── Emergency page ────────────────────────────────────────────────────────
   if (isEmergencyPage) {
     return {
-      title: "🚨 דחוף — מבקר בעמוד חירום!",
-      message: `📍 עמוד: ${pagePath}\n🌐 IP: ${ip}\n📣 מקור: ${isPaid ? "ממומן 💰" : "אורגני 🌿"}\n📊 כניסות היום: ${todayCount}`,
+      title: "🚨 דחוף — עמוד חירום!",
+      message: lines(
+        `עמוד: ${pageLabel}`,
+        `מקור: ${sourceLabel}`,
+        `IP: ${ip}`,
+        "⚠️ דורש תשומת לב מיידית",
+        countLine
+      ),
       priority: 1 as PushoverPriority,
       sound: "siren",
     };
   }
 
-  // ── Competitor protection ─────────────────────────────────────────────────
   if (isSuspect) {
     return {
-      title: "🕵️ חשד — מתחרה אפשרי?",
-      message: `⚠️ IP זה כנס ${todayCount} פעמים היום!\n📍 עמוד: ${pagePath}\n🌐 IP: ${ip}\n📣 מקור: ${isPaid ? "ממומן 💰" : "אורגני 🌿"}`,
+      title: "🛡️ חשוד — יותר מ-2 כניסות היום",
+      message: lines(
+        `עמוד: ${pageLabel}`,
+        `מקור: ${sourceLabel}`,
+        `IP: ${ip}`,
+        `🕵️ אותו IP כנס ${todayCount} פעמים היום`,
+      ),
       priority: 1 as PushoverPriority,
       sound: "alien",
     };
   }
 
-  // ── Paid traffic ──────────────────────────────────────────────────────────
   if (isPaid) {
     return {
-      title: "💰 מבקר ממומן נכנס",
-      message: `📍 עמוד: ${pagePath}\n🌐 IP: ${ip}\n📊 כניסות היום: ${todayCount}`,
+      title: "🔴 קליק ממומן חדש!",
+      message: lines(
+        `עמוד: ${pageLabel}`,
+        `מקור: ${sourceLabel}`,
+        `IP: ${ip}`,
+        countLine
+      ),
       priority: 0 as PushoverPriority,
       sound: "cashregister",
     };
   }
 
-  // ── Organic traffic ───────────────────────────────────────────────────────
   return {
-    title: "🌿 מבקר אורגני נכנס",
-    message: `📍 עמוד: ${pagePath}\n🌐 IP: ${ip}\n📊 כניסות היום: ${todayCount}`,
+    title: "🟢 כניסה אורגנית",
+    message: lines(
+      `עמוד: ${pageLabel}`,
+      `מקור: ${sourceLabel}`,
+      `IP: ${ip}`,
+      countLine
+    ),
     priority: -1 as PushoverPriority,
     sound: "none",
   };
