@@ -72,7 +72,7 @@ export default async function RootLayout({
     >
       {isAdmin ? (
         // Admin pages — bare body, no site chrome
-        <body className="h-full bg-slate-950">{children}</body>
+        <body className="h-full bg-gray-50 text-slate-900 antialiased">{children}</body>
       ) : (
         // Public site — full layout with navbar/footer
         <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased">

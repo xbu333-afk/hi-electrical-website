@@ -48,8 +48,38 @@ export async function sendPushover(params: PushoverParams): Promise<void> {
 
 // ── Notification builders ────────────────────────────────────────────────────
 
+export type VisitorDevice = "mobile" | "desktop";
+
 function lines(...parts: (string | null | undefined)[]): string {
   return parts.filter(Boolean).join("\n") as string;
+}
+
+/** Shared body lines for enter notifications (paid, organic, emergency, suspicious). */
+export function buildMessageLines(opts: {
+  pagePath: string;
+  source: "mumooman" | "organic";
+  ip: string;
+  todayCount: number;
+  device: VisitorDevice;
+  city?: string | null;
+  extraLines?: (string | null | undefined)[];
+}): string {
+  const pageLabel = formatPageLabel(opts.pagePath);
+  const sourceLabel =
+    opts.source === "mumooman" ? "ממומן (גוגל אדס)" : "אורגני";
+  const deviceLine =
+    opts.device === "mobile" ? "📱 מכשיר: נייד" : "💻 מכשיר: מחשב";
+  const cityLine = opts.city ? `📍 עיר (משוערת): ${opts.city}` : null;
+
+  return lines(
+    `עמוד: ${pageLabel}`,
+    `מקור: ${sourceLabel}`,
+    `🌐 IP: ${opts.ip}`,
+    deviceLine,
+    cityLine,
+    `📊 כניסות היום: ${opts.todayCount}`,
+    ...(opts.extraLines ?? [])
+  );
 }
 
 /** Sent immediately when a visitor clicks tel: or WhatsApp. */
@@ -76,25 +106,31 @@ export function buildVisitorNotification(opts: {
   pagePath: string;
   ip: string;
   todayCount: number;
+  device: VisitorDevice;
+  city?: string | null;
   isEmergencyPage: boolean;
 }) {
-  const { source, pagePath, ip, todayCount, isEmergencyPage } = opts;
+  const { source, pagePath, ip, todayCount, device, city, isEmergencyPage } =
+    opts;
   const isPaid = source === "mumooman";
   const isSuspect = todayCount > 2;
-  const pageLabel = formatPageLabel(pagePath);
-  const sourceLabel = isPaid ? "ממומן (גוגל אדס)" : "אורגני";
-  const countLine = todayCount > 1 ? `כניסות היום מאותו IP: ${todayCount}` : null;
+
+  const base = {
+    pagePath,
+    source,
+    ip,
+    todayCount,
+    device,
+    city,
+  };
 
   if (isEmergencyPage) {
     return {
       title: "🚨 דחוף — עמוד חירום!",
-      message: lines(
-        `עמוד: ${pageLabel}`,
-        `מקור: ${sourceLabel}`,
-        `IP: ${ip}`,
-        "⚠️ דורש תשומת לב מיידית",
-        countLine
-      ),
+      message: buildMessageLines({
+        ...base,
+        extraLines: ["⚠️ דורש תשומת לב מיידית"],
+      }),
       priority: 1 as PushoverPriority,
       sound: "siren",
     };
@@ -103,12 +139,10 @@ export function buildVisitorNotification(opts: {
   if (isSuspect) {
     return {
       title: "🛡️ חשוד — יותר מ-2 כניסות היום",
-      message: lines(
-        `עמוד: ${pageLabel}`,
-        `מקור: ${sourceLabel}`,
-        `IP: ${ip}`,
-        `🕵️ אותו IP כנס ${todayCount} פעמים היום`,
-      ),
+      message: buildMessageLines({
+        ...base,
+        extraLines: [`🕵️ אותו IP כנס ${todayCount} פעמים היום`],
+      }),
       priority: 1 as PushoverPriority,
       sound: "alien",
     };
@@ -116,13 +150,8 @@ export function buildVisitorNotification(opts: {
 
   if (isPaid) {
     return {
-      title: "🔴 קליק ממומן חדש!",
-      message: lines(
-        `עמוד: ${pageLabel}`,
-        `מקור: ${sourceLabel}`,
-        `IP: ${ip}`,
-        countLine
-      ),
+      title: "💰 קליק ממומן חדש!",
+      message: buildMessageLines(base),
       priority: 0 as PushoverPriority,
       sound: "cashregister",
     };
@@ -130,12 +159,7 @@ export function buildVisitorNotification(opts: {
 
   return {
     title: "🟢 כניסה אורגנית",
-    message: lines(
-      `עמוד: ${pageLabel}`,
-      `מקור: ${sourceLabel}`,
-      `IP: ${ip}`,
-      countLine
-    ),
+    message: buildMessageLines(base),
     priority: -1 as PushoverPriority,
     sound: "none",
   };

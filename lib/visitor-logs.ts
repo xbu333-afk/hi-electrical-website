@@ -1,29 +1,14 @@
-/**
- * visitor_logs — Supabase table schema (run once in Supabase SQL editor):
- *
- * create table visitor_logs (
- *   id            uuid primary key default gen_random_uuid(),
- *   visitor_id    text not null,
- *   ip_address    text not null,
- *   page_path     text not null,
- *   source        text not null check (source in ('mumooman', 'organic')),
- *   duration      integer,
- *   clicked_action boolean not null default false,
- *   created_at    timestamptz not null default now(),
- *   updated_at    timestamptz not null default now()
- * );
- *
- * -- RLS: allow insert/select from service role only
- * alter table visitor_logs enable row level security;
- */
-
 import { getSupabaseAdmin } from "./supabase";
+
+export type VisitorDevice = "mobile" | "desktop";
 
 export interface VisitorLogEntry {
   visitor_id: string;
   ip_address: string;
   page_path: string;
   source: "mumooman" | "organic";
+  device?: VisitorDevice;
+  city?: string | null;
   duration?: number;
   clicked_action?: boolean;
 }
@@ -37,7 +22,10 @@ export async function insertVisitorLog(
       visitor_id: entry.visitor_id,
       ip_address: entry.ip_address,
       page_path: entry.page_path,
+      pages_visited: [entry.page_path],
       source: entry.source,
+      device: entry.device ?? null,
+      city: entry.city ?? null,
       clicked_action: entry.clicked_action ?? false,
     })
     .select("id")
@@ -57,6 +45,49 @@ export async function updateVisitorLog(
     .eq("id", id);
 
   if (error) console.error("[visitor_logs] update error:", error.message);
+}
+
+/** Append a page to the session's pages_visited list and set page_path to latest. */
+export async function appendPageToLog(
+  id: number,
+  pagePath: string
+): Promise<void> {
+  const { data, error: fetchError } = await getSupabaseAdmin()
+    .from("visitor_logs")
+    .select("pages_visited, page_path")
+    .eq("id", id)
+    .single();
+
+  if (fetchError) {
+    console.error("[visitor_logs] append fetch error:", fetchError.message);
+    // Fallback: update page_path only
+    await getSupabaseAdmin()
+      .from("visitor_logs")
+      .update({ page_path: pagePath, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    return;
+  }
+
+  const raw = data?.pages_visited;
+  const pages: string[] = Array.isArray(raw)
+    ? (raw as string[])
+  : data?.page_path
+      ? [data.page_path as string]
+      : [];
+
+  const last = pages[pages.length - 1];
+  if (last !== pagePath) pages.push(pagePath);
+
+  const { error } = await getSupabaseAdmin()
+    .from("visitor_logs")
+    .update({
+      page_path: pagePath,
+      pages_visited: pages,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) console.error("[visitor_logs] append error:", error.message);
 }
 
 export async function countTodayVisitsByIp(ip: string): Promise<number> {

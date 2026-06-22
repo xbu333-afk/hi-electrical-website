@@ -23,29 +23,29 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6" dir="rtl">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 w-full max-w-sm space-y-6 text-center">
+    <div className="min-h-screen flex items-center justify-center p-6" dir="rtl">
+      <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-10 w-full max-w-sm space-y-6 text-center">
         <div className="space-y-1">
           <div className="text-4xl">🔒</div>
-          <h1 className="text-xl font-bold text-white">כניסה לדשבורד</h1>
-          <p className="text-slate-400 text-sm">ח.י שירותי חשמל — פאנל ניהול פרטי</p>
+          <h1 className="text-xl font-bold text-slate-900">כניסה לדשבורד</h1>
+          <p className="text-slate-500 text-sm">ח.י שירותי חשמל — פאנל ניהול פרטי</p>
         </div>
 
         {error && (
-          <div className="bg-red-950 border border-red-800 text-red-300 text-xs rounded-lg px-4 py-3 text-right break-all">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-4 py-3 text-right break-all">
             <strong>שגיאה:</strong> {decodeURIComponent(error)}
           </div>
         )}
 
         <button
           onClick={signInWithGoogle}
-          className="w-full flex items-center justify-center gap-3 bg-white text-slate-900 font-semibold py-3 px-5 rounded-xl hover:bg-slate-100 transition"
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-slate-900 font-semibold py-3 px-5 rounded-xl hover:bg-gray-50 shadow-sm transition"
         >
           <GoogleIcon />
           התחבר עם Google
         </button>
 
-        <p className="text-slate-600 text-xs">גישה מורשית לבעל האתר בלבד</p>
+        <p className="text-slate-400 text-xs">גישה מורשית לבעל האתר בלבד</p>
       </div>
     </div>
   );

@@ -2,7 +2,9 @@ import { type NextRequest } from "next/server";
 import {
   insertVisitorLog,
   updateVisitorLog,
+  appendPageToLog,
   countTodayVisitsByIp,
+  type VisitorDevice,
 } from "@/lib/visitor-logs";
 import {
   sendPushover,
@@ -13,9 +15,20 @@ import {
 const EMERGENCY_PATHS = ["/emergency", "/fast-service", "/welcome"];
 
 type NotifyPayload =
-  | { event: "enter"; visitor_id: string; page_path: string; source: "mumooman" | "organic"; send_pushover?: boolean }
+  | {
+      event: "enter";
+      visitor_id: string;
+      page_path: string;
+      source: "mumooman" | "organic";
+    }
+  | { event: "navigate"; log_id: number; page_path: string }
   | { event: "exit"; log_id?: number; duration?: number; clicked_action?: boolean }
-  | { event: "click"; visitor_id: string; page_path: string; source: "mumooman" | "organic"; log_id?: number };
+  | {
+      event: "click";
+      page_path: string;
+      source: "mumooman" | "organic";
+      log_id?: number;
+    };
 
 function getIp(req: NextRequest): string {
   return (
@@ -23,6 +36,20 @@ function getIp(req: NextRequest): string {
     req.headers.get("x-real-ip") ??
     "unknown"
   );
+}
+
+function getDevice(req: NextRequest): VisitorDevice {
+  const ua = req.headers.get("user-agent") ?? "";
+  return /Mobile|Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+    ua
+  )
+    ? "mobile"
+    : "desktop";
+}
+
+function getCity(req: NextRequest): string | null {
+  const city = req.headers.get("x-vercel-ip-city")?.trim();
+  return city || null;
 }
 
 export async function POST(req: NextRequest) {
@@ -41,7 +68,17 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: true });
     }
 
-    // ── CLICK — immediate "יצר קשר" notification ────────────────────────────
+    // ── NAVIGATE — DB only, no Pushover ─────────────────────────────────────
+    if (body.event === "navigate") {
+      if (body.log_id) {
+        appendPageToLog(body.log_id, body.page_path).catch((e) =>
+          console.error("[notify:navigate]", e)
+        );
+      }
+      return Response.json({ ok: true });
+    }
+
+    // ── CLICK — DB update + Pushover ────────────────────────────────────────
     if (body.event === "click") {
       if (body.log_id) {
         updateVisitorLog(body.log_id, { clicked_action: true }).catch((e) =>
@@ -58,7 +95,10 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: true });
     }
 
-    // ── ENTER ────────────────────────────────────────────────────────────────
+    // ── ENTER — new row + single Pushover ───────────────────────────────────
+    const device = getDevice(req);
+    const city = getCity(req);
+
     let log_id: number | undefined;
     try {
       log_id = await insertVisitorLog({
@@ -66,6 +106,8 @@ export async function POST(req: NextRequest) {
         ip_address: ip,
         page_path: body.page_path,
         source: body.source,
+        device,
+        city,
         clicked_action: false,
       });
     } catch (e) {
@@ -79,20 +121,21 @@ export async function POST(req: NextRequest) {
       // non-fatal
     }
 
-    if (body.send_pushover !== false) {
-      const isEmergencyPage = EMERGENCY_PATHS.some((p) =>
-        body.page_path.startsWith(p)
-      );
-      sendPushover(
-        buildVisitorNotification({
-          source: body.source,
-          pagePath: body.page_path,
-          ip,
-          todayCount,
-          isEmergencyPage,
-        })
-      ).catch((e) => console.error("[notify:enter pushover]", e));
-    }
+    const isEmergencyPage = EMERGENCY_PATHS.some((p) =>
+      body.page_path.startsWith(p)
+    );
+
+    sendPushover(
+      buildVisitorNotification({
+        source: body.source,
+        pagePath: body.page_path,
+        ip,
+        todayCount,
+        device,
+        city,
+        isEmergencyPage,
+      })
+    ).catch((e) => console.error("[notify:enter pushover]", e));
 
     return Response.json({ ok: true, log_id });
   } catch (err) {

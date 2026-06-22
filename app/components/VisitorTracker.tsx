@@ -34,69 +34,52 @@ function detectSource(searchParams: URLSearchParams): "mumooman" | "organic" {
 export default function VisitorTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
   const logIdRef = useRef<number | null>(null);
-  const enterTimeRef = useRef<number>(Date.now());
+  const sessionStartRef = useRef<number>(Date.now());
   const clickedRef = useRef<boolean>(false);
-  const pushoverSentRef = useRef<boolean>(false);
+  const sessionInitRef = useRef<boolean>(false);
+  const prevPathRef = useRef<string | null>(null);
 
+  const pathnameRef = useRef(pathname);
+  const sourceRef = useRef<"mumooman" | "organic">("organic");
+  pathnameRef.current = pathname;
+  sourceRef.current = detectSource(searchParams);
+
+  // ── Click handler (attached once) ─────────────────────────────────────────
   useEffect(() => {
-    const visitorId = getOrCreateVisitorId();
-    const source = detectSource(searchParams);
-    enterTimeRef.current = Date.now();
-    clickedRef.current = false;
-
-    // Send Pushover only on the first page of the session
-    const sendPushover = !pushoverSentRef.current;
-    if (sendPushover) pushoverSentRef.current = true;
-
-    // ── Click tracking ───────────────────────────────────────────────────────
     function handleClick(e: MouseEvent) {
       const anchor = (e.target as HTMLElement).closest("a");
       if (!anchor) return;
       const href = anchor.getAttribute("href") ?? "";
       if (!href.startsWith("tel:") && !href.startsWith("https://wa.me")) return;
-      if (clickedRef.current) return; // send only once per page
+      if (clickedRef.current) return;
 
       clickedRef.current = true;
 
-      // Immediate click event → updates DB row + Pushover "יצר קשר"
       fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           event: "click",
-          visitor_id: visitorId,
-          page_path: pathname,
-          source,
+          page_path: pathnameRef.current,
+          source: sourceRef.current,
           log_id: logIdRef.current,
         }),
         keepalive: true,
       }).catch(() => {});
     }
 
-    document.addEventListener("click", handleClick);
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, []);
 
-    // ── Enter event ──────────────────────────────────────────────────────────
-    fetch("/api/notify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event: "enter",
-        visitor_id: visitorId,
-        page_path: pathname,
-        source,
-        send_pushover: sendPushover,
-      }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        logIdRef.current = data.log_id ?? null;
-      })
-      .catch(() => {});
-
-    // ── Exit event ───────────────────────────────────────────────────────────
+  // ── Session exit (attached once) ──────────────────────────────────────────
+  useEffect(() => {
     function sendExit() {
-      const duration = Math.round((Date.now() - enterTimeRef.current) / 1000);
+      const duration = Math.round(
+        (Date.now() - sessionStartRef.current) / 1000
+      );
       const payload = JSON.stringify({
         event: "exit",
         log_id: logIdRef.current,
@@ -119,11 +102,54 @@ export default function VisitorTracker() {
     }
 
     window.addEventListener("beforeunload", sendExit);
+    return () => window.removeEventListener("beforeunload", sendExit);
+  }, []);
 
-    return () => {
-      document.removeEventListener("click", handleClick);
-      window.removeEventListener("beforeunload", sendExit);
-    };
+  // ── Enter (once) + navigate (route changes) ───────────────────────────────
+  useEffect(() => {
+    const visitorId = getOrCreateVisitorId();
+    const source = detectSource(searchParams);
+
+    // First page of session → enter + Pushover
+    if (!sessionInitRef.current) {
+      sessionInitRef.current = true;
+      sessionStartRef.current = Date.now();
+      prevPathRef.current = pathname;
+
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "enter",
+          visitor_id: visitorId,
+          page_path: pathname,
+          source,
+        }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          logIdRef.current = data.log_id ?? null;
+        })
+        .catch(() => {});
+
+      return;
+    }
+
+    // Route change within same session → DB only, no Pushover
+    if (prevPathRef.current !== pathname && logIdRef.current) {
+      prevPathRef.current = pathname;
+
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "navigate",
+          log_id: logIdRef.current,
+          page_path: pathname,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    }
   }, [pathname, searchParams]);
 
   return null;
