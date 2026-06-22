@@ -1,4 +1,5 @@
 import { formatPageLabel } from "./page-labels";
+import type { VisitorHistory } from "./visitor-logs";
 
 export type PushoverPriority = -2 | -1 | 0 | 1 | 2;
 
@@ -59,9 +60,10 @@ export function buildMessageLines(opts: {
   pagePath: string;
   source: "mumooman" | "organic";
   ip: string;
-  todayCount: number;
+  history: VisitorHistory;
   device: VisitorDevice;
   city?: string | null;
+  gclid?: string | null;
   extraLines?: (string | null | undefined)[];
 }): string {
   const pageLabel = formatPageLabel(opts.pagePath);
@@ -70,6 +72,11 @@ export function buildMessageLines(opts: {
   const deviceLine =
     opts.device === "mobile" ? "📱 מכשיר: נייד" : "💻 מכשיר: מחשב";
   const cityLine = opts.city ? `📍 עיר (משוערת): ${opts.city}` : null;
+  const historyLine =
+    `📊 היסטוריית מבקר: היום: ${opts.history.today_count} | ` +
+    `השבוע: ${opts.history.week_count} | ` +
+    `סה"כ: ${opts.history.total_count}`;
+  const gclidLine = opts.gclid ? `🎟️ מזהה גוגל (GCLID): ${opts.gclid}` : null;
 
   return lines(
     `עמוד: ${pageLabel}`,
@@ -77,7 +84,8 @@ export function buildMessageLines(opts: {
     `🌐 IP: ${opts.ip}`,
     deviceLine,
     cityLine,
-    `📊 כניסות היום: ${opts.todayCount}`,
+    historyLine,
+    gclidLine,
     ...(opts.extraLines ?? [])
   );
 }
@@ -105,24 +113,18 @@ export function buildVisitorNotification(opts: {
   source: "mumooman" | "organic";
   pagePath: string;
   ip: string;
-  todayCount: number;
+  history: VisitorHistory;
   device: VisitorDevice;
   city?: string | null;
+  gclid?: string | null;
   isEmergencyPage: boolean;
 }) {
-  const { source, pagePath, ip, todayCount, device, city, isEmergencyPage } =
+  const { source, pagePath, ip, history, device, city, gclid, isEmergencyPage } =
     opts;
   const isPaid = source === "mumooman";
-  const isSuspect = todayCount > 2;
+  const isSuspect = history.today_count > 2;
 
-  const base = {
-    pagePath,
-    source,
-    ip,
-    todayCount,
-    device,
-    city,
-  };
+  const base = { pagePath, source, ip, history, device, city, gclid };
 
   if (isEmergencyPage) {
     return {
@@ -141,7 +143,9 @@ export function buildVisitorNotification(opts: {
       title: "🛡️ חשוד — יותר מ-2 כניסות היום",
       message: buildMessageLines({
         ...base,
-        extraLines: [`🕵️ אותו IP כנס ${todayCount} פעמים היום`],
+        extraLines: [
+          `🕵️ אותו מבקר כנס ${history.today_count} פעמים היום`,
+        ],
       }),
       priority: 1 as PushoverPriority,
       sound: "alien",

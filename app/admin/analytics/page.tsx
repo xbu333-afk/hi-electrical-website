@@ -1,14 +1,22 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { formatPageLabel } from "@/lib/page-labels";
+import { getIsraelStartOfDay, getVisitorTotalCounts } from "@/lib/visitor-logs";
+import { ExportCsvButton } from "@/app/components/ExportCsvButton";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface VisitorRow {
   id: number;
+  visitor_id: string;
   ip_address: string;
   page_path: string;
   pages_visited: string[] | null;
   source: string;
   device: string | null;
   city: string | null;
+  gclid: string | null;
+  user_agent: string | null;
   duration: number | null;
   clicked_action: boolean;
   created_at: string;
@@ -18,7 +26,9 @@ async function getLogs(): Promise<VisitorRow[]> {
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("visitor_logs")
-      .select("id, ip_address, page_path, pages_visited, source, device, city, duration, clicked_action, created_at")
+      .select(
+        "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, gclid, user_agent, duration, clicked_action, created_at"
+      )
       .order("created_at", { ascending: false })
       .limit(300);
     if (error) throw error;
@@ -30,9 +40,7 @@ async function getLogs(): Promise<VisitorRow[]> {
 }
 
 function startOfDay() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return getIsraelStartOfDay();
 }
 
 function isToday(iso: string) {
@@ -41,11 +49,15 @@ function isToday(iso: string) {
 
 function getSuspiciousIps(logs: VisitorRow[]): Set<string> {
   const counts = new Map<string, number>();
-  logs.filter((r) => isToday(r.created_at)).forEach((r) => {
-    counts.set(r.ip_address, (counts.get(r.ip_address) ?? 0) + 1);
-  });
+  logs
+    .filter((r) => isToday(r.created_at))
+    .forEach((r) => {
+      counts.set(r.ip_address, (counts.get(r.ip_address) ?? 0) + 1);
+    });
   const s = new Set<string>();
-  counts.forEach((v, k) => { if (v > 2) s.add(k); });
+  counts.forEach((v, k) => {
+    if (v > 2) s.add(k);
+  });
   return s;
 }
 
@@ -84,13 +96,17 @@ function fmtDevice(device: string | null): { icon: string; label: string } {
 }
 
 export default async function AnalyticsDashboard() {
-  const logs = await getLogs();
-  const suspIps = getSuspiciousIps(logs);
+  const [logs, totalCounts] = await Promise.all([
+    getLogs(),
+    getVisitorTotalCounts(),
+  ]);
 
+  const suspIps = getSuspiciousIps(logs);
   const todayLogs = logs.filter((r) => isToday(r.created_at));
   const totalToday = todayLogs.length;
   const paidToday = todayLogs.filter((r) => r.source === "mumooman").length;
   const clickedToday = todayLogs.filter((r) => r.clicked_action).length;
+  const gclidToday = todayLogs.filter((r) => r.gclid).length;
 
   return (
     <div dir="rtl" className="p-4 md:p-8">
@@ -99,25 +115,33 @@ export default async function AnalyticsDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">📊 דשבורד ניטור</h1>
+            <h1 className="text-2xl font-bold text-slate-900">
+              📊 דשבורד ניטור Anti-Fraud
+            </h1>
             <p className="text-slate-500 text-sm mt-0.5">
               ח.י שירותי חשמל —{" "}
-              {new Date().toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}
+              {new Date().toLocaleDateString("he-IL", {
+                timeZone: "Asia/Jerusalem",
+              })}
             </p>
           </div>
-          <a
-            href="/admin/auth/signout"
-            className="text-sm bg-white border border-gray-200 hover:bg-gray-50 text-slate-700 px-4 py-2 rounded-lg shadow-sm transition"
-          >
-            התנתק
-          </a>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ExportCsvButton rows={logs} totalCounts={totalCounts} />
+            <a
+              href="/admin/auth/signout"
+              className="text-sm bg-white border border-gray-200 hover:bg-gray-50 text-slate-700 px-4 py-2 rounded-lg shadow-sm transition"
+            >
+              התנתק
+            </a>
+          </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <StatCard label="כניסות היום" value={totalToday} color="blue" />
           <StatCard label="ממומן היום" value={paidToday} color="yellow" />
           <StatCard label="יצרו קשר" value={clickedToday} color="green" />
+          <StatCard label="GCLIDs היום" value={gclidToday} color="purple" />
           <StatCard label="חשודים" value={suspIps.size} color="red" />
         </div>
 
@@ -133,6 +157,7 @@ export default async function AnalyticsDashboard() {
                   <th className="px-4 py-3 text-right font-medium">עיר</th>
                   <th className="px-4 py-3 text-right font-medium">עמוד</th>
                   <th className="px-4 py-3 text-right font-medium">מקור</th>
+                  <th className="px-4 py-3 text-right font-medium">GCLID</th>
                   <th className="px-4 py-3 text-center font-medium">שהייה</th>
                   <th className="px-4 py-3 text-center font-medium">יצר קשר</th>
                   <th className="px-4 py-3 text-center font-medium">סטטוס</th>
@@ -189,6 +214,18 @@ export default async function AnalyticsDashboard() {
                           </span>
                         )}
                       </td>
+                      <td className="px-4 py-3 text-xs max-w-[120px]">
+                        {row.gclid ? (
+                          <span
+                            className="block font-mono text-violet-700 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded truncate cursor-default"
+                            title={row.gclid}
+                          >
+                            🎟️ {row.gclid.slice(0, 14)}…
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-slate-600 text-xs text-center whitespace-nowrap">
                         {fmtDuration(row.duration)}
                       </td>
@@ -211,7 +248,7 @@ export default async function AnalyticsDashboard() {
                 })}
                 {logs.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-16 text-center text-slate-400">
+                    <td colSpan={10} className="px-4 py-16 text-center text-slate-400">
                       אין נתונים עדיין
                     </td>
                   </tr>
@@ -226,23 +263,37 @@ export default async function AnalyticsDashboard() {
   );
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+function StatCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color: string;
+}) {
   const colors: Record<string, string> = {
     blue: "bg-white border-blue-100 text-blue-700",
     yellow: "bg-white border-amber-100 text-amber-700",
     green: "bg-white border-emerald-100 text-emerald-700",
+    purple: "bg-white border-violet-100 text-violet-700",
     red: "bg-white border-red-100 text-red-700",
   };
   const labelColors: Record<string, string> = {
     blue: "text-blue-500",
     yellow: "text-amber-500",
     green: "text-emerald-500",
+    purple: "text-violet-500",
     red: "text-red-500",
   };
   return (
-    <div className={`rounded-xl border shadow-sm p-5 flex flex-col gap-1 ${colors[color]}`}>
+    <div
+      className={`rounded-xl border shadow-sm p-5 flex flex-col gap-1 ${colors[color]}`}
+    >
       <span className="text-3xl font-bold">{value}</span>
-      <span className={`text-xs font-medium ${labelColors[color]}`}>{label}</span>
+      <span className={`text-xs font-medium ${labelColors[color]}`}>
+        {label}
+      </span>
     </div>
   );
 }

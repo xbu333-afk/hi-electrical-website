@@ -2,6 +2,14 @@ import { getSupabaseAdmin } from "./supabase";
 
 export type VisitorDevice = "mobile" | "desktop";
 
+export interface VisitorHistory {
+  today_count: number;
+  week_count: number;
+  total_count: number;
+}
+
+const ISRAEL_TZ = "Asia/Jerusalem";
+
 export interface VisitorLogEntry {
   visitor_id: string;
   ip_address: string;
@@ -9,30 +17,132 @@ export interface VisitorLogEntry {
   source: "mumooman" | "organic";
   device?: VisitorDevice;
   city?: string | null;
+  gclid?: string | null;
+  user_agent?: string | null;
   duration?: number;
   clicked_action?: boolean;
 }
 
-export async function insertVisitorLog(
+function isSchemaMismatchError(error: {
+  code?: string;
+  message?: string;
+}): boolean {
+  const msg = error.message ?? "";
+  return (
+    error.code === "PGRST204" ||
+    /column.*does not exist/i.test(msg) ||
+    /Could not find the .* column/i.test(msg)
+  );
+}
+
+export function logSupabaseError(context: string, error: unknown): void {
+  if (error && typeof error === "object" && "message" in error) {
+    const e = error as {
+      message?: string;
+      code?: string;
+      details?: string;
+      hint?: string;
+    };
+    console.error(`[visitor_logs] ${context}:`, {
+      message: e.message,
+      code: e.code,
+      details: e.details,
+      hint: e.hint,
+    });
+    return;
+  }
+  console.error(`[visitor_logs] ${context}:`, error);
+}
+
+/** Midnight in Israel — correct for DST on Vercel (UTC servers). */
+export function getIsraelStartOfDay(ref = new Date()): Date {
+  const jerusalem = new Date(
+    ref.toLocaleString("en-US", { timeZone: ISRAEL_TZ })
+  );
+  const msFromMidnight =
+    jerusalem.getHours() * 3_600_000 +
+    jerusalem.getMinutes() * 60_000 +
+    jerusalem.getSeconds() * 1_000 +
+    jerusalem.getMilliseconds();
+  return new Date(ref.getTime() - msFromMidnight);
+}
+
+async function patchOptionalFields(
+  id: number,
   entry: VisitorLogEntry
-): Promise<number | undefined> {
-  const { data, error } = await getSupabaseAdmin()
+): Promise<void> {
+  const optional: Record<string, unknown> = {
+    pages_visited: [entry.page_path],
+  };
+  if (entry.device) optional.device = entry.device;
+  if (entry.city) optional.city = entry.city;
+  if (entry.gclid) optional.gclid = entry.gclid;
+  if (entry.user_agent) optional.user_agent = entry.user_agent;
+
+  const { error } = await getSupabaseAdmin()
     .from("visitor_logs")
-    .insert({
-      visitor_id: entry.visitor_id,
-      ip_address: entry.ip_address,
-      page_path: entry.page_path,
-      pages_visited: [entry.page_path],
-      source: entry.source,
-      device: entry.device ?? null,
-      city: entry.city ?? null,
-      clicked_action: entry.clicked_action ?? false,
-    })
+    .update({ ...optional, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error && !isSchemaMismatchError(error)) {
+    logSupabaseError("optional fields update", error);
+  }
+}
+
+export async function insertVisitorLog(entry: VisitorLogEntry): Promise<number> {
+  const admin = getSupabaseAdmin();
+
+  const baseRow = {
+    visitor_id: entry.visitor_id,
+    ip_address: entry.ip_address,
+    page_path: entry.page_path,
+    source: entry.source,
+    clicked_action: entry.clicked_action ?? false,
+  };
+
+  const fullRow = {
+    ...baseRow,
+    pages_visited: [entry.page_path],
+    device: entry.device ?? null,
+    city: entry.city ?? null,
+    gclid: entry.gclid ?? null,
+    user_agent: entry.user_agent ?? null,
+  };
+
+  let { data, error } = await admin
+    .from("visitor_logs")
+    .insert(fullRow)
     .select("id")
     .single();
 
-  if (error) console.error("[visitor_logs] insert error:", error.message);
-  return data?.id as number | undefined;
+  if (error && isSchemaMismatchError(error)) {
+    console.warn(
+      "[visitor_logs] extended columns missing — retrying base insert:",
+      error.message
+    );
+    ({ data, error } = await admin
+      .from("visitor_logs")
+      .insert(baseRow)
+      .select("id")
+      .single());
+
+    if (!error && data?.id) {
+      await patchOptionalFields(data.id as number, entry);
+    }
+  }
+
+  if (error) {
+    logSupabaseError("insert failed", error);
+    throw error;
+  }
+
+  if (!data?.id) {
+    const err = new Error("insert succeeded but no id returned");
+    logSupabaseError("insert failed", err);
+    throw err;
+  }
+
+  return data.id as number;
 }
 
 export async function updateVisitorLog(
@@ -60,7 +170,6 @@ export async function appendPageToLog(
 
   if (fetchError) {
     console.error("[visitor_logs] append fetch error:", fetchError.message);
-    // Fallback: update page_path only
     await getSupabaseAdmin()
       .from("visitor_logs")
       .update({ page_path: pagePath, updated_at: new Date().toISOString() })
@@ -71,7 +180,7 @@ export async function appendPageToLog(
   const raw = data?.pages_visited;
   const pages: string[] = Array.isArray(raw)
     ? (raw as string[])
-  : data?.page_path
+    : data?.page_path
       ? [data.page_path as string]
       : [];
 
@@ -90,16 +199,63 @@ export async function appendPageToLog(
   if (error) console.error("[visitor_logs] append error:", error.message);
 }
 
-export async function countTodayVisitsByIp(ip: string): Promise<number> {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+/**
+ * Returns today/week/total visit counts for a specific visitor_id.
+ * Called after the current visit is already inserted, so today_count ≥ 1.
+ */
+export async function getVisitorHistory(
+  visitorId: string
+): Promise<VisitorHistory> {
+  const admin = getSupabaseAdmin();
+  const startOfToday = getIsraelStartOfDay();
+  const startOfWeek = new Date(Date.now() - 7 * 24 * 3_600_000);
 
-  const { count, error } = await getSupabaseAdmin()
+  const [todayRes, weekRes, totalRes] = await Promise.all([
+    admin
+      .from("visitor_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("visitor_id", visitorId)
+      .gte("created_at", startOfToday.toISOString()),
+    admin
+      .from("visitor_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("visitor_id", visitorId)
+      .gte("created_at", startOfWeek.toISOString()),
+    admin
+      .from("visitor_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("visitor_id", visitorId),
+  ]);
+
+  if (todayRes.error) logSupabaseError("getVisitorHistory today", todayRes.error);
+  if (weekRes.error) logSupabaseError("getVisitorHistory week", weekRes.error);
+  if (totalRes.error) logSupabaseError("getVisitorHistory total", totalRes.error);
+
+  return {
+    today_count: Math.max(todayRes.count ?? 0, 1),
+    week_count: Math.max(weekRes.count ?? 0, 1),
+    total_count: Math.max(totalRes.count ?? 0, 1),
+  };
+}
+
+/**
+ * Returns a map of visitor_id → total lifetime visit count.
+ * Used by the admin dashboard CSV export to populate the "Total Lifetime Visits" column.
+ */
+export async function getVisitorTotalCounts(): Promise<Record<string, number>> {
+  const { data, error } = await getSupabaseAdmin()
     .from("visitor_logs")
-    .select("id", { count: "exact", head: true })
-    .eq("ip_address", ip)
-    .gte("created_at", startOfDay.toISOString());
+    .select("visitor_id");
 
-  if (error) console.error("[visitor_logs] count error:", error.message);
-  return count ?? 0;
+  if (error) {
+    logSupabaseError("getVisitorTotalCounts", error);
+    return {};
+  }
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const vid = row.visitor_id as string;
+    if (vid) counts[vid] = (counts[vid] ?? 0) + 1;
+  }
+  return counts;
 }

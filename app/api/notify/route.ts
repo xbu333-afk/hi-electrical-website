@@ -3,7 +3,7 @@ import {
   insertVisitorLog,
   updateVisitorLog,
   appendPageToLog,
-  countTodayVisitsByIp,
+  getVisitorHistory,
   type VisitorDevice,
 } from "@/lib/visitor-logs";
 import {
@@ -20,9 +20,15 @@ type NotifyPayload =
       visitor_id: string;
       page_path: string;
       source: "mumooman" | "organic";
+      gclid?: string | null;
     }
   | { event: "navigate"; log_id: number; page_path: string }
-  | { event: "exit"; log_id?: number; duration?: number; clicked_action?: boolean }
+  | {
+      event: "exit";
+      log_id?: number;
+      duration?: number;
+      clicked_action?: boolean;
+    }
   | {
       event: "click";
       page_path: string;
@@ -48,8 +54,13 @@ function getDevice(req: NextRequest): VisitorDevice {
 }
 
 function getCity(req: NextRequest): string | null {
-  const city = req.headers.get("x-vercel-ip-city")?.trim();
-  return city || null;
+  const raw = req.headers.get("x-vercel-ip-city")?.trim();
+  if (!raw) return null;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -98,6 +109,8 @@ export async function POST(req: NextRequest) {
     // ── ENTER — new row + single Pushover ───────────────────────────────────
     const device = getDevice(req);
     const city = getCity(req);
+    const userAgent = req.headers.get("user-agent") ?? null;
+    const gclid = body.gclid ?? null;
 
     let log_id: number | undefined;
     try {
@@ -108,17 +121,45 @@ export async function POST(req: NextRequest) {
         source: body.source,
         device,
         city,
+        gclid,
+        user_agent: userAgent,
         clicked_action: false,
       });
     } catch (e) {
-      console.error("[notify:enter DB]", e);
+      console.error("[notify:enter DB] insert failed:", {
+        message: e instanceof Error ? e.message : String(e),
+        code:
+          e && typeof e === "object" && "code" in e
+            ? (e as { code?: string }).code
+            : undefined,
+        details:
+          e && typeof e === "object" && "details" in e
+            ? (e as { details?: string }).details
+            : undefined,
+        hint:
+          e && typeof e === "object" && "hint" in e
+            ? (e as { hint?: string }).hint
+            : undefined,
+        payload: {
+          visitor_id: body.visitor_id,
+          page_path: body.page_path,
+          source: body.source,
+          ip,
+          device,
+          city,
+        },
+      });
     }
 
-    let todayCount = 1;
+    // Visitor history — based on visitor_id, includes the row just inserted
+    let history = { today_count: 1, week_count: 1, total_count: 1 };
     try {
-      todayCount = await countTodayVisitsByIp(ip);
-    } catch {
-      // non-fatal
+      history = await getVisitorHistory(body.visitor_id);
+    } catch (e) {
+      console.error("[notify:enter] getVisitorHistory failed:", {
+        message: e instanceof Error ? e.message : String(e),
+        visitor_id: body.visitor_id,
+      });
     }
 
     const isEmergencyPage = EMERGENCY_PATHS.some((p) =>
@@ -130,9 +171,10 @@ export async function POST(req: NextRequest) {
         source: body.source,
         pagePath: body.page_path,
         ip,
-        todayCount,
+        history,
         device,
         city,
+        gclid,
         isEmergencyPage,
       })
     ).catch((e) => console.error("[notify:enter pushover]", e));

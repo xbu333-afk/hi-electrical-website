@@ -116,6 +116,8 @@ export default function VisitorTracker() {
       sessionStartRef.current = Date.now();
       prevPathRef.current = pathname;
 
+      const gclid = searchParams.get("gclid") ?? null;
+
       fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -124,6 +126,7 @@ export default function VisitorTracker() {
           visitor_id: visitorId,
           page_path: pathname,
           source,
+          gclid,
         }),
       })
         .then((r) => r.json())
