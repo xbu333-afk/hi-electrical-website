@@ -43,7 +43,7 @@ export interface VisitorRow {
 
 // ── Date range helpers ────────────────────────────────────────────────────────
 type DatePreset = "today" | "yesterday" | "week" | "month" | "custom";
-type SourceFilter = "all" | "mumooman" | "organic";
+type SourceFilter = "all" | "mumooman" | "organic" | "fraud";
 
 const DATE_PRESETS: { id: DatePreset; label: string }[] = [
   { id: "today", label: "היום" },
@@ -183,19 +183,6 @@ export function DashboardClient({
     [allRows, rangeStart, rangeEnd]
   );
 
-  // Date + source filtered — used for stats, table, and CSV
-  const displayRows = useMemo(
-    () =>
-      sourceFilter === "all"
-        ? filteredRows
-        : filteredRows.filter((r) =>
-            sourceFilter === "mumooman"
-              ? r.source === "mumooman"
-              : r.source !== "mumooman"
-          ),
-    [filteredRows, sourceFilter]
-  );
-
   const fraudGroups = useMemo(
     () => detectSuspiciousGclidIps(filteredRows),
     [filteredRows]
@@ -228,6 +215,25 @@ export function DashboardClient({
     () => new Set(desktopFraudRows.map((r) => r.id)),
     [desktopFraudRows]
   );
+
+  // Date + source filtered — used for stats, table, and CSV
+  const displayRows = useMemo(() => {
+    if (sourceFilter === "fraud") {
+      return filteredRows.filter(
+        (r) =>
+          fraudIps.has(r.ip_address) ||
+          fraudVisitorIds.has(r.visitor_id) ||
+          geoFraudIds.has(r.id) ||
+          desktopFraudIds.has(r.id)
+      );
+    }
+    if (sourceFilter === "all") return filteredRows;
+    return filteredRows.filter((r) =>
+      sourceFilter === "mumooman"
+        ? r.source === "mumooman"
+        : r.source !== "mumooman"
+    );
+  }, [filteredRows, sourceFilter, fraudIps, fraudVisitorIds, geoFraudIds, desktopFraudIds]);
 
   // Stats (based on displayRows — respects both date + source filters)
   const paidCount = displayRows.filter((r) => r.source === "mumooman").length;
@@ -375,6 +381,16 @@ export function DashboardClient({
                 {s.label}
               </button>
             ))}
+            <button
+              onClick={() => setSourceFilter("fraud")}
+              className={`text-sm px-3 py-1.5 rounded-lg border transition whitespace-nowrap ${
+                sourceFilter === "fraud"
+                  ? "bg-red-700 text-white border-red-700 font-medium"
+                  : "bg-white text-red-700 border-red-200 hover:bg-red-50"
+              }`}
+            >
+              🚨 הונאות{suspiciousCount > 0 ? ` (${suspiciousCount})` : ""}
+            </button>
           </div>
 
           {/* Divider */}
