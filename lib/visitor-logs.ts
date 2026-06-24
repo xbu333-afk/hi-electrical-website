@@ -239,6 +239,31 @@ export async function getVisitorHistory(
 }
 
 /**
+ * Count visitor_logs rows for an IP within a sliding time window.
+ * Used for enter Pushover cooldown (bypassed when gclid is present).
+ */
+export async function countRecentVisitsByIp(
+  ip: string,
+  windowMs: number
+): Promise<number> {
+  if (!ip || ip === "unknown") return 0;
+
+  const since = new Date(Date.now() - windowMs).toISOString();
+  const { count, error } = await getSupabaseAdmin()
+    .from("visitor_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("ip_address", ip)
+    .gte("created_at", since);
+
+  if (error) {
+    logSupabaseError("countRecentVisitsByIp", error);
+    return 0; // fail open — do not suppress notifications on query errors
+  }
+
+  return count ?? 0;
+}
+
+/**
  * Returns a map of visitor_id → total lifetime visit count.
  * Used by the admin dashboard CSV export to populate the "Total Lifetime Visits" column.
  */

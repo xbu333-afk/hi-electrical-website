@@ -4,6 +4,7 @@ import {
   updateVisitorLog,
   appendPageToLog,
   getVisitorHistory,
+  countRecentVisitsByIp,
   type VisitorDevice,
 } from "@/lib/visitor-logs";
 import {
@@ -12,7 +13,13 @@ import {
   buildClickNotification,
 } from "@/lib/pushover";
 
+/** Keep the handler alive until Pushover/Supabase finish (Vercel serverless). */
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
+
 const EMERGENCY_PATHS = ["/emergency", "/fast-service", "/welcome"];
+/** Organic re-enters from the same IP within this window skip Pushover (gclid bypasses). */
+const IP_PUSHOVER_COOLDOWN_MS = 5 * 60 * 1000;
 
 type NotifyPayload =
   | {
@@ -34,6 +41,7 @@ type NotifyPayload =
       page_path: string;
       source: "mumooman" | "organic";
       log_id?: number;
+      gclid?: string | null;
     };
 
 function getIp(req: NextRequest): string {
@@ -63,6 +71,16 @@ function getCity(req: NextRequest): string | null {
   }
 }
 
+/** Paid Google Ads clicks (gclid) always notify; organic repeats from same IP are cooled down. */
+function shouldSkipEnterPushover(
+  recentIpCount: number,
+  gclid: string | null
+): boolean {
+  if (gclid) return false;
+  // recentIpCount includes the row we just inserted; >1 means another visit in the window
+  return recentIpCount > 1;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body: NotifyPayload = await req.json();
@@ -71,10 +89,14 @@ export async function POST(req: NextRequest) {
     // ── EXIT ────────────────────────────────────────────────────────────────
     if (body.event === "exit") {
       if (body.log_id) {
-        updateVisitorLog(body.log_id, {
-          duration: body.duration,
-          clicked_action: body.clicked_action,
-        }).catch((e) => console.error("[notify:exit]", e));
+        try {
+          await updateVisitorLog(body.log_id, {
+            duration: body.duration,
+            clicked_action: body.clicked_action,
+          });
+        } catch (e) {
+          console.error("[notify:exit]", e);
+        }
       }
       return Response.json({ ok: true });
     }
@@ -82,36 +104,47 @@ export async function POST(req: NextRequest) {
     // ── NAVIGATE — DB only, no Pushover ─────────────────────────────────────
     if (body.event === "navigate") {
       if (body.log_id) {
-        appendPageToLog(body.log_id, body.page_path).catch((e) =>
-          console.error("[notify:navigate]", e)
-        );
+        try {
+          await appendPageToLog(body.log_id, body.page_path);
+        } catch (e) {
+          console.error("[notify:navigate]", e);
+        }
       }
       return Response.json({ ok: true });
     }
 
-    // ── CLICK — DB update + Pushover ────────────────────────────────────────
+    // ── CLICK — DB update + Pushover (always awaited) ───────────────────────
     if (body.event === "click") {
       if (body.log_id) {
-        updateVisitorLog(body.log_id, { clicked_action: true }).catch((e) =>
-          console.error("[notify:click]", e)
-        );
+        try {
+          await updateVisitorLog(body.log_id, { clicked_action: true });
+        } catch (e) {
+          console.error("[notify:click DB]", e);
+        }
       }
-      sendPushover(
-        buildClickNotification({
-          pagePath: body.page_path,
-          ip,
-          source: body.source,
-        })
-      ).catch((e) => console.error("[notify:click pushover]", e));
+
+      try {
+        await sendPushover(
+          buildClickNotification({
+            pagePath: body.page_path,
+            ip,
+            source: body.source,
+          })
+        );
+      } catch (e) {
+        console.error("[notify:click pushover]", e);
+      }
+
       return Response.json({ ok: true });
     }
 
-    // ── ENTER — new row + single Pushover ───────────────────────────────────
+    // ── ENTER — DB insert + single Pushover ─────────────────────────────────
     const device = getDevice(req);
     const city = getCity(req);
     const userAgent = req.headers.get("user-agent") ?? null;
     const gclid = body.gclid ?? null;
 
+    // 1) Supabase insert — failures must not block Pushover
     let log_id: number | undefined;
     try {
       log_id = await insertVisitorLog({
@@ -147,11 +180,12 @@ export async function POST(req: NextRequest) {
           ip,
           device,
           city,
+          gclid,
         },
       });
     }
 
-    // Visitor history — based on visitor_id, includes the row just inserted
+    // 2) Visitor history — failures must not block Pushover
     let history = { today_count: 1, week_count: 1, total_count: 1 };
     try {
       history = await getVisitorHistory(body.visitor_id);
@@ -166,18 +200,39 @@ export async function POST(req: NextRequest) {
       body.page_path.startsWith(p)
     );
 
-    sendPushover(
-      buildVisitorNotification({
-        source: body.source,
-        pagePath: body.page_path,
+    // 3) IP cooldown — gclid (paid Ads) always bypasses
+    let recentIpCount = 0;
+    try {
+      recentIpCount = await countRecentVisitsByIp(ip, IP_PUSHOVER_COOLDOWN_MS);
+    } catch (e) {
+      console.error("[notify:enter] countRecentVisitsByIp failed:", e);
+    }
+
+    const skipPushover = shouldSkipEnterPushover(recentIpCount, gclid);
+
+    if (skipPushover) {
+      console.info("[notify:enter] Pushover skipped (IP cooldown, no gclid):", {
         ip,
-        history,
-        device,
-        city,
-        gclid,
-        isEmergencyPage,
-      })
-    ).catch((e) => console.error("[notify:enter pushover]", e));
+        recentIpCount,
+      });
+    } else {
+      try {
+        await sendPushover(
+          buildVisitorNotification({
+            source: body.source,
+            pagePath: body.page_path,
+            ip,
+            history,
+            device,
+            city,
+            gclid,
+            isEmergencyPage,
+          })
+        );
+      } catch (e) {
+        console.error("[notify:enter pushover]", e);
+      }
+    }
 
     return Response.json({ ok: true, log_id });
   } catch (err) {
