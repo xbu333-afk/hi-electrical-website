@@ -126,7 +126,7 @@ function exportGoogleAdsReport(
         r.vt_device,
         r.visitor_id,
         r.browser_language,
-        "Multiple GCLIDs from same IP"
+        `Click Fraud — Repeated paid clicks from a single IP address. This IP generated ${g.gclid_visit_count} separate ad clicks (unique GCLIDs) within the reporting period, each resulting in a charge. Behavior is consistent with intentional or automated click fraud.`
       );
     }
   }
@@ -145,7 +145,7 @@ function exportGoogleAdsReport(
         r.vt_device,
         r.visitor_id,
         r.browser_language,
-        `IP Rotation (${g.unique_ip_count} IPs, Cookie: ${g.visitor_id.slice(0, 8)}…)`
+        `Click Fraud — IP rotation detected. The same browser session (cookie/visitor ID: ${g.visitor_id.slice(0, 8)}…) was recorded across ${g.unique_ip_count} distinct IP addresses, indicating VPN or cellular IP cycling to bypass duplicate-click filters. Each IP produced a separately charged click.`
       );
     }
   }
@@ -164,7 +164,7 @@ function exportGoogleAdsReport(
       r.vt_device,
       r.visitor_id,
       r.browser_language,
-      `Geographic Targeting Violation — Campaign targets Israel (IL) only; paid click from ${r.country} (${countryName}). GCLID charged for out-of-target impression.`
+      `Geographic Targeting Violation — Campaign targets Israel (IL) only; paid click originated from ${r.country} (${countryName}). The associated GCLID was charged despite the impression being delivered outside the campaign's defined geographic scope.`
     );
   }
 
