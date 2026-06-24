@@ -90,9 +90,7 @@ export function buildMessageLines(opts: {
     `השבוע: ${opts.history.week_count} | ` +
     `סה"כ: ${opts.history.total_count}`;
   const gclidLine = opts.gclid ? `🎟️ מזהה גוגל (GCLID): ${opts.gclid}` : null;
-  const uaLine = opts.gclid
-    ? `🧭 מכשיר/דפדפן: ${summarizeUserAgent(opts.userAgent)}`
-    : null;
+  const uaLine = `🧭 מכשיר/דפדפן: ${summarizeUserAgent(opts.userAgent)}`;
   const referrerLine = opts.gclid
     ? `🔗 Referrer: ${opts.referrer?.trim() || "(ישיר / ללא referrer)"}`
     : null;
