@@ -162,7 +162,7 @@ export function buildVisitorNotification(opts: {
     match_type,
   } = opts;
   const isPaid = source === "mumooman";
-  const isSuspect = history.today_count > 2;
+  const isSuspect = isPaid && history.today_count > 2;
 
   const base = {
     pagePath,
