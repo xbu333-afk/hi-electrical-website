@@ -1,6 +1,10 @@
 import { formatPageLabel } from "./page-labels";
 import type { VisitorHistory } from "./visitor-logs";
 import { summarizeUserAgent } from "./user-agent";
+import {
+  formatAdsNetwork,
+  formatMatchType,
+} from "./valuetrack";
 
 export type PushoverPriority = -2 | -1 | 0 | 1 | 2;
 
@@ -67,6 +71,9 @@ export function buildMessageLines(opts: {
   gclid?: string | null;
   userAgent?: string | null;
   referrer?: string | null;
+  keyword?: string | null;
+  network?: string | null;
+  match_type?: string | null;
   extraLines?: (string | null | undefined)[];
 }): string {
   const pageLabel = formatPageLabel(opts.pagePath);
@@ -75,6 +82,9 @@ export function buildMessageLines(opts: {
   const deviceLine =
     opts.device === "mobile" ? "📱 מכשיר: נייד" : "💻 מכשיר: מחשב";
   const cityLine = opts.city ? `📍 עיר (משוערת): ${opts.city}` : null;
+  const keywordLine = opts.keyword?.trim()
+    ? `🎯 חיפש: ${opts.keyword} | רשת: ${formatAdsNetwork(opts.network ?? null)} | התאמה: ${formatMatchType(opts.match_type ?? null)}`
+    : null;
   const historyLine =
     `📊 היסטוריית מבקר: היום: ${opts.history.today_count} | ` +
     `השבוע: ${opts.history.week_count} | ` +
@@ -90,6 +100,7 @@ export function buildMessageLines(opts: {
   return lines(
     `עמוד: ${pageLabel}`,
     `מקור: ${sourceLabel}`,
+    keywordLine,
     `🌐 IP: ${opts.ip}`,
     deviceLine,
     cityLine,
@@ -131,6 +142,9 @@ export function buildVisitorNotification(opts: {
   isEmergencyPage: boolean;
   userAgent?: string | null;
   referrer?: string | null;
+  keyword?: string | null;
+  network?: string | null;
+  match_type?: string | null;
 }) {
   const {
     source,
@@ -143,6 +157,9 @@ export function buildVisitorNotification(opts: {
     isEmergencyPage,
     userAgent,
     referrer,
+    keyword,
+    network,
+    match_type,
   } = opts;
   const isPaid = source === "mumooman";
   const isSuspect = history.today_count > 2;
@@ -157,6 +174,9 @@ export function buildVisitorNotification(opts: {
     gclid,
     userAgent,
     referrer,
+    keyword,
+    network,
+    match_type,
   };
 
   if (isEmergencyPage) {

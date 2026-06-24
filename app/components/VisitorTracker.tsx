@@ -2,20 +2,53 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { extractValueTrackParams } from "@/lib/valuetrack";
 
 const VISITOR_ID_KEY = "hi_elec_vid";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year in seconds
+
+function readCookie(name: string): string | null {
+  try {
+    const match = document.cookie
+      .split(";")
+      .map((c) => c.trim())
+      .find((c) => c.startsWith(name + "="));
+    return match ? decodeURIComponent(match.slice(name.length + 1)) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCookie(name: string, value: string): void {
+  try {
+    document.cookie = `${name}=${encodeURIComponent(value)}; max-age=${COOKIE_MAX_AGE}; path=/; SameSite=Lax`;
+  } catch {
+    // ignore — cookie write failed (e.g. iframe restrictions)
+  }
+}
 
 function getOrCreateVisitorId(): string {
-  try {
-    let id = localStorage.getItem(VISITOR_ID_KEY);
-    if (!id) {
-      id = crypto.randomUUID();
-      localStorage.setItem(VISITOR_ID_KEY, id);
-    }
-    return id;
-  } catch {
-    return crypto.randomUUID();
+  // Cookie is the primary persistent store (survives mobile browser eviction of localStorage)
+  const fromCookie = readCookie(VISITOR_ID_KEY);
+  if (fromCookie) {
+    // Refresh cookie TTL on every visit
+    writeCookie(VISITOR_ID_KEY, fromCookie);
+    try { localStorage.setItem(VISITOR_ID_KEY, fromCookie); } catch { /* ignore */ }
+    return fromCookie;
   }
+  // Fallback: localStorage (may have been set before cookie logic was added)
+  try {
+    const fromStorage = localStorage.getItem(VISITOR_ID_KEY);
+    if (fromStorage) {
+      writeCookie(VISITOR_ID_KEY, fromStorage);
+      return fromStorage;
+    }
+  } catch { /* ignore */ }
+  // Generate fresh ID
+  const id = crypto.randomUUID();
+  writeCookie(VISITOR_ID_KEY, id);
+  try { localStorage.setItem(VISITOR_ID_KEY, id); } catch { /* ignore */ }
+  return id;
 }
 
 function detectSource(searchParams: URLSearchParams): "mumooman" | "organic" {
@@ -117,6 +150,9 @@ export default function VisitorTracker() {
       prevPathRef.current = pathname;
 
       const gclid = searchParams.get("gclid") ?? null;
+      const valueTrack = extractValueTrackParams(searchParams);
+      const browserLanguage =
+        typeof navigator !== "undefined" ? navigator.language : null;
 
       fetch("/api/notify", {
         method: "POST",
@@ -127,6 +163,8 @@ export default function VisitorTracker() {
           page_path: pathname,
           source,
           gclid,
+          browser_language: browserLanguage,
+          ...valueTrack,
         }),
       })
         .then((r) => r.json())

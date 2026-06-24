@@ -23,3 +23,21 @@ export function summarizeUserAgent(ua: string | null | undefined): string {
 
   return `${form} · ${os} · ${browser}`;
 }
+
+const MOBILE_UA =
+  /Mobile|Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i;
+
+/** Icon + label for dashboard device column (uses stored device or infers from UA). */
+export function getDeviceIcon(
+  device: string | null | undefined,
+  userAgent?: string | null
+): { icon: string; label: string } {
+  if (device === "mobile") return { icon: "📱", label: "נייד" };
+  if (device === "desktop") return { icon: "💻", label: "מחשב" };
+  if (userAgent) {
+    return MOBILE_UA.test(userAgent)
+      ? { icon: "📱", label: "נייד" }
+      : { icon: "💻", label: "מחשב" };
+  }
+  return { icon: "—", label: "" };
+}

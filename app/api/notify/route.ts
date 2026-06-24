@@ -14,6 +14,10 @@ import {
   buildVisitorNotification,
   buildClickNotification,
 } from "@/lib/pushover";
+import {
+  normalizeValueTrackPayload,
+  type ValueTrackParams,
+} from "@/lib/valuetrack";
 
 /** Keep the handler alive until Pushover/Supabase finish (Vercel serverless). */
 export const dynamic = "force-dynamic";
@@ -23,14 +27,17 @@ const EMERGENCY_PATHS = ["/emergency", "/fast-service", "/welcome"];
 /** Organic re-enters from the same IP within this window skip Pushover (gclid bypasses). */
 const IP_PUSHOVER_COOLDOWN_MS = 5 * 60 * 1000;
 
+type EnterPayload = {
+  event: "enter";
+  visitor_id: string;
+  page_path: string;
+  source: "mumooman" | "organic";
+  gclid?: string | null;
+  browser_language?: string | null;
+} & Partial<ValueTrackParams>;
+
 type NotifyPayload =
-  | {
-      event: "enter";
-      visitor_id: string;
-      page_path: string;
-      source: "mumooman" | "organic";
-      gclid?: string | null;
-    }
+  | EnterPayload
   | { event: "navigate"; log_id: number; page_path: string }
   | {
       event: "exit";
@@ -156,6 +163,8 @@ export async function POST(req: NextRequest) {
     const referrer =
       req.headers.get("referer") ?? req.headers.get("referrer") ?? null;
     const gclid = body.gclid ?? null;
+    const browserLanguage = body.browser_language?.trim() || null;
+    const valueTrack = normalizeValueTrackPayload(body);
 
     // 1) Supabase insert — failures must not block Pushover
     let log_id: number | undefined;
@@ -170,6 +179,8 @@ export async function POST(req: NextRequest) {
         gclid,
         user_agent: userAgent,
         referrer,
+        browser_language: browserLanguage,
+        ...valueTrack,
         clicked_action: false,
       });
     } catch (e) {
@@ -247,6 +258,9 @@ export async function POST(req: NextRequest) {
             userAgent,
             referrer,
             isEmergencyPage,
+            keyword: valueTrack.keyword,
+            network: valueTrack.network,
+            match_type: valueTrack.match_type,
           })
         );
       } catch (e) {

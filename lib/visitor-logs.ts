@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "./supabase";
+import type { ValueTrackParams } from "./valuetrack";
 
 export type VisitorDevice = "mobile" | "desktop";
 
@@ -10,7 +11,7 @@ export interface VisitorHistory {
 
 const ISRAEL_TZ = "Asia/Jerusalem";
 
-export interface VisitorLogEntry {
+export interface VisitorLogEntry extends ValueTrackParams {
   visitor_id: string;
   ip_address: string;
   page_path: string;
@@ -20,6 +21,7 @@ export interface VisitorLogEntry {
   gclid?: string | null;
   user_agent?: string | null;
   referrer?: string | null;
+  browser_language?: string | null;
   duration?: number;
   clicked_action?: boolean;
 }
@@ -78,6 +80,15 @@ async function patchOptionalFields(
   if (entry.gclid) optional.gclid = entry.gclid;
   if (entry.user_agent) optional.user_agent = entry.user_agent;
   if (entry.referrer) optional.referrer = entry.referrer;
+  if (entry.browser_language) optional.browser_language = entry.browser_language;
+  if (entry.keyword) optional.keyword = entry.keyword;
+  if (entry.campaign_id) optional.campaign_id = entry.campaign_id;
+  if (entry.adgroup_id) optional.adgroup_id = entry.adgroup_id;
+  if (entry.creative) optional.creative = entry.creative;
+  if (entry.vt_device) optional.vt_device = entry.vt_device;
+  if (entry.loc_physical_ms) optional.loc_physical_ms = entry.loc_physical_ms;
+  if (entry.network) optional.network = entry.network;
+  if (entry.match_type) optional.match_type = entry.match_type;
 
   const { error } = await getSupabaseAdmin()
     .from("visitor_logs")
@@ -108,6 +119,15 @@ export async function insertVisitorLog(entry: VisitorLogEntry): Promise<number> 
     gclid: entry.gclid ?? null,
     user_agent: entry.user_agent ?? null,
     referrer: entry.referrer ?? null,
+    browser_language: entry.browser_language ?? null,
+    keyword: entry.keyword ?? null,
+    campaign_id: entry.campaign_id ?? null,
+    adgroup_id: entry.adgroup_id ?? null,
+    creative: entry.creative ?? null,
+    vt_device: entry.vt_device ?? null,
+    loc_physical_ms: entry.loc_physical_ms ?? null,
+    network: entry.network ?? null,
+    match_type: entry.match_type ?? null,
   };
 
   let { data, error } = await admin
