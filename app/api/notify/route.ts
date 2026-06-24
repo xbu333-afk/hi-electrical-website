@@ -253,7 +253,8 @@ export async function POST(req: NextRequest) {
     if (
       isPaidAdClick({ source: body.source, gclid }) &&
       country &&
-      country !== "IL"
+      country !== "IL" &&
+      gclid
     ) {
       try {
         await sendPushover(
@@ -273,6 +274,7 @@ export async function POST(req: NextRequest) {
     // 5) Desktop-fraud alert — paid click on mobile-only campaign from desktop (high priority)
     if (
       isPaidAdClick({ source: body.source, gclid }) &&
+      gclid &&
       isDesktopPaidClick({
         vt_device: valueTrack.vt_device,
         device,
