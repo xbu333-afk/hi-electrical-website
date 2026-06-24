@@ -1,5 +1,6 @@
 import { formatPageLabel } from "./page-labels";
 import type { VisitorHistory } from "./visitor-logs";
+import { summarizeUserAgent } from "./user-agent";
 
 export type PushoverPriority = -2 | -1 | 0 | 1 | 2;
 
@@ -64,6 +65,8 @@ export function buildMessageLines(opts: {
   device: VisitorDevice;
   city?: string | null;
   gclid?: string | null;
+  userAgent?: string | null;
+  referrer?: string | null;
   extraLines?: (string | null | undefined)[];
 }): string {
   const pageLabel = formatPageLabel(opts.pagePath);
@@ -77,6 +80,12 @@ export function buildMessageLines(opts: {
     `השבוע: ${opts.history.week_count} | ` +
     `סה"כ: ${opts.history.total_count}`;
   const gclidLine = opts.gclid ? `🎟️ מזהה גוגל (GCLID): ${opts.gclid}` : null;
+  const uaLine = opts.gclid
+    ? `🧭 מכשיר/דפדפן: ${summarizeUserAgent(opts.userAgent)}`
+    : null;
+  const referrerLine = opts.gclid
+    ? `🔗 Referrer: ${opts.referrer?.trim() || "(ישיר / ללא referrer)"}`
+    : null;
 
   return lines(
     `עמוד: ${pageLabel}`,
@@ -86,6 +95,8 @@ export function buildMessageLines(opts: {
     cityLine,
     historyLine,
     gclidLine,
+    uaLine,
+    referrerLine,
     ...(opts.extraLines ?? [])
   );
 }
@@ -118,13 +129,35 @@ export function buildVisitorNotification(opts: {
   city?: string | null;
   gclid?: string | null;
   isEmergencyPage: boolean;
+  userAgent?: string | null;
+  referrer?: string | null;
 }) {
-  const { source, pagePath, ip, history, device, city, gclid, isEmergencyPage } =
-    opts;
+  const {
+    source,
+    pagePath,
+    ip,
+    history,
+    device,
+    city,
+    gclid,
+    isEmergencyPage,
+    userAgent,
+    referrer,
+  } = opts;
   const isPaid = source === "mumooman";
   const isSuspect = history.today_count > 2;
 
-  const base = { pagePath, source, ip, history, device, city, gclid };
+  const base = {
+    pagePath,
+    source,
+    ip,
+    history,
+    device,
+    city,
+    gclid,
+    userAgent,
+    referrer,
+  };
 
   if (isEmergencyPage) {
     return {

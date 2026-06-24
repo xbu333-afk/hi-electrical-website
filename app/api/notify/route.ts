@@ -153,6 +153,8 @@ export async function POST(req: NextRequest) {
     const device = getDevice(req);
     const city = getCity(req);
     const userAgent = req.headers.get("user-agent") ?? null;
+    const referrer =
+      req.headers.get("referer") ?? req.headers.get("referrer") ?? null;
     const gclid = body.gclid ?? null;
 
     // 1) Supabase insert — failures must not block Pushover
@@ -167,6 +169,7 @@ export async function POST(req: NextRequest) {
         city,
         gclid,
         user_agent: userAgent,
+        referrer,
         clicked_action: false,
       });
     } catch (e) {
@@ -241,6 +244,8 @@ export async function POST(req: NextRequest) {
             device,
             city,
             gclid,
+            userAgent,
+            referrer,
             isEmergencyPage,
           })
         );

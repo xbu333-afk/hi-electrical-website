@@ -19,6 +19,7 @@ export interface VisitorLogEntry {
   city?: string | null;
   gclid?: string | null;
   user_agent?: string | null;
+  referrer?: string | null;
   duration?: number;
   clicked_action?: boolean;
 }
@@ -76,6 +77,7 @@ async function patchOptionalFields(
   if (entry.city) optional.city = entry.city;
   if (entry.gclid) optional.gclid = entry.gclid;
   if (entry.user_agent) optional.user_agent = entry.user_agent;
+  if (entry.referrer) optional.referrer = entry.referrer;
 
   const { error } = await getSupabaseAdmin()
     .from("visitor_logs")
@@ -105,6 +107,7 @@ export async function insertVisitorLog(entry: VisitorLogEntry): Promise<number> 
     city: entry.city ?? null,
     gclid: entry.gclid ?? null,
     user_agent: entry.user_agent ?? null,
+    referrer: entry.referrer ?? null,
   };
 
   let { data, error } = await admin

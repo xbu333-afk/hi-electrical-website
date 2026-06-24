@@ -1,7 +1,12 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { formatPageLabel } from "@/lib/page-labels";
 import { getIsraelStartOfDay } from "@/lib/visitor-logs";
+import {
+  detectSuspiciousGclidIps,
+  FRAUD_LOOKBACK_HOURS,
+} from "@/lib/fraud-detection";
 import { ExportCsvButton } from "@/app/components/ExportCsvButton";
+import { SuspiciousIpsPanel } from "@/app/components/SuspiciousIpsPanel";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -17,6 +22,7 @@ interface VisitorRow {
   city: string | null;
   gclid: string | null;
   user_agent: string | null;
+  referrer: string | null;
   duration: number | null;
   clicked_action: boolean;
   created_at: string;
@@ -24,7 +30,7 @@ interface VisitorRow {
 
 // Columns that may not exist yet (migrations 003 / 004).
 const EXTENDED_COLS =
-  "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, gclid, user_agent, duration, clicked_action, created_at";
+  "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, gclid, user_agent, referrer, duration, clicked_action, created_at";
 const BASE_COLS =
   "id, visitor_id, ip_address, page_path, source, duration, clicked_action, created_at";
 
@@ -73,6 +79,7 @@ async function getLogs(): Promise<{ rows: VisitorRow[]; warning: string | null }
       city: null,
       gclid: null,
       user_agent: null,
+      referrer: null,
       duration: r.duration ?? null,
       clicked_action: r.clicked_action ?? false,
       created_at: r.created_at ?? "",
@@ -80,7 +87,7 @@ async function getLogs(): Promise<{ rows: VisitorRow[]; warning: string | null }
 
     return {
       rows,
-      warning: `חלק מהעמודות החדשות חסרות בטבלה. הרץ את migrations 002-004 ב-Supabase. שגיאת Supabase: ${msg}`,
+      warning: `חלק מהעמודות החדשות חסרות בטבלה. הרץ את migrations 002-005 ב-Supabase. שגיאת Supabase: ${msg}`,
     };
   }
 
@@ -121,18 +128,8 @@ function isToday(iso: string) {
   return new Date(iso) >= startOfDay();
 }
 
-function getSuspiciousIps(logs: VisitorRow[]): Set<string> {
-  const counts = new Map<string, number>();
-  logs
-    .filter((r) => isToday(r.created_at))
-    .forEach((r) => {
-      counts.set(r.ip_address, (counts.get(r.ip_address) ?? 0) + 1);
-    });
-  const s = new Set<string>();
-  counts.forEach((v, k) => {
-    if (v > 2) s.add(k);
-  });
-  return s;
+function getFraudIpSet(logs: VisitorRow[]): Set<string> {
+  return new Set(detectSuspiciousGclidIps(logs).map((g) => g.ip_address));
 }
 
 function fmt(iso: string) {
@@ -193,7 +190,7 @@ function ErrorScreen({ error }: { error: unknown }) {
           </pre>
         </div>
         <p className="text-sm text-slate-500">
-          בדוק שכל משתני הסביבה מוגדרים ב-Vercel ושהרצת את כל המיגרציות ב-Supabase (001–004).
+          בדוק שכל משתני הסביבה מוגדרים ב-Vercel ושהרצת את כל המיגרציות ב-Supabase (001–005).
         </p>
         <a
           href="/admin/auth/signout"
@@ -231,7 +228,8 @@ export default async function AnalyticsDashboard() {
     return <ErrorScreen error={fatalError} />;
   }
 
-  const suspIps = getSuspiciousIps(logs);
+  const fraudGroups = detectSuspiciousGclidIps(logs);
+  const fraudIps = getFraudIpSet(logs);
   const todayLogs = logs.filter((r) => isToday(r.created_at));
   const totalToday = todayLogs.length;
   const paidToday = todayLogs.filter((r) => r.source === "mumooman").length;
@@ -279,8 +277,14 @@ export default async function AnalyticsDashboard() {
           <StatCard label="ממומן היום" value={paidToday} color="yellow" />
           <StatCard label="יצרו קשר" value={clickedToday} color="green" />
           <StatCard label="GCLIDs היום" value={gclidToday} color="purple" />
-          <StatCard label="חשודים" value={suspIps.size} color="red" />
+          <StatCard label="חשודים (GCLID)" value={fraudGroups.length} color="red" />
         </div>
+
+        {/* Click fraud — suspicious IPs with multiple GCLIDs */}
+        <SuspiciousIpsPanel
+          groups={fraudGroups}
+          lookbackHours={FRAUD_LOOKBACK_HOURS}
+        />
 
         {/* Table */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -302,13 +306,13 @@ export default async function AnalyticsDashboard() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {logs.map((row) => {
-                  const susp = suspIps.has(row.ip_address);
+                  const fraud = fraudIps.has(row.ip_address);
                   const pages = formatPages(row);
                   const dev = fmtDevice(row.device);
                   return (
                     <tr
                       key={row.id}
-                      className={`hover:bg-gray-50 transition-colors ${susp ? "bg-red-50" : ""}`}
+                      className={`hover:bg-gray-50 transition-colors ${fraud ? "bg-red-50" : ""}`}
                     >
                       <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
                         {fmt(row.created_at)}
@@ -374,9 +378,9 @@ export default async function AnalyticsDashboard() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {susp && (
+                        {fraud && (
                           <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
-                            🕵️ חשוד
+                            🚨 הונאה
                           </span>
                         )}
                       </td>
