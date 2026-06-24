@@ -128,6 +128,58 @@ export function buildClickNotification(opts: {
   };
 }
 
+/** ISO country code → Hebrew country name (common fraud origins). */
+const COUNTRY_NAMES: Record<string, string> = {
+  RU: "רוסיה",
+  TR: "טורקיה",
+  US: "ארצות הברית",
+  JO: "ירדן",
+  GB: "בריטניה",
+  DE: "גרמניה",
+  FR: "צרפת",
+  CN: "סין",
+  UA: "אוקראינה",
+  PL: "פולין",
+  IN: "הודו",
+  BR: "ברזיל",
+  IR: "איראן",
+  SA: "ערב הסעודית",
+  EG: "מצרים",
+  SY: "סוריה",
+  LB: "לבנון",
+  PS: "שטחים פלסטיניים",
+  AE: "איחוד האמירויות",
+  NL: "הולנד",
+};
+
+/**
+ * Sent immediately when a paid click with GCLID arrives from outside Israel.
+ * Priority 2 = emergency — Pushover will keep alerting until acknowledged.
+ */
+export function buildGeoFraudNotification(opts: {
+  ip: string;
+  gclid: string;
+  country: string;
+  city?: string | null;
+  keyword?: string | null;
+}) {
+  const countryName = COUNTRY_NAMES[opts.country] ?? opts.country;
+  return {
+    title: `🚨 הונאה גיאוגרפית — קליק ממומן מחו"ל!`,
+    message: lines(
+      `⚠️ הקמפיין מוגדר לישראל בלבד!`,
+      `🌍 מדינה: ${countryName} (${opts.country})`,
+      `🌐 IP: ${opts.ip}`,
+      opts.city ? `📍 עיר: ${opts.city}` : null,
+      `🎟️ GCLID: ${opts.gclid}`,
+      opts.keyword ? `🎯 מילת מפתח: ${opts.keyword}` : null,
+      `💸 סמן כ-Invalid Click בגוגל אדס לקבלת החזר!`
+    ),
+    priority: 2 as PushoverPriority,
+    sound: "siren",
+  };
+}
+
 /** Sent on page enter. */
 export function buildVisitorNotification(opts: {
   source: "mumooman" | "organic";

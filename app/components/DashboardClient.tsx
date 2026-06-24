@@ -6,6 +6,7 @@ import { formatPageLabel } from "@/lib/page-labels";
 import {
   detectSuspiciousGclidIps,
   detectIpSwitcherByVisitorId,
+  detectGeoFraud,
 } from "@/lib/fraud-detection";
 import { SuspiciousIpsPanel } from "./SuspiciousIpsPanel";
 import { formatAdsNetwork, formatMatchType } from "@/lib/valuetrack";
@@ -32,6 +33,7 @@ export interface VisitorRow {
   network: string | null;
   match_type: string | null;
   browser_language: string | null;
+  country: string | null;
   duration: number | null;
   clicked_action: boolean;
   created_at: string;
@@ -206,12 +208,21 @@ export function DashboardClient({
     () => new Set(ipSwitcherGroups.map((g) => g.visitor_id)),
     [ipSwitcherGroups]
   );
+  const geoFraudRows = useMemo(
+    () => detectGeoFraud(filteredRows),
+    [filteredRows]
+  );
+  const geoFraudIds = useMemo(
+    () => new Set(geoFraudRows.map((r) => r.id)),
+    [geoFraudRows]
+  );
 
   // Stats (based on displayRows — respects both date + source filters)
   const paidCount = displayRows.filter((r) => r.source === "mumooman").length;
   const clickedCount = displayRows.filter((r) => r.clicked_action).length;
   const gclidCount = displayRows.filter((r) => r.gclid).length;
-  const suspiciousCount = fraudGroups.length + ipSwitcherGroups.length;
+  const suspiciousCount =
+    fraudGroups.length + ipSwitcherGroups.length + geoFraudRows.length;
 
   const dateRangeLabel =
     preset === "custom" && customStart && customEnd
@@ -420,6 +431,7 @@ export function DashboardClient({
         <SuspiciousIpsPanel
           gclidGroups={fraudGroups}
           ipSwitcherGroups={ipSwitcherGroups}
+          geoFraudRows={geoFraudRows}
           dateRangeLabel={dateRangeLabel}
         />
 
@@ -446,7 +458,8 @@ export function DashboardClient({
                 {displayRows.map((row) => {
                   const isGclidFraud = fraudIps.has(row.ip_address);
                   const isIpSwitcher = fraudVisitorIds.has(row.visitor_id);
-                  const fraud = isGclidFraud || isIpSwitcher;
+                  const isGeoFraud = geoFraudIds.has(row.id);
+                  const fraud = isGclidFraud || isIpSwitcher || isGeoFraud;
                   const pages = formatPages(row);
                   const dev = getDeviceDisplay(row.device, row.user_agent);
                   return (
@@ -553,6 +566,11 @@ export function DashboardClient({
                         {isIpSwitcher && (
                           <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 border border-orange-200 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
                             🔄 IP Switch
+                          </span>
+                        )}
+                        {isGeoFraud && (
+                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                            🌍 Geo ({row.country})
                           </span>
                         )}
                       </td>

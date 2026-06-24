@@ -161,3 +161,69 @@ export function detectIpSwitcherByVisitorId(logs: LogLike[]): IpSwitcherGroup[] 
 export function flattenFraudClicksForExport(groups: SuspiciousIpGroup[]): FraudClickRow[] {
   return groups.flatMap((g) => g.gclid_rows);
 }
+
+// ── Geographic Targeting Violations ──────────────────────────────────────────
+
+export interface GeoFraudRow {
+  id: number;
+  ip_address: string;
+  created_at: string;
+  gclid: string;
+  country: string;
+  user_agent: string | null;
+  visitor_id?: string;
+  keyword?: string | null;
+  campaign_id?: string | null;
+  adgroup_id?: string | null;
+  network?: string | null;
+  vt_device?: string | null;
+  browser_language?: string | null;
+}
+
+type GeoFraudLogLike = {
+  id: number;
+  ip_address: string;
+  created_at: string;
+  gclid: string | null;
+  country: string | null;
+  source: string;
+  user_agent: string | null;
+  visitor_id?: string;
+  keyword?: string | null;
+  campaign_id?: string | null;
+  adgroup_id?: string | null;
+  network?: string | null;
+  vt_device?: string | null;
+  browser_language?: string | null;
+};
+
+/**
+ * Paid clicks (with GCLID) that originated outside Israel.
+ * The campaign is set to target Israel only — these are geographic targeting violations
+ * eligible for invalid click credit from Google Ads.
+ */
+export function detectGeoFraud(rows: GeoFraudLogLike[]): GeoFraudRow[] {
+  return rows
+    .filter(
+      (r): r is GeoFraudLogLike & { gclid: string; country: string } =>
+        r.source === "mumooman" &&
+        !!r.gclid &&
+        !!r.country &&
+        r.country !== "IL"
+    )
+    .map((r) => ({
+      id: r.id,
+      ip_address: r.ip_address,
+      created_at: r.created_at,
+      gclid: r.gclid,
+      country: r.country,
+      user_agent: r.user_agent,
+      visitor_id: r.visitor_id,
+      keyword: r.keyword,
+      campaign_id: r.campaign_id,
+      adgroup_id: r.adgroup_id,
+      network: r.network,
+      vt_device: r.vt_device,
+      browser_language: r.browser_language,
+    }));
+}

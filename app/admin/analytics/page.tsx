@@ -6,7 +6,7 @@ export const revalidate = 0;
 
 // Columns present after all migrations 001–007
 const EXTENDED_COLS =
-  "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, gclid, user_agent, referrer, keyword, campaign_id, adgroup_id, creative, vt_device, loc_physical_ms, network, match_type, browser_language, duration, clicked_action, created_at";
+  "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, country, gclid, user_agent, referrer, keyword, campaign_id, adgroup_id, creative, vt_device, loc_physical_ms, network, match_type, browser_language, duration, clicked_action, created_at";
 
 // Columns guaranteed after migration 001 only
 const BASE_COLS =
@@ -59,6 +59,7 @@ async function getLogs(): Promise<{ rows: VisitorRow[]; warning: string | null }
         source: r.source ?? "organic",
         device: null,
         city: null,
+        country: null,
         gclid: null,
         user_agent: null,
         referrer: null,

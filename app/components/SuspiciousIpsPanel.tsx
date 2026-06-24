@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SuspiciousIpGroup, IpSwitcherGroup } from "@/lib/fraud-detection";
+import type { SuspiciousIpGroup, IpSwitcherGroup, GeoFraudRow } from "@/lib/fraud-detection";
 import { getDeviceDisplay } from "@/lib/user-agent";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -32,10 +32,27 @@ function fmtDisplay(iso: string): string {
   });
 }
 
+/** Convert ISO 3166-1 alpha-2 code to flag emoji (e.g. "RU" → "🇷🇺"). */
+function countryFlag(code: string): string {
+  if (!code || code.length !== 2) return "🌍";
+  const a = code.toUpperCase().charCodeAt(0) - 65 + 0x1f1e6;
+  const b = code.toUpperCase().charCodeAt(1) - 65 + 0x1f1e6;
+  return String.fromCodePoint(a, b);
+}
+
+const COUNTRY_NAMES: Record<string, string> = {
+  RU: "רוסיה", TR: "טורקיה", US: "ארצות הברית", JO: "ירדן",
+  GB: "בריטניה", DE: "גרמניה", FR: "צרפת", CN: "סין",
+  UA: "אוקראינה", PL: "פולין", IN: "הודו", BR: "ברזיל",
+  IR: "איראן", SA: "ערב הסעודית", EG: "מצרים", SY: "סוריה",
+  LB: "לבנון", PS: "שטחים פלסטיניים", AE: "איחוד האמירויות", NL: "הולנד",
+};
+
 // ── Google Ads Investigation Report CSV ───────────────────────────────────────
 function exportGoogleAdsReport(
   gclidGroups: SuspiciousIpGroup[],
   ipSwitcherGroups: IpSwitcherGroup[],
+  geoFraudRows: GeoFraudRow[],
   dateRangeLabel: string
 ) {
   const HEADERS = [
@@ -133,6 +150,24 @@ function exportGoogleAdsReport(
     }
   }
 
+  for (const r of geoFraudRows) {
+    const countryName = COUNTRY_NAMES[r.country] ?? r.country;
+    addRow(
+      r.ip_address,
+      r.created_at,
+      r.gclid,
+      r.user_agent,
+      r.keyword,
+      r.campaign_id,
+      r.adgroup_id,
+      r.network,
+      r.vt_device,
+      r.visitor_id,
+      r.browser_language,
+      `Geographic Targeting Violation — Campaign targets Israel (IL) only; paid click from ${r.country} (${countryName}). GCLID charged for out-of-target impression.`
+    );
+  }
+
   const csv = "\uFEFF" + [HEADERS, ...csvRows].join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -181,16 +216,20 @@ function CopyIpButton({ ip }: { ip: string }) {
 export function SuspiciousIpsPanel({
   gclidGroups,
   ipSwitcherGroups,
+  geoFraudRows,
   dateRangeLabel,
 }: {
   gclidGroups: SuspiciousIpGroup[];
   ipSwitcherGroups: IpSwitcherGroup[];
+  geoFraudRows: GeoFraudRow[];
   dateRangeLabel: string;
 }) {
-  const totalSuspicious = gclidGroups.length + ipSwitcherGroups.length;
+  const totalSuspicious =
+    gclidGroups.length + ipSwitcherGroups.length + geoFraudRows.length;
   const hasAnyGclid =
     gclidGroups.flatMap((g) => g.gclid_rows).some((r) => r.gclid) ||
-    ipSwitcherGroups.flatMap((g) => g.rows).some((r) => r.gclid);
+    ipSwitcherGroups.flatMap((g) => g.rows).some((r) => r.gclid) ||
+    geoFraudRows.length > 0;
 
   return (
     <div className="bg-red-50 border-2 border-red-300 rounded-xl shadow-sm overflow-hidden">
@@ -203,14 +242,26 @@ export function SuspiciousIpsPanel({
           <p className="text-xs text-red-700 mt-0.5">
             {totalSuspicious === 0
               ? `אין פעילות חשודה — ${dateRangeLabel}`
-              : `${gclidGroups.length} IPs עם GCLID כפול + ${ipSwitcherGroups.length} מסובבי IP — ${dateRangeLabel}`}
+              : [
+                  gclidGroups.length > 0
+                    ? `${gclidGroups.length} IPs עם GCLID כפול`
+                    : null,
+                  ipSwitcherGroups.length > 0
+                    ? `${ipSwitcherGroups.length} מסובבי IP`
+                    : null,
+                  geoFraudRows.length > 0
+                    ? `${geoFraudRows.length} קליקים מחו"ל`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" + ") + ` — ${dateRangeLabel}`}
           </p>
         </div>
         {hasAnyGclid && (
           <button
             type="button"
             onClick={() =>
-              exportGoogleAdsReport(gclidGroups, ipSwitcherGroups, dateRangeLabel)
+              exportGoogleAdsReport(gclidGroups, ipSwitcherGroups, geoFraudRows, dateRangeLabel)
             }
             className="text-sm bg-white border border-red-300 hover:bg-red-50 text-red-800 font-medium px-4 py-2 rounded-lg shadow-sm transition whitespace-nowrap"
           >
@@ -363,6 +414,80 @@ export function SuspiciousIpsPanel({
                             >
                               🔄 IP Rotation
                             </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── Section 3: Geographic Targeting Violations ── */}
+          {geoFraudRows.length > 0 && (
+            <div>
+              <div className="px-5 py-3 bg-purple-100/40">
+                <p className="text-xs font-semibold text-purple-800 uppercase tracking-wide">
+                  🌍 הונאה גיאוגרפית — קליקים ממומנים מחוץ לישראל ({geoFraudRows.length})
+                </p>
+                <p className="text-xs text-purple-700 mt-0.5">
+                  הקמפיין מוגדר לישראל בלבד — קליקים אלה עם GCLID חויבו על אף שמקורם מחו"ל. זכאים להחזר מגוגל.
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-purple-100/40 text-purple-800 text-xs uppercase tracking-wide border-b border-purple-200">
+                      <th className="px-4 py-3 text-right font-medium">IP</th>
+                      <th className="px-4 py-3 text-right font-medium">מדינה</th>
+                      <th className="px-4 py-3 text-right font-medium">GCLID</th>
+                      <th className="px-4 py-3 text-right font-medium">זמן</th>
+                      <th className="px-4 py-3 text-right font-medium">מילת מפתח</th>
+                      <th className="px-4 py-3 text-center font-medium">מכשיר</th>
+                      <th className="px-4 py-3 text-center font-medium">פעולה</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-purple-100">
+                    {geoFraudRows.map((r) => {
+                      const dev = getDeviceDisplay(null, r.user_agent);
+                      const flag = countryFlag(r.country);
+                      const countryName = COUNTRY_NAMES[r.country] ?? r.country;
+                      return (
+                        <tr key={r.id} className="hover:bg-purple-50/50">
+                          <td className="px-4 py-3 font-mono text-purple-900 text-xs whitespace-nowrap font-semibold">
+                            {r.ip_address}
+                          </td>
+                          <td className="px-4 py-3 text-xs whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 bg-purple-100 border border-purple-300 text-purple-800 px-2 py-0.5 rounded-full font-medium">
+                              {flag} {countryName} ({r.country})
+                            </span>
+                          </td>
+                          <td
+                            className="px-4 py-3 font-mono text-violet-800 text-xs max-w-[140px] truncate"
+                            title={r.gclid}
+                          >
+                            {r.gclid.slice(0, 18)}…
+                          </td>
+                          <td className="px-4 py-3 text-purple-800 text-xs whitespace-nowrap">
+                            {fmtDisplay(r.created_at)}
+                          </td>
+                          <td className="px-4 py-3 text-xs max-w-[160px] truncate text-purple-900">
+                            {r.keyword ? `🎯 ${r.keyword}` : <span className="text-gray-300">—</span>}
+                          </td>
+                          <td
+                            className="px-4 py-3 text-xs whitespace-nowrap text-center"
+                            title={r.user_agent ?? undefined}
+                          >
+                            <span className="inline-flex items-center gap-1 cursor-help">
+                              <span className="text-base leading-none">{dev.icon}</span>
+                              {dev.text && (
+                                <span className="text-purple-800/80">{dev.text}</span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <CopyIpButton ip={r.ip_address} />
                           </td>
                         </tr>
                       );

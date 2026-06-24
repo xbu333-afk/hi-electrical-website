@@ -12,6 +12,7 @@ import {
   sendPushover,
   buildVisitorNotification,
   buildClickNotification,
+  buildGeoFraudNotification,
 } from "@/lib/pushover";
 import {
   normalizeValueTrackPayload,
@@ -86,6 +87,10 @@ function getCity(req: NextRequest): string | null {
   }
 }
 
+function getCountry(req: NextRequest): string | null {
+  return req.headers.get("x-vercel-ip-country")?.toUpperCase().trim() ?? null;
+}
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -147,6 +152,7 @@ export async function POST(req: NextRequest) {
     // ── ENTER — DB insert + single Pushover ─────────────────────────────────
     const device = getDevice(req);
     const city = getCity(req);
+    const country = getCountry(req);
     const userAgent = req.headers.get("user-agent") ?? null;
     const referrer =
       req.headers.get("referer") ?? req.headers.get("referrer") ?? null;
@@ -164,6 +170,7 @@ export async function POST(req: NextRequest) {
         source: body.source,
         device,
         city,
+        country,
         gclid,
         user_agent: userAgent,
         referrer,
@@ -238,6 +245,23 @@ export async function POST(req: NextRequest) {
       );
     } catch (e) {
       console.error("[notify:enter pushover]", e);
+    }
+
+    // 4) Geo-fraud alert — paid click with GCLID from outside Israel (emergency)
+    if (body.source === "mumooman" && gclid && country && country !== "IL") {
+      try {
+        await sendPushover(
+          buildGeoFraudNotification({
+            ip,
+            gclid,
+            country,
+            city,
+            keyword: valueTrack.keyword,
+          })
+        );
+      } catch (e) {
+        console.error("[notify:geo-fraud pushover]", e);
+      }
     }
 
     return Response.json({ ok: true, log_id });
