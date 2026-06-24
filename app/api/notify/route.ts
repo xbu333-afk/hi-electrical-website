@@ -5,7 +5,6 @@ import {
   updateVisitorLog,
   appendPageToLog,
   getVisitorHistoryByIp,
-  countRecentVisitsByIp,
   type VisitorDevice,
   type VisitorHistory,
 } from "@/lib/visitor-logs";
@@ -24,8 +23,6 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 const EMERGENCY_PATHS = ["/emergency", "/fast-service", "/welcome"];
-/** Organic re-enters from the same IP within this window skip Pushover (gclid bypasses). */
-const IP_PUSHOVER_COOLDOWN_MS = 5 * 60 * 1000;
 
 type EnterPayload = {
   event: "enter";
@@ -89,15 +86,6 @@ function getCity(req: NextRequest): string | null {
   }
 }
 
-/** Paid Google Ads clicks (gclid) always notify; organic repeats from same IP are cooled down. */
-function shouldSkipEnterPushover(
-  recentIpCount: number,
-  gclid: string | null
-): boolean {
-  if (gclid) return false;
-  // recentIpCount includes the row we just inserted; >1 means another visit in the window
-  return recentIpCount > 1;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -229,43 +217,27 @@ export async function POST(req: NextRequest) {
       body.page_path.startsWith(p)
     );
 
-    // 3) IP cooldown — gclid (paid Ads) always bypasses
-    let recentIpCount = 0;
+    // 3) Send Pushover for every enter event
     try {
-      recentIpCount = await countRecentVisitsByIp(ip, IP_PUSHOVER_COOLDOWN_MS);
+      await sendPushover(
+        buildVisitorNotification({
+          source: body.source,
+          pagePath: body.page_path,
+          ip,
+          history,
+          device,
+          city,
+          gclid,
+          userAgent,
+          referrer,
+          isEmergencyPage,
+          keyword: valueTrack.keyword,
+          network: valueTrack.network,
+          match_type: valueTrack.match_type,
+        })
+      );
     } catch (e) {
-      console.error("[notify:enter] countRecentVisitsByIp failed:", e);
-    }
-
-    const skipPushover = shouldSkipEnterPushover(recentIpCount, gclid);
-
-    if (skipPushover) {
-      console.info("[notify:enter] Pushover skipped (IP cooldown, no gclid):", {
-        ip,
-        recentIpCount,
-      });
-    } else {
-      try {
-        await sendPushover(
-          buildVisitorNotification({
-            source: body.source,
-            pagePath: body.page_path,
-            ip,
-            history,
-            device,
-            city,
-            gclid,
-            userAgent,
-            referrer,
-            isEmergencyPage,
-            keyword: valueTrack.keyword,
-            network: valueTrack.network,
-            match_type: valueTrack.match_type,
-          })
-        );
-      } catch (e) {
-        console.error("[notify:enter pushover]", e);
-      }
+      console.error("[notify:enter pushover]", e);
     }
 
     return Response.json({ ok: true, log_id });

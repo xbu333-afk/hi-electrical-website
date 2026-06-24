@@ -217,7 +217,7 @@ export function buildVisitorNotification(opts: {
   return {
     title: "🟢 כניסה אורגנית",
     message: buildMessageLines(base),
-    priority: -1 as PushoverPriority,
-    sound: "none",
+    priority: 0 as PushoverPriority,
+    sound: "bike",
   };
 }
