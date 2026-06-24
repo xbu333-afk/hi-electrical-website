@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { formatPageLabel } from "@/lib/page-labels";
-import { getIsraelStartOfDay, getVisitorTotalCounts } from "@/lib/visitor-logs";
+import { getIsraelStartOfDay } from "@/lib/visitor-logs";
 import { ExportCsvButton } from "@/app/components/ExportCsvButton";
 
 export const dynamic = "force-dynamic";
@@ -22,20 +22,94 @@ interface VisitorRow {
   created_at: string;
 }
 
-async function getLogs(): Promise<VisitorRow[]> {
+// Columns that may not exist yet (migrations 003 / 004).
+const EXTENDED_COLS =
+  "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, gclid, user_agent, duration, clicked_action, created_at";
+const BASE_COLS =
+  "id, visitor_id, ip_address, page_path, source, duration, clicked_action, created_at";
+
+async function getLogs(): Promise<{ rows: VisitorRow[]; warning: string | null }> {
+  const admin = getSupabaseAdmin();
+
+  // Try full query first (all columns incl. gclid, user_agent, device, city, pages_visited)
+  const { data, error } = await admin
+    .from("visitor_logs")
+    .select(EXTENDED_COLS)
+    .order("created_at", { ascending: false })
+    .limit(300);
+
+  if (!error) {
+    return { rows: (data as VisitorRow[]) ?? [], warning: null };
+  }
+
+  const msg = (error as { message?: string }).message ?? "";
+  const isColMissing =
+    (error as { code?: string }).code === "PGRST204" ||
+    /column.*does not exist/i.test(msg) ||
+    /Could not find the .* column/i.test(msg);
+
+  if (isColMissing) {
+    // Fallback: base columns only — some migrations haven't been run yet
+    const { data: baseData, error: baseError } = await admin
+      .from("visitor_logs")
+      .select(BASE_COLS)
+      .order("created_at", { ascending: false })
+      .limit(300);
+
+    if (baseError) {
+      throw new Error(
+        `Supabase base query failed: ${(baseError as { message?: string }).message ?? JSON.stringify(baseError)}`
+      );
+    }
+
+    const rows = ((baseData as Partial<VisitorRow>[]) ?? []).map((r) => ({
+      id: r.id ?? 0,
+      visitor_id: r.visitor_id ?? "",
+      ip_address: r.ip_address ?? "",
+      page_path: r.page_path ?? "",
+      pages_visited: null,
+      source: r.source ?? "organic",
+      device: null,
+      city: null,
+      gclid: null,
+      user_agent: null,
+      duration: r.duration ?? null,
+      clicked_action: r.clicked_action ?? false,
+      created_at: r.created_at ?? "",
+    }));
+
+    return {
+      rows,
+      warning: `חלק מהעמודות החדשות חסרות בטבלה. הרץ את migrations 002-004 ב-Supabase. שגיאת Supabase: ${msg}`,
+    };
+  }
+
+  // Unknown error — surface it
+  throw new Error(
+    `Supabase query failed: ${msg || JSON.stringify(error)}`
+  );
+}
+
+async function safeGetTotalCounts(): Promise<Record<string, number>> {
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("visitor_logs")
-      .select(
-        "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, gclid, user_agent, duration, clicked_action, created_at"
-      )
-      .order("created_at", { ascending: false })
-      .limit(300);
-    if (error) throw error;
-    return (data as VisitorRow[]) ?? [];
+      .select("visitor_id");
+
+    if (error) {
+      console.error("[analytics] getVisitorTotalCounts error:", error);
+      return {};
+    }
+
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) {
+      const vid = (row as { visitor_id?: string }).visitor_id;
+      if (vid) counts[vid] = (counts[vid] ?? 0) + 1;
+    }
+    return counts;
   } catch (e) {
-    console.error("[analytics]", e);
-    return [];
+    console.error("[analytics] getVisitorTotalCounts threw:", e);
+    return {};
   }
 }
 
@@ -95,11 +169,67 @@ function fmtDevice(device: string | null): { icon: string; label: string } {
   return { icon: "—", label: "" };
 }
 
+// ── Error screen ─────────────────────────────────────────────────────────────
+
+function ErrorScreen({ error }: { error: unknown }) {
+  const msg =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object"
+        ? JSON.stringify(error, null, 2)
+        : String(error);
+
+  return (
+    <div dir="rtl" className="p-4 md:p-8">
+      <div className="max-w-3xl mx-auto mt-12 space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">🚨</span>
+          <h1 className="text-xl font-bold text-red-700">שגיאה בטעינת הדשבורד</h1>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+          <p className="text-sm font-semibold text-red-700 mb-2">פרטי השגיאה (לצורך דיבוג):</p>
+          <pre className="text-xs text-red-800 whitespace-pre-wrap break-all font-mono leading-relaxed">
+            {msg}
+          </pre>
+        </div>
+        <p className="text-sm text-slate-500">
+          בדוק שכל משתני הסביבה מוגדרים ב-Vercel ושהרצת את כל המיגרציות ב-Supabase (001–004).
+        </p>
+        <a
+          href="/admin/auth/signout"
+          className="inline-block text-sm text-slate-600 underline"
+        >
+          התנתק
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── Main dashboard ────────────────────────────────────────────────────────────
+
 export default async function AnalyticsDashboard() {
-  const [logs, totalCounts] = await Promise.all([
-    getLogs(),
-    getVisitorTotalCounts(),
-  ]);
+  let logs: VisitorRow[] = [];
+  let totalCounts: Record<string, number> = {};
+  let warning: string | null = null;
+  let fatalError: unknown = null;
+
+  try {
+    const [logsResult, counts] = await Promise.all([
+      getLogs(),
+      safeGetTotalCounts(),
+    ]);
+    logs = logsResult.rows;
+    warning = logsResult.warning;
+    totalCounts = counts;
+  } catch (e) {
+    console.error("[analytics] fatal:", e);
+    fatalError = e;
+  }
+
+  if (fatalError) {
+    return <ErrorScreen error={fatalError} />;
+  }
 
   const suspIps = getSuspiciousIps(logs);
   const todayLogs = logs.filter((r) => isToday(r.created_at));
@@ -135,6 +265,13 @@ export default async function AnalyticsDashboard() {
             </a>
           </div>
         </div>
+
+        {/* Migration warning banner */}
+        {warning && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 leading-relaxed">
+            ⚠️ {warning}
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -246,7 +383,7 @@ export default async function AnalyticsDashboard() {
                     </tr>
                   );
                 })}
-                {logs.length === 0 && (
+                {logs.length === 0 && !warning && (
                   <tr>
                     <td colSpan={10} className="px-4 py-16 text-center text-slate-400">
                       אין נתונים עדיין
