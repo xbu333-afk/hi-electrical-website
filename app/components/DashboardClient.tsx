@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { getDeviceIcon } from "@/lib/user-agent";
+import { getDeviceDisplay } from "@/lib/user-agent";
 import { formatPageLabel } from "@/lib/page-labels";
 import {
   detectSuspiciousGclidIps,
@@ -401,7 +401,7 @@ export function DashboardClient({
                   const isIpSwitcher = fraudVisitorIds.has(row.visitor_id);
                   const fraud = isGclidFraud || isIpSwitcher;
                   const pages = formatPages(row);
-                  const dev = getDeviceIcon(row.device, row.user_agent);
+                  const dev = getDeviceDisplay(row.device, row.user_agent);
                   return (
                     <tr
                       key={row.id}
@@ -417,17 +417,15 @@ export function DashboardClient({
                         {row.ip_address}
                       </td>
                       <td
-                        className="px-4 py-3 text-center text-xs whitespace-nowrap"
+                        className="px-4 py-3 text-xs whitespace-nowrap"
                         title={row.user_agent ?? undefined}
                       >
-                        <span className="inline-block cursor-help text-base leading-none">
-                          {dev.icon}
+                        <span className="inline-flex items-center gap-1 cursor-help">
+                          <span className="text-base leading-none">{dev.icon}</span>
+                          {dev.text && (
+                            <span className="text-slate-600">{dev.text}</span>
+                          )}
                         </span>
-                        {dev.label && (
-                          <span className="block text-[10px] text-slate-400 mt-0.5 cursor-help">
-                            {dev.label}
-                          </span>
-                        )}
                       </td>
                       <td className="px-4 py-3 text-slate-600 text-xs whitespace-nowrap">
                         {row.city ? (

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { SuspiciousIpGroup, IpSwitcherGroup } from "@/lib/fraud-detection";
-import { getDeviceIcon } from "@/lib/user-agent";
+import { getDeviceDisplay } from "@/lib/user-agent";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function csvCell(val: string | null | undefined): string {
@@ -248,7 +248,7 @@ export function SuspiciousIpsPanel({
                   </thead>
                   <tbody className="divide-y divide-red-100">
                     {gclidGroups.map((g) => {
-                      const dev = getDeviceIcon(null, g.latest_user_agent);
+                      const dev = getDeviceDisplay(null, g.latest_user_agent);
                       return (
                         <tr key={g.ip_address} className="hover:bg-red-100/30">
                           <td className="px-4 py-3 font-mono text-red-900 text-xs whitespace-nowrap font-semibold">
@@ -269,17 +269,15 @@ export function SuspiciousIpsPanel({
                             {fmtDisplay(g.latest_at)}
                           </td>
                           <td
-                            className="px-4 py-3 text-center text-xs whitespace-nowrap"
+                            className="px-4 py-3 text-xs whitespace-nowrap"
                             title={g.latest_user_agent ?? undefined}
                           >
-                            <span className="inline-block cursor-help text-base leading-none">
-                              {dev.icon}
+                            <span className="inline-flex items-center gap-1 cursor-help">
+                              <span className="text-base leading-none">{dev.icon}</span>
+                              {dev.text && (
+                                <span className="text-red-800/80">{dev.text}</span>
+                              )}
                             </span>
-                            {dev.label && (
-                              <span className="block text-[10px] text-red-600/70 mt-0.5 cursor-help">
-                                {dev.label}
-                              </span>
-                            )}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <CopyIpButton ip={g.ip_address} />
@@ -318,7 +316,7 @@ export function SuspiciousIpsPanel({
                   </thead>
                   <tbody className="divide-y divide-orange-100">
                     {ipSwitcherGroups.map((g) => {
-                      const dev = getDeviceIcon(null, g.latest_user_agent);
+                      const dev = getDeviceDisplay(null, g.latest_user_agent);
                       return (
                         <tr key={g.visitor_id} className="hover:bg-orange-50/50">
                           <td
@@ -348,17 +346,15 @@ export function SuspiciousIpsPanel({
                             {fmtDisplay(g.latest_at)}
                           </td>
                           <td
-                            className="px-4 py-3 text-center text-xs whitespace-nowrap"
+                            className="px-4 py-3 text-xs whitespace-nowrap"
                             title={g.latest_user_agent ?? undefined}
                           >
-                            <span className="inline-block cursor-help text-base leading-none">
-                              {dev.icon}
+                            <span className="inline-flex items-center gap-1 cursor-help">
+                              <span className="text-base leading-none">{dev.icon}</span>
+                              {dev.text && (
+                                <span className="text-orange-800/80">{dev.text}</span>
+                              )}
                             </span>
-                            {dev.label && (
-                              <span className="block text-[10px] text-orange-600/70 mt-0.5 cursor-help">
-                                {dev.label}
-                              </span>
-                            )}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span

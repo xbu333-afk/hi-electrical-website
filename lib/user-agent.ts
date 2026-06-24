@@ -41,3 +41,26 @@ export function getDeviceIcon(
   }
   return { icon: "—", label: "" };
 }
+
+/**
+ * Human-readable device display for the dashboard table.
+ * Returns icon + readable text like "📱 iPhone · Safari" or "💻 Windows · Chrome".
+ * The full raw user_agent string should still be shown as a tooltip (title attr).
+ */
+export function getDeviceDisplay(
+  device: string | null | undefined,
+  userAgent: string | null | undefined
+): { icon: string; text: string } {
+  const { icon } = getDeviceIcon(device, userAgent);
+  if (!userAgent) {
+    if (device === "mobile") return { icon: "📱", text: "נייד" };
+    if (device === "desktop") return { icon: "💻", text: "מחשב" };
+    return { icon: "—", text: "" };
+  }
+  // summarizeUserAgent returns "נייד · iPhone · Safari" — drop the first Hebrew form word
+  // since the icon already conveys mobile vs desktop.
+  const full = summarizeUserAgent(userAgent);
+  const parts = full.split(" · ");
+  const detail = parts.length > 1 ? parts.slice(1).join(" · ") : full;
+  return { icon, text: detail };
+}
