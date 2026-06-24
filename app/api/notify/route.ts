@@ -15,7 +15,7 @@ import {
   buildGeoFraudNotification,
   buildDesktopFraudNotification,
 } from "@/lib/pushover";
-import { isDesktopPaidClick } from "@/lib/fraud-detection";
+import { isDesktopPaidClick, isPaidAdClick } from "@/lib/fraud-detection";
 import {
   normalizeValueTrackPayload,
   type ValueTrackParams,
@@ -249,8 +249,12 @@ export async function POST(req: NextRequest) {
       console.error("[notify:enter pushover]", e);
     }
 
-    // 4) Geo-fraud alert — paid click with GCLID from outside Israel (emergency)
-    if (body.source === "mumooman" && gclid && country && country !== "IL") {
+    // 4) Geo-fraud alert — paid click with GCLID from outside Israel (high priority)
+    if (
+      isPaidAdClick({ source: body.source, gclid }) &&
+      country &&
+      country !== "IL"
+    ) {
       try {
         await sendPushover(
           buildGeoFraudNotification({
@@ -266,10 +270,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5) Desktop-fraud alert — paid click on mobile-only campaign from desktop (emergency)
+    // 5) Desktop-fraud alert — paid click on mobile-only campaign from desktop (high priority)
     if (
-      body.source === "mumooman" &&
-      gclid &&
+      isPaidAdClick({ source: body.source, gclid }) &&
       isDesktopPaidClick({
         vt_device: valueTrack.vt_device,
         device,

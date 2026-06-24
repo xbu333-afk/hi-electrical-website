@@ -1,6 +1,14 @@
 /** Lookback window for reference (hours) — callers pass pre-filtered rows. */
 export const FRAUD_LOOKBACK_HOURS = 48;
 
+/** Paid Google Ads click — both source and GCLID required. Organic never qualifies. */
+export function isPaidAdClick(row: {
+  source?: string;
+  gclid?: string | null;
+}): boolean {
+  return row.source === "mumooman" && !!row.gclid;
+}
+
 export interface FraudClickRow {
   ip_address: string;
   created_at: string;
@@ -50,6 +58,7 @@ export interface IpSwitcherGroup {
 type LogLike = {
   ip_address: string;
   gclid: string | null;
+  source?: string;
   created_at: string;
   user_agent: string | null;
   visitor_id?: string;
@@ -68,7 +77,7 @@ type LogLike = {
 export function detectSuspiciousGclidIps(logs: LogLike[]): SuspiciousIpGroup[] {
   const byIp = new Map<string, LogLike[]>();
   for (const row of logs) {
-    if (!row.gclid || !row.ip_address) continue;
+    if (!isPaidAdClick(row) || !row.ip_address) continue;
     const list = byIp.get(row.ip_address) ?? [];
     list.push(row);
     byIp.set(row.ip_address, list);
@@ -116,7 +125,7 @@ export function detectSuspiciousGclidIps(logs: LogLike[]): SuspiciousIpGroup[] {
 export function detectIpSwitcherByVisitorId(logs: LogLike[]): IpSwitcherGroup[] {
   const byVisitorId = new Map<string, LogLike[]>();
   for (const row of logs) {
-    if (!row.visitor_id || !row.ip_address) continue;
+    if (!row.visitor_id || !row.ip_address || !isPaidAdClick(row)) continue;
     const list = byVisitorId.get(row.visitor_id) ?? [];
     list.push(row);
     byVisitorId.set(row.visitor_id, list);
@@ -206,10 +215,7 @@ export function detectGeoFraud(rows: GeoFraudLogLike[]): GeoFraudRow[] {
   return rows
     .filter(
       (r): r is GeoFraudLogLike & { gclid: string; country: string } =>
-        r.source === "mumooman" &&
-        !!r.gclid &&
-        !!r.country &&
-        r.country !== "IL"
+        isPaidAdClick(r) && !!r.country && r.country !== "IL"
     )
     .map((r) => ({
       id: r.id,
@@ -287,7 +293,7 @@ export function detectDesktopFraud(rows: DesktopFraudLogLike[]): DesktopFraudRow
   return rows
     .filter(
       (r): r is DesktopFraudLogLike & { gclid: string } =>
-        r.source === "mumooman" && !!r.gclid && isDesktopPaidClick(r)
+        isPaidAdClick(r) && isDesktopPaidClick(r)
     )
     .map((r) => ({
       id: r.id,

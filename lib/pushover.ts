@@ -154,7 +154,7 @@ const COUNTRY_NAMES: Record<string, string> = {
 
 /**
  * Sent immediately when a paid click with GCLID arrives from outside Israel.
- * Priority 2 = emergency — Pushover will keep alerting until acknowledged.
+ * Priority 1 = high — alerts once without emergency retry loop.
  */
 export function buildGeoFraudNotification(opts: {
   ip: string;
@@ -175,13 +175,14 @@ export function buildGeoFraudNotification(opts: {
       opts.keyword ? `🎯 מילת מפתח: ${opts.keyword}` : null,
       `💸 סמן כ-Invalid Click בגוגל אדס לקבלת החזר!`
     ),
-    priority: 2 as PushoverPriority,
+    priority: 1 as PushoverPriority,
     sound: "siren",
   };
 }
 
 /**
  * Sent when a paid GCLID click arrives from desktop on a mobile-only campaign.
+ * Priority 1 = high — alerts once without emergency retry loop.
  */
 export function buildDesktopFraudNotification(opts: {
   ip: string;
@@ -205,7 +206,7 @@ export function buildDesktopFraudNotification(opts: {
       opts.keyword ? `🎯 מילת מפתח: ${opts.keyword}` : null,
       `💸 סמן כ-Invalid Click בגוגל אדס לקבלת החזר!`
     ),
-    priority: 2 as PushoverPriority,
+    priority: 1 as PushoverPriority,
     sound: "siren",
   };
 }
