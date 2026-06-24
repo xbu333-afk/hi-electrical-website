@@ -180,6 +180,36 @@ export function buildGeoFraudNotification(opts: {
   };
 }
 
+/**
+ * Sent when a paid GCLID click arrives from desktop on a mobile-only campaign.
+ */
+export function buildDesktopFraudNotification(opts: {
+  ip: string;
+  gclid: string;
+  userAgent?: string | null;
+  vtDevice?: string | null;
+  keyword?: string | null;
+}) {
+  const deviceEvidence =
+    opts.vtDevice === "c"
+      ? "ValueTrack device=c (Computer)"
+      : summarizeUserAgent(opts.userAgent);
+
+  return {
+    title: `🚨 הונאת מכשיר — Desktop בקמפיין Mobile-only!`,
+    message: lines(
+      `⚠️ הקמפיין מוגדר לנייד בלבד!`,
+      `💻 מכשיר: ${deviceEvidence}`,
+      `🌐 IP: ${opts.ip}`,
+      `🎟️ GCLID: ${opts.gclid}`,
+      opts.keyword ? `🎯 מילת מפתח: ${opts.keyword}` : null,
+      `💸 סמן כ-Invalid Click בגוגל אדס לקבלת החזר!`
+    ),
+    priority: 2 as PushoverPriority,
+    sound: "siren",
+  };
+}
+
 /** Sent on page enter. */
 export function buildVisitorNotification(opts: {
   source: "mumooman" | "organic";

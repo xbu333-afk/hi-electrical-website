@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { DashboardClient, type VisitorRow } from "@/app/components/DashboardClient";
+import { getGoogleAdsReportMeta } from "@/lib/google-ads-report-meta";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -141,5 +142,5 @@ export default async function AnalyticsDashboard() {
 
   if (fatalError) return <ErrorScreen error={fatalError} />;
 
-  return <DashboardClient allRows={logs} warning={warning} />;
+  return <DashboardClient allRows={logs} warning={warning} reportMeta={getGoogleAdsReportMeta()} />;
 }

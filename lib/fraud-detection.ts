@@ -227,3 +227,81 @@ export function detectGeoFraud(rows: GeoFraudLogLike[]): GeoFraudRow[] {
       browser_language: r.browser_language,
     }));
 }
+
+// ── Device Targeting Violations (mobile-only campaign) ─────────────────────────
+
+const MOBILE_UA =
+  /Mobile|Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i;
+
+export interface DesktopFraudRow {
+  id: number;
+  ip_address: string;
+  created_at: string;
+  gclid: string;
+  user_agent: string | null;
+  visitor_id?: string;
+  keyword?: string | null;
+  campaign_id?: string | null;
+  adgroup_id?: string | null;
+  network?: string | null;
+  vt_device: string | null;
+  browser_language?: string | null;
+  device: string | null;
+}
+
+type DesktopFraudLogLike = {
+  id: number;
+  ip_address: string;
+  created_at: string;
+  gclid: string | null;
+  source: string;
+  user_agent: string | null;
+  visitor_id?: string;
+  keyword?: string | null;
+  campaign_id?: string | null;
+  adgroup_id?: string | null;
+  network?: string | null;
+  vt_device?: string | null;
+  browser_language?: string | null;
+  device?: string | null;
+};
+
+/** True when click evidence indicates desktop/computer on a mobile-only campaign. */
+export function isDesktopPaidClick(row: {
+  vt_device?: string | null;
+  device?: string | null;
+  user_agent?: string | null;
+}): boolean {
+  const vt = row.vt_device?.toLowerCase();
+  if (vt === "c") return true;
+  if (row.device === "desktop") return true;
+  if (row.user_agent && !MOBILE_UA.test(row.user_agent)) return true;
+  return false;
+}
+
+/**
+ * Paid clicks (with GCLID) from desktop/computer devices.
+ * Campaign targets mobile only — these are device targeting violations.
+ */
+export function detectDesktopFraud(rows: DesktopFraudLogLike[]): DesktopFraudRow[] {
+  return rows
+    .filter(
+      (r): r is DesktopFraudLogLike & { gclid: string } =>
+        r.source === "mumooman" && !!r.gclid && isDesktopPaidClick(r)
+    )
+    .map((r) => ({
+      id: r.id,
+      ip_address: r.ip_address,
+      created_at: r.created_at,
+      gclid: r.gclid,
+      user_agent: r.user_agent,
+      visitor_id: r.visitor_id,
+      keyword: r.keyword,
+      campaign_id: r.campaign_id,
+      adgroup_id: r.adgroup_id,
+      network: r.network,
+      vt_device: r.vt_device ?? null,
+      browser_language: r.browser_language,
+      device: r.device ?? null,
+    }));
+}

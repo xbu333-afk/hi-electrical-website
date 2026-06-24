@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import type { SuspiciousIpGroup, IpSwitcherGroup, GeoFraudRow } from "@/lib/fraud-detection";
+import type {
+  SuspiciousIpGroup,
+  IpSwitcherGroup,
+  GeoFraudRow,
+  DesktopFraudRow,
+} from "@/lib/fraud-detection";
 import { getDeviceDisplay } from "@/lib/user-agent";
+import {
+  buildGoogleCsvCoverLines,
+  COUNTRY_NAMES_EN,
+  type GoogleAdsReportMeta,
+} from "@/lib/google-ads-report-meta";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function csvCell(val: string | null | undefined): string {
@@ -53,7 +63,11 @@ function exportGoogleAdsReport(
   gclidGroups: SuspiciousIpGroup[],
   ipSwitcherGroups: IpSwitcherGroup[],
   geoFraudRows: GeoFraudRow[],
-  dateRangeLabel: string
+  desktopFraudRows: DesktopFraudRow[],
+  reportMeta: GoogleAdsReportMeta,
+  dateRangeLabel: string,
+  rangeStart: Date,
+  rangeEnd: Date
 ) {
   const HEADERS = [
     "IP Address",
@@ -72,11 +86,24 @@ function exportGoogleAdsReport(
     .map(csvCell)
     .join(",");
 
-  // Collect rows, deduplicating by (ip + gclid + timestamp)
-  const seen = new Set<string>();
-  const csvRows: string[] = [];
+  type RowAccum = {
+    ip: string;
+    ts: string;
+    gclid: string;
+    ua: string | null | undefined;
+    keyword: string | null | undefined;
+    campaignId: string | null | undefined;
+    adgroupId: string | null | undefined;
+    network: string | null | undefined;
+    device: string | null | undefined;
+    visitorId: string | null | undefined;
+    browserLang: string | null | undefined;
+    fraudTypes: string[];
+  };
 
-  function addRow(
+  const byKey = new Map<string, RowAccum>();
+
+  function addFraudType(
     ip: string,
     ts: string,
     gclid: string | null,
@@ -90,31 +117,34 @@ function exportGoogleAdsReport(
     browserLang: string | null | undefined,
     fraudType: string
   ) {
-    if (!gclid) return; // Google Ads only accepts GCLID rows
+    if (!gclid) return;
     const key = `${ip}|${gclid}|${ts}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    csvRows.push(
-      [
-        csvCell(ip),
-        csvCell(fmtTimestamp(ts)),
-        csvCell(gclid),
-        csvCell(ua),
-        csvCell(keyword),
-        csvCell(campaignId),
-        csvCell(adgroupId),
-        csvCell(network),
-        csvCell(device),
-        csvCell(visitorId),
-        csvCell(browserLang),
-        csvCell(fraudType),
-      ].join(",")
-    );
+    const existing = byKey.get(key);
+    if (existing) {
+      if (!existing.fraudTypes.includes(fraudType)) {
+        existing.fraudTypes.push(fraudType);
+      }
+      return;
+    }
+    byKey.set(key, {
+      ip,
+      ts,
+      gclid,
+      ua,
+      keyword,
+      campaignId,
+      adgroupId,
+      network,
+      device,
+      visitorId,
+      browserLang,
+      fraudTypes: [fraudType],
+    });
   }
 
   for (const g of gclidGroups) {
     for (const r of g.gclid_rows) {
-      addRow(
+      addFraudType(
         r.ip_address,
         r.created_at,
         r.gclid,
@@ -133,7 +163,7 @@ function exportGoogleAdsReport(
 
   for (const g of ipSwitcherGroups) {
     for (const r of g.rows) {
-      addRow(
+      addFraudType(
         r.ip_address,
         r.created_at,
         r.gclid,
@@ -151,8 +181,8 @@ function exportGoogleAdsReport(
   }
 
   for (const r of geoFraudRows) {
-    const countryName = COUNTRY_NAMES[r.country] ?? r.country;
-    addRow(
+    const countryName = COUNTRY_NAMES_EN[r.country] ?? r.country;
+    addFraudType(
       r.ip_address,
       r.created_at,
       r.gclid,
@@ -168,7 +198,55 @@ function exportGoogleAdsReport(
     );
   }
 
-  const csv = "\uFEFF" + [HEADERS, ...csvRows].join("\r\n");
+  for (const r of desktopFraudRows) {
+    const deviceLabel =
+      r.vt_device?.toLowerCase() === "c"
+        ? "Computer (ValueTrack device=c)"
+        : r.device === "desktop"
+          ? "Desktop (server-detected)"
+          : "Desktop (user agent)";
+    addFraudType(
+      r.ip_address,
+      r.created_at,
+      r.gclid,
+      r.user_agent,
+      r.keyword,
+      r.campaign_id,
+      r.adgroup_id,
+      r.network,
+      r.vt_device,
+      r.visitor_id,
+      r.browser_language,
+      `Device Targeting Violation — Campaign targets mobile devices only; paid click originated from ${deviceLabel}. The associated GCLID was charged despite the click being delivered outside the campaign's device targeting settings.`
+    );
+  }
+
+  const csvRows = [...byKey.values()].map((row) =>
+    [
+      csvCell(row.ip),
+      csvCell(fmtTimestamp(row.ts)),
+      csvCell(row.gclid),
+      csvCell(row.ua),
+      csvCell(row.keyword),
+      csvCell(row.campaignId),
+      csvCell(row.adgroupId),
+      csvCell(row.network),
+      csvCell(row.device),
+      csvCell(row.visitorId),
+      csvCell(row.browserLang),
+      csvCell(row.fraudTypes.join(" | ")),
+    ].join(",")
+  );
+
+  const coverLines = buildGoogleCsvCoverLines(
+    reportMeta,
+    dateRangeLabel,
+    rangeStart,
+    rangeEnd
+  );
+
+  const csv =
+    "\uFEFF" + [...coverLines, HEADERS, ...csvRows].join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -217,19 +295,32 @@ export function SuspiciousIpsPanel({
   gclidGroups,
   ipSwitcherGroups,
   geoFraudRows,
+  desktopFraudRows,
+  reportMeta,
   dateRangeLabel,
+  rangeStart,
+  rangeEnd,
 }: {
   gclidGroups: SuspiciousIpGroup[];
   ipSwitcherGroups: IpSwitcherGroup[];
   geoFraudRows: GeoFraudRow[];
+  desktopFraudRows: DesktopFraudRow[];
+  reportMeta: GoogleAdsReportMeta;
   dateRangeLabel: string;
+  rangeStart: Date;
+  rangeEnd: Date;
 }) {
   const totalSuspicious =
-    gclidGroups.length + ipSwitcherGroups.length + geoFraudRows.length;
+    gclidGroups.length +
+    ipSwitcherGroups.length +
+    geoFraudRows.length +
+    desktopFraudRows.length;
   const hasAnyGclid =
     gclidGroups.flatMap((g) => g.gclid_rows).some((r) => r.gclid) ||
     ipSwitcherGroups.flatMap((g) => g.rows).some((r) => r.gclid) ||
-    geoFraudRows.length > 0;
+    geoFraudRows.length > 0 ||
+    desktopFraudRows.length > 0;
+  const missingMeta = !reportMeta.customerId || !reportMeta.campaignName;
 
   return (
     <div className="bg-red-50 border-2 border-red-300 rounded-xl shadow-sm overflow-hidden">
@@ -252,16 +343,33 @@ export function SuspiciousIpsPanel({
                   geoFraudRows.length > 0
                     ? `${geoFraudRows.length} קליקים מחו"ל`
                     : null,
+                  desktopFraudRows.length > 0
+                    ? `${desktopFraudRows.length} Desktop ב-Mobile-only`
+                    : null,
                 ]
                   .filter(Boolean)
                   .join(" + ") + ` — ${dateRangeLabel}`}
           </p>
+          {missingMeta && (
+            <p className="text-xs text-amber-700 mt-1">
+              ⚠️ הגדר ב-Vercel: GOOGLE_ADS_CUSTOMER_ID ו-GOOGLE_ADS_CAMPAIGN_NAME — יופיעו אוטומטית בראש קובץ ה-CSV
+            </p>
+          )}
         </div>
         {hasAnyGclid && (
           <button
             type="button"
             onClick={() =>
-              exportGoogleAdsReport(gclidGroups, ipSwitcherGroups, geoFraudRows, dateRangeLabel)
+              exportGoogleAdsReport(
+                gclidGroups,
+                ipSwitcherGroups,
+                geoFraudRows,
+                desktopFraudRows,
+                reportMeta,
+                dateRangeLabel,
+                rangeStart,
+                rangeEnd
+              )
             }
             className="text-sm bg-white border border-red-300 hover:bg-red-50 text-red-800 font-medium px-4 py-2 rounded-lg shadow-sm transition whitespace-nowrap"
           >
@@ -483,6 +591,72 @@ export function SuspiciousIpsPanel({
                               <span className="text-base leading-none">{dev.icon}</span>
                               {dev.text && (
                                 <span className="text-purple-800/80">{dev.text}</span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <CopyIpButton ip={r.ip_address} />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── Section 4: Device Targeting Violations (desktop on mobile-only) ── */}
+          {desktopFraudRows.length > 0 && (
+            <div>
+              <div className="px-5 py-3 bg-sky-100/40">
+                <p className="text-xs font-semibold text-sky-800 uppercase tracking-wide">
+                  💻 הונאת מכשיר — Desktop בקמפיין Mobile-only ({desktopFraudRows.length})
+                </p>
+                <p className="text-xs text-sky-700 mt-0.5">
+                  הקמפיין מוגדר לנייד בלבד — קליקים אלה עם GCLID הגיעו ממחשב (Desktop). זכאים להחזר מגוגל.
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-sky-100/40 text-sky-800 text-xs uppercase tracking-wide border-b border-sky-200">
+                      <th className="px-4 py-3 text-right font-medium">IP</th>
+                      <th className="px-4 py-3 text-right font-medium">GCLID</th>
+                      <th className="px-4 py-3 text-right font-medium">זמן</th>
+                      <th className="px-4 py-3 text-right font-medium">מילת מפתח</th>
+                      <th className="px-4 py-3 text-center font-medium">מכשיר</th>
+                      <th className="px-4 py-3 text-center font-medium">פעולה</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-sky-100">
+                    {desktopFraudRows.map((r) => {
+                      const dev = getDeviceDisplay(r.device, r.user_agent);
+                      return (
+                        <tr key={r.id} className="hover:bg-sky-50/50">
+                          <td className="px-4 py-3 font-mono text-sky-900 text-xs whitespace-nowrap font-semibold">
+                            {r.ip_address}
+                          </td>
+                          <td
+                            className="px-4 py-3 font-mono text-violet-800 text-xs max-w-[140px] truncate"
+                            title={r.gclid}
+                          >
+                            {r.gclid.slice(0, 18)}…
+                          </td>
+                          <td className="px-4 py-3 text-sky-800 text-xs whitespace-nowrap">
+                            {fmtDisplay(r.created_at)}
+                          </td>
+                          <td className="px-4 py-3 text-xs max-w-[160px] truncate text-sky-900">
+                            {r.keyword ? `🎯 ${r.keyword}` : <span className="text-gray-300">—</span>}
+                          </td>
+                          <td
+                            className="px-4 py-3 text-xs whitespace-nowrap text-center"
+                            title={r.user_agent ?? undefined}
+                          >
+                            <span className="inline-flex items-center gap-1 cursor-help">
+                              <span className="text-base leading-none">{dev.icon}</span>
+                              {dev.text && (
+                                <span className="text-sky-800/80">{dev.text}</span>
                               )}
                             </span>
                           </td>

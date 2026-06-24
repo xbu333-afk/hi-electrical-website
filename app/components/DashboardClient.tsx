@@ -7,9 +7,11 @@ import {
   detectSuspiciousGclidIps,
   detectIpSwitcherByVisitorId,
   detectGeoFraud,
+  detectDesktopFraud,
 } from "@/lib/fraud-detection";
 import { SuspiciousIpsPanel } from "./SuspiciousIpsPanel";
 import { formatAdsNetwork, formatMatchType } from "@/lib/valuetrack";
+import type { GoogleAdsReportMeta } from "@/lib/google-ads-report-meta";
 
 // ── Shared row type (used by page.tsx and this component) ─────────────────────
 export interface VisitorRow {
@@ -155,9 +157,11 @@ function csvCell(val: string | null | undefined): string {
 export function DashboardClient({
   allRows,
   warning,
+  reportMeta,
 }: {
   allRows: VisitorRow[];
   warning: string | null;
+  reportMeta: GoogleAdsReportMeta;
 }) {
   const [preset, setPreset] = useState<DatePreset>("today");
   const [customStart, setCustomStart] = useState("");
@@ -216,13 +220,24 @@ export function DashboardClient({
     () => new Set(geoFraudRows.map((r) => r.id)),
     [geoFraudRows]
   );
+  const desktopFraudRows = useMemo(
+    () => detectDesktopFraud(filteredRows),
+    [filteredRows]
+  );
+  const desktopFraudIds = useMemo(
+    () => new Set(desktopFraudRows.map((r) => r.id)),
+    [desktopFraudRows]
+  );
 
   // Stats (based on displayRows — respects both date + source filters)
   const paidCount = displayRows.filter((r) => r.source === "mumooman").length;
   const clickedCount = displayRows.filter((r) => r.clicked_action).length;
   const gclidCount = displayRows.filter((r) => r.gclid).length;
   const suspiciousCount =
-    fraudGroups.length + ipSwitcherGroups.length + geoFraudRows.length;
+    fraudGroups.length +
+    ipSwitcherGroups.length +
+    geoFraudRows.length +
+    desktopFraudRows.length;
 
   const dateRangeLabel =
     preset === "custom" && customStart && customEnd
@@ -432,7 +447,11 @@ export function DashboardClient({
           gclidGroups={fraudGroups}
           ipSwitcherGroups={ipSwitcherGroups}
           geoFraudRows={geoFraudRows}
+          desktopFraudRows={desktopFraudRows}
+          reportMeta={reportMeta}
           dateRangeLabel={dateRangeLabel}
+          rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
         />
 
         {/* Main Table */}
@@ -459,7 +478,9 @@ export function DashboardClient({
                   const isGclidFraud = fraudIps.has(row.ip_address);
                   const isIpSwitcher = fraudVisitorIds.has(row.visitor_id);
                   const isGeoFraud = geoFraudIds.has(row.id);
-                  const fraud = isGclidFraud || isIpSwitcher || isGeoFraud;
+                  const isDesktopFraud = desktopFraudIds.has(row.id);
+                  const fraud =
+                    isGclidFraud || isIpSwitcher || isGeoFraud || isDesktopFraud;
                   const pages = formatPages(row);
                   const dev = getDeviceDisplay(row.device, row.user_agent);
                   return (
@@ -571,6 +592,11 @@ export function DashboardClient({
                         {isGeoFraud && (
                           <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
                             🌍 Geo ({row.country})
+                          </span>
+                        )}
+                        {isDesktopFraud && (
+                          <span className="inline-flex items-center gap-1 bg-sky-50 text-sky-700 border border-sky-200 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                            💻 Desktop
                           </span>
                         )}
                       </td>

@@ -13,7 +13,9 @@ import {
   buildVisitorNotification,
   buildClickNotification,
   buildGeoFraudNotification,
+  buildDesktopFraudNotification,
 } from "@/lib/pushover";
+import { isDesktopPaidClick } from "@/lib/fraud-detection";
 import {
   normalizeValueTrackPayload,
   type ValueTrackParams,
@@ -261,6 +263,31 @@ export async function POST(req: NextRequest) {
         );
       } catch (e) {
         console.error("[notify:geo-fraud pushover]", e);
+      }
+    }
+
+    // 5) Desktop-fraud alert — paid click on mobile-only campaign from desktop (emergency)
+    if (
+      body.source === "mumooman" &&
+      gclid &&
+      isDesktopPaidClick({
+        vt_device: valueTrack.vt_device,
+        device,
+        user_agent: userAgent,
+      })
+    ) {
+      try {
+        await sendPushover(
+          buildDesktopFraudNotification({
+            ip,
+            gclid,
+            userAgent,
+            vtDevice: valueTrack.vt_device,
+            keyword: valueTrack.keyword,
+          })
+        );
+      } catch (e) {
+        console.error("[notify:desktop-fraud pushover]", e);
       }
     }
 
