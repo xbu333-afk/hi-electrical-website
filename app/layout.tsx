@@ -70,6 +70,22 @@ export default async function RootLayout({
       dir="rtl"
       className={`${heebo.variable} ${gveretLevin.variable} h-full`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  'ad_storage': 'granted',
+  'ad_user_data': 'granted',
+  'ad_personalization': 'granted',
+  'analytics_storage': 'granted'
+});
+`,
+          }}
+        />
+      </head>
       {isAdmin ? (
         // Admin pages — bare body, no site chrome
         <body className="h-full bg-gray-50 text-slate-900 antialiased">{children}</body>
