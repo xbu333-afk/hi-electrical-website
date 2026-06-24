@@ -1,11 +1,13 @@
 import { type NextRequest } from "next/server";
+import { extractClientIp } from "@/lib/client-ip";
 import {
   insertVisitorLog,
   updateVisitorLog,
   appendPageToLog,
-  getVisitorHistory,
+  getVisitorHistoryByIp,
   countRecentVisitsByIp,
   type VisitorDevice,
+  type VisitorHistory,
 } from "@/lib/visitor-logs";
 import {
   sendPushover,
@@ -45,11 +47,20 @@ type NotifyPayload =
     };
 
 function getIp(req: NextRequest): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
-  );
+  return extractClientIp(req.headers);
+}
+
+/** If DB insert failed, the count queries won't include this visit — add 1. */
+function withCurrentVisit(
+  history: VisitorHistory,
+  insertSucceeded: boolean
+): VisitorHistory {
+  if (insertSucceeded) return history;
+  return {
+    today_count: history.today_count + 1,
+    week_count: history.week_count + 1,
+    total_count: history.total_count + 1,
+  };
 }
 
 function getDevice(req: NextRequest): VisitorDevice {
@@ -185,14 +196,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2) Visitor history — failures must not block Pushover
-    let history = { today_count: 1, week_count: 1, total_count: 1 };
+    // 2) Visitor history by IP — failures must not block Pushover
+    let history: VisitorHistory = { today_count: 1, week_count: 1, total_count: 1 };
     try {
-      history = await getVisitorHistory(body.visitor_id);
+      const counts = await getVisitorHistoryByIp(ip);
+      history = withCurrentVisit(counts, log_id != null);
+      if (history.today_count < 1) {
+        history = { today_count: 1, week_count: 1, total_count: 1 };
+      }
     } catch (e) {
-      console.error("[notify:enter] getVisitorHistory failed:", {
+      console.error("[notify:enter] getVisitorHistoryByIp failed:", {
         message: e instanceof Error ? e.message : String(e),
-        visitor_id: body.visitor_id,
+        ip,
       });
     }
 

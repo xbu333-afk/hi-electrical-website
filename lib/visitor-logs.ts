@@ -54,17 +54,15 @@ export function logSupabaseError(context: string, error: unknown): void {
   console.error(`[visitor_logs] ${context}:`, error);
 }
 
-/** Midnight in Israel — correct for DST on Vercel (UTC servers). */
+/** Midnight in Israel (Asia/Jerusalem) as a UTC Date — handles DST on Vercel servers. */
 export function getIsraelStartOfDay(ref = new Date()): Date {
-  const jerusalem = new Date(
+  const nowInIsrael = new Date(
     ref.toLocaleString("en-US", { timeZone: ISRAEL_TZ })
   );
-  const msFromMidnight =
-    jerusalem.getHours() * 3_600_000 +
-    jerusalem.getMinutes() * 60_000 +
-    jerusalem.getSeconds() * 1_000 +
-    jerusalem.getMilliseconds();
-  return new Date(ref.getTime() - msFromMidnight);
+  const midnightIsrael = new Date(nowInIsrael);
+  midnightIsrael.setHours(0, 0, 0, 0);
+  const offsetMs = ref.getTime() - nowInIsrael.getTime();
+  return new Date(midnightIsrael.getTime() + offsetMs);
 }
 
 async function patchOptionalFields(
@@ -200,44 +198,48 @@ export async function appendPageToLog(
 }
 
 /**
- * Returns today/week/total visit counts for a specific visitor_id.
- * Called after the current visit is already inserted, so today_count ≥ 1.
+ * Returns today/week/total visit counts for an IP address.
+ * Call after insertVisitorLog so the current row is included in the counts.
  */
-export async function getVisitorHistory(
-  visitorId: string
-): Promise<VisitorHistory> {
+export async function getVisitorHistoryByIp(ip: string): Promise<VisitorHistory> {
+  if (!ip || ip === "unknown") {
+    return { today_count: 0, week_count: 0, total_count: 0 };
+  }
+
   const admin = getSupabaseAdmin();
   const startOfToday = getIsraelStartOfDay();
   const startOfWeek = new Date(Date.now() - 7 * 24 * 3_600_000);
 
+  const byIp = () =>
+    admin
+      .from("visitor_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("ip_address", ip);
+
   const [todayRes, weekRes, totalRes] = await Promise.all([
-    admin
-      .from("visitor_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("visitor_id", visitorId)
-      .gte("created_at", startOfToday.toISOString()),
-    admin
-      .from("visitor_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("visitor_id", visitorId)
-      .gte("created_at", startOfWeek.toISOString()),
-    admin
-      .from("visitor_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("visitor_id", visitorId),
+    byIp().gte("created_at", startOfToday.toISOString()),
+    byIp().gte("created_at", startOfWeek.toISOString()),
+    byIp(),
   ]);
 
-  if (todayRes.error) logSupabaseError("getVisitorHistory today", todayRes.error);
-  if (weekRes.error) logSupabaseError("getVisitorHistory week", weekRes.error);
-  if (totalRes.error) logSupabaseError("getVisitorHistory total", totalRes.error);
+  if (todayRes.error)
+    logSupabaseError("getVisitorHistoryByIp today", todayRes.error);
+  if (weekRes.error)
+    logSupabaseError("getVisitorHistoryByIp week", weekRes.error);
+  if (totalRes.error)
+    logSupabaseError("getVisitorHistoryByIp total", totalRes.error);
+
+  // Throw if all queries failed so caller can fall back gracefully
+  if (todayRes.error && weekRes.error && totalRes.error) {
+    throw todayRes.error;
+  }
 
   return {
-    today_count: Math.max(todayRes.count ?? 0, 1),
-    week_count: Math.max(weekRes.count ?? 0, 1),
-    total_count: Math.max(totalRes.count ?? 0, 1),
+    today_count: todayRes.count ?? 0,
+    week_count: weekRes.count ?? 0,
+    total_count: totalRes.count ?? 0,
   };
 }
-
 /**
  * Count visitor_logs rows for an IP within a sliding time window.
  * Used for enter Pushover cooldown (bypassed when gclid is present).
