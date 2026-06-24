@@ -39,6 +39,7 @@ export interface VisitorRow {
 
 // ── Date range helpers ────────────────────────────────────────────────────────
 type DatePreset = "today" | "yesterday" | "week" | "month" | "custom";
+type SourceFilter = "all" | "mumooman" | "organic";
 
 const DATE_PRESETS: { id: DatePreset; label: string }[] = [
   { id: "today", label: "היום" },
@@ -159,12 +160,14 @@ export function DashboardClient({
   const [preset, setPreset] = useState<DatePreset>("today");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
 
   const { rangeStart, rangeEnd } = useMemo(
     () => computeDateRange(preset, customStart, customEnd),
     [preset, customStart, customEnd]
   );
 
+  // Date-only filtered — used for fraud detection (always full picture)
   const filteredRows = useMemo(
     () =>
       allRows.filter((r) => {
@@ -172,6 +175,19 @@ export function DashboardClient({
         return ts >= rangeStart.getTime() && ts <= rangeEnd.getTime();
       }),
     [allRows, rangeStart, rangeEnd]
+  );
+
+  // Date + source filtered — used for stats, table, and CSV
+  const displayRows = useMemo(
+    () =>
+      sourceFilter === "all"
+        ? filteredRows
+        : filteredRows.filter((r) =>
+            sourceFilter === "mumooman"
+              ? r.source === "mumooman"
+              : r.source !== "mumooman"
+          ),
+    [filteredRows, sourceFilter]
   );
 
   const fraudGroups = useMemo(
@@ -191,10 +207,10 @@ export function DashboardClient({
     [ipSwitcherGroups]
   );
 
-  // Stats
-  const paidCount = filteredRows.filter((r) => r.source === "mumooman").length;
-  const clickedCount = filteredRows.filter((r) => r.clicked_action).length;
-  const gclidCount = filteredRows.filter((r) => r.gclid).length;
+  // Stats (based on displayRows — respects both date + source filters)
+  const paidCount = displayRows.filter((r) => r.source === "mumooman").length;
+  const clickedCount = displayRows.filter((r) => r.clicked_action).length;
+  const gclidCount = displayRows.filter((r) => r.gclid).length;
   const suspiciousCount = fraudGroups.length + ipSwitcherGroups.length;
 
   const dateRangeLabel =
@@ -227,7 +243,7 @@ export function DashboardClient({
       .map(csvCell)
       .join(",");
 
-    const rows = filteredRows.map((r) =>
+    const rows = displayRows.map((r) =>
       [
         csvCell(fmtTimestampForCsv(r.created_at)),
         csvCell(r.ip_address),
@@ -287,7 +303,7 @@ export function DashboardClient({
             <button
               onClick={handleAllVisitorsExport}
               className="flex items-center gap-2 text-sm bg-white border border-gray-200 hover:bg-gray-50 text-slate-700 px-4 py-2 rounded-lg shadow-sm transition whitespace-nowrap"
-              title={`ייצוא ${filteredRows.length} שורות — ${dateRangeLabel}`}
+              title={`ייצוא ${displayRows.length} שורות — ${dateRangeLabel}`}
             >
               📋 ייצוא כל הכניסות (CSV)
             </button>
@@ -307,10 +323,40 @@ export function DashboardClient({
           </div>
         )}
 
-        {/* Date Filter */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+        {/* Filters */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+          {/* Source filter */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium text-slate-600 ml-2">
+            <span className="text-sm font-medium text-slate-600 ml-2 w-24">
+              סנן לפי מקור:
+            </span>
+            {(
+              [
+                { id: "all", label: "🔍 הכל" },
+                { id: "mumooman", label: "💰 ממומן" },
+                { id: "organic", label: "🟢 אורגני" },
+              ] as { id: SourceFilter; label: string }[]
+            ).map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setSourceFilter(s.id)}
+                className={`text-sm px-3 py-1.5 rounded-lg border transition whitespace-nowrap ${
+                  sourceFilter === s.id
+                    ? "bg-slate-800 text-white border-slate-800 font-medium"
+                    : "bg-white text-slate-700 border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100" />
+
+          {/* Date filter */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-slate-600 ml-2 w-24">
               סנן לפי תאריך:
             </span>
             {DATE_PRESETS.map((p) => (
@@ -361,8 +407,9 @@ export function DashboardClient({
         </div>
 
         {/* Stats */}
+
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <StatCard label={`כניסות — ${dateRangeLabel}`} value={filteredRows.length} color="blue" />
+          <StatCard label={`כניסות — ${dateRangeLabel}`} value={displayRows.length} color="blue" />
           <StatCard label="ממומן" value={paidCount} color="yellow" />
           <StatCard label="יצרו קשר" value={clickedCount} color="green" />
           <StatCard label="GCLIDs" value={gclidCount} color="purple" />
@@ -396,7 +443,7 @@ export function DashboardClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredRows.map((row) => {
+                {displayRows.map((row) => {
                   const isGclidFraud = fraudIps.has(row.ip_address);
                   const isIpSwitcher = fraudVisitorIds.has(row.visitor_id);
                   const fraud = isGclidFraud || isIpSwitcher;
@@ -512,13 +559,13 @@ export function DashboardClient({
                     </tr>
                   );
                 })}
-                {filteredRows.length === 0 && (
+                {displayRows.length === 0 && (
                   <tr>
                     <td
                       colSpan={11}
                       className="px-4 py-16 text-center text-slate-400"
                     >
-                      אין נתונים בטווח התאריכים הנבחר
+                      אין נתונים בטווח התאריכים והסינון הנבחר
                     </td>
                   </tr>
                 )}
