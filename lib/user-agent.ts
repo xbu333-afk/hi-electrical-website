@@ -1,3 +1,14 @@
+/**
+ * Returns true when the User-Agent belongs to a Google system crawler that
+ * should be excluded from fraud/analytics data.
+ * Only matches 'AdsBot-Google' and 'Googlebot' — generic 'bot' is intentionally
+ * NOT filtered so that other bots and real users are still recorded.
+ */
+export function isGoogleSystemBot(ua: string | null | undefined): boolean {
+  if (!ua) return false;
+  return /AdsBot-Google|Googlebot/.test(ua);
+}
+
 /** Brief device/OS/browser label for Pushover fraud alerts. */
 export function summarizeUserAgent(ua: string | null | undefined): string {
   if (!ua) return "לא ידוע";

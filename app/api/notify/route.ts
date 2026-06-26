@@ -16,6 +16,7 @@ import {
   buildDesktopFraudNotification,
 } from "@/lib/pushover";
 import { isDesktopPaidClick, isPaidAdClick } from "@/lib/fraud-detection";
+import { isGoogleSystemBot } from "@/lib/user-agent";
 import {
   normalizeValueTrackPayload,
   type ValueTrackParams,
@@ -161,6 +162,16 @@ export async function POST(req: NextRequest) {
     const gclid = body.gclid ?? null;
     const browserLanguage = body.browser_language?.trim() || null;
     const valueTrack = normalizeValueTrackPayload(body);
+
+    // ── FILTER: Google system crawlers (AdsBot-Google / Googlebot only) ──────
+    if (isGoogleSystemBot(userAgent)) {
+      return Response.json({ ok: true, skipped: "google-bot" });
+    }
+
+    // ── FILTER: Tag Manager synthetic GCLIDs (gtm_ prefix) ───────────────────
+    if (gclid?.startsWith("gtm_")) {
+      return Response.json({ ok: true, skipped: "gtm-gclid" });
+    }
 
     // 1) Supabase insert — failures must not block Pushover
     let log_id: number | undefined;
