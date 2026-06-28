@@ -171,6 +171,90 @@ export function detectIpSwitcherByVisitorId(logs: LogLike[]): IpSwitcherGroup[] 
   return groups.sort((a, b) => b.unique_ip_count - a.unique_ip_count);
 }
 
+export interface FingerprintIpSwitcherRow {
+  device_fingerprint: string;
+  visitor_id: string;
+  ip_address: string;
+  created_at: string;
+  gclid: string | null;
+  user_agent: string | null;
+  keyword?: string | null;
+  campaign_id?: string | null;
+  adgroup_id?: string | null;
+  network?: string | null;
+  vt_device?: string | null;
+  browser_language?: string | null;
+}
+
+export interface FingerprintIpSwitcherGroup {
+  device_fingerprint: string;
+  unique_ip_count: number;
+  unique_ips: string[];
+  unique_visitor_id_count: number;
+  unique_visitor_ids: string[];
+  latest_at: string;
+  latest_user_agent: string | null;
+  rows: FingerprintIpSwitcherRow[];
+}
+
+/**
+ * Device fingerprints that appear with more than one unique IP address in the provided rows.
+ * Catches Incognito + IP rotation where cookie (visitor_id) changes each session but
+ * hardware fingerprint stays the same. Callers must pass pre-filtered rows (e.g. by date range).
+ */
+export function detectIpSwitcherByFingerprint(
+  logs: LogLike[]
+): FingerprintIpSwitcherGroup[] {
+  const byFingerprint = new Map<string, LogLike[]>();
+  for (const row of logs) {
+    const fp = row.device_fingerprint?.trim();
+    if (!fp || !row.ip_address || !isPaidAdClick(row)) continue;
+    const list = byFingerprint.get(fp) ?? [];
+    list.push(row);
+    byFingerprint.set(fp, list);
+  }
+
+  const groups: FingerprintIpSwitcherGroup[] = [];
+  for (const [fingerprint, rows] of byFingerprint) {
+    const uniqueIps = [...new Set(rows.map((r) => r.ip_address))];
+    if (uniqueIps.length <= 1) continue;
+
+    const uniqueVisitorIds = [
+      ...new Set(rows.map((r) => r.visitor_id).filter(Boolean) as string[]),
+    ];
+    const sorted = [...rows].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    const latest = sorted[0];
+
+    groups.push({
+      device_fingerprint: fingerprint,
+      unique_ip_count: uniqueIps.length,
+      unique_ips: uniqueIps,
+      unique_visitor_id_count: uniqueVisitorIds.length,
+      unique_visitor_ids: uniqueVisitorIds,
+      latest_at: latest.created_at,
+      latest_user_agent: latest.user_agent,
+      rows: sorted.map((r) => ({
+        device_fingerprint: fingerprint,
+        visitor_id: r.visitor_id ?? "",
+        ip_address: r.ip_address,
+        created_at: r.created_at,
+        gclid: r.gclid,
+        user_agent: r.user_agent,
+        keyword: r.keyword,
+        campaign_id: r.campaign_id,
+        adgroup_id: r.adgroup_id,
+        network: r.network,
+        vt_device: r.vt_device,
+        browser_language: r.browser_language,
+      })),
+    });
+  }
+
+  return groups.sort((a, b) => b.unique_ip_count - a.unique_ip_count);
+}
+
 /** Flatten all gclid rows from suspicious IP groups for Google CSV export. */
 export function flattenFraudClicksForExport(groups: SuspiciousIpGroup[]): FraudClickRow[] {
   return groups.flatMap((g) => g.gclid_rows);

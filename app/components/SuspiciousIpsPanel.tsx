@@ -4,6 +4,7 @@ import { useState } from "react";
 import type {
   SuspiciousIpGroup,
   IpSwitcherGroup,
+  FingerprintIpSwitcherGroup,
   GeoFraudRow,
   DesktopFraudRow,
 } from "@/lib/fraud-detection";
@@ -62,6 +63,7 @@ const COUNTRY_NAMES: Record<string, string> = {
 function exportGoogleAdsReport(
   gclidGroups: SuspiciousIpGroup[],
   ipSwitcherGroups: IpSwitcherGroup[],
+  fingerprintSwitcherGroups: FingerprintIpSwitcherGroup[],
   geoFraudRows: GeoFraudRow[],
   desktopFraudRows: DesktopFraudRow[],
   reportMeta: GoogleAdsReportMeta,
@@ -186,6 +188,26 @@ function exportGoogleAdsReport(
     }
   }
 
+  for (const g of fingerprintSwitcherGroups) {
+    for (const r of g.rows) {
+      addFraudType(
+        r.ip_address,
+        r.created_at,
+        r.gclid,
+        r.user_agent,
+        r.keyword,
+        r.campaign_id,
+        r.adgroup_id,
+        r.network,
+        r.vt_device,
+        r.visitor_id,
+        r.browser_language,
+        r.device_fingerprint,
+        `Click Fraud — IP rotation / Incognito evasion detected. The same physical device (device fingerprint hash: ${g.device_fingerprint.slice(0, 8)}…) was recorded across ${g.unique_ip_count} distinct IP addresses with ${g.unique_visitor_id_count} different browser cookie ID(s), indicating Incognito mode and/or cookie clearing combined with VPN or cellular IP cycling. Each IP produced a separately charged click.`
+      );
+    }
+  }
+
   for (const r of geoFraudRows) {
     const countryName = COUNTRY_NAMES_EN[r.country] ?? r.country;
     addFraudType(
@@ -303,6 +325,7 @@ function CopyIpButton({ ip }: { ip: string }) {
 export function SuspiciousIpsPanel({
   gclidGroups,
   ipSwitcherGroups,
+  fingerprintSwitcherGroups,
   geoFraudRows,
   desktopFraudRows,
   reportMeta,
@@ -312,6 +335,7 @@ export function SuspiciousIpsPanel({
 }: {
   gclidGroups: SuspiciousIpGroup[];
   ipSwitcherGroups: IpSwitcherGroup[];
+  fingerprintSwitcherGroups: FingerprintIpSwitcherGroup[];
   geoFraudRows: GeoFraudRow[];
   desktopFraudRows: DesktopFraudRow[];
   reportMeta: GoogleAdsReportMeta;
@@ -322,11 +346,13 @@ export function SuspiciousIpsPanel({
   const totalSuspicious =
     gclidGroups.length +
     ipSwitcherGroups.length +
+    fingerprintSwitcherGroups.length +
     geoFraudRows.length +
     desktopFraudRows.length;
   const hasAnyGclid =
     gclidGroups.flatMap((g) => g.gclid_rows).some((r) => r.gclid) ||
     ipSwitcherGroups.flatMap((g) => g.rows).some((r) => r.gclid) ||
+    fingerprintSwitcherGroups.flatMap((g) => g.rows).some((r) => r.gclid) ||
     geoFraudRows.length > 0 ||
     desktopFraudRows.length > 0;
   const missingMeta = !reportMeta.customerId || !reportMeta.campaignName;
@@ -347,7 +373,10 @@ export function SuspiciousIpsPanel({
                     ? `${gclidGroups.length} IPs עם GCLID כפול`
                     : null,
                   ipSwitcherGroups.length > 0
-                    ? `${ipSwitcherGroups.length} מסובבי IP`
+                    ? `${ipSwitcherGroups.length} מסובבי IP (Cookie)`
+                    : null,
+                  fingerprintSwitcherGroups.length > 0
+                    ? `${fingerprintSwitcherGroups.length} מסובבי IP (Fingerprint)`
                     : null,
                   geoFraudRows.length > 0
                     ? `${geoFraudRows.length} קליקים מחו"ל`
@@ -372,6 +401,7 @@ export function SuspiciousIpsPanel({
               exportGoogleAdsReport(
                 gclidGroups,
                 ipSwitcherGroups,
+                fingerprintSwitcherGroups,
                 geoFraudRows,
                 desktopFraudRows,
                 reportMeta,
@@ -530,6 +560,94 @@ export function SuspiciousIpsPanel({
                               title="דווח כל IP בנפרד לגוגל אדס"
                             >
                               🔄 IP Rotation
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── Section 2b: IP Rotation via Fingerprint (Incognito evasion) ── */}
+          {fingerprintSwitcherGroups.length > 0 && (
+            <div>
+              <div className="px-5 py-3 bg-red-100/50">
+                <p className="text-xs font-semibold text-red-900 uppercase tracking-wide">
+                  🔴 IP Rotation / Incognito Evasion — אותו מכשיר, IPs ו-Cookies שונים ({fingerprintSwitcherGroups.length})
+                </p>
+                <p className="text-xs text-red-800 mt-0.5">
+                  אותו Device Fingerprint Hash זוהה עם מספר כתובות IP ו-Cookie IDs שונים — מעיד על Incognito + סיבוב IP
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-red-100/50 text-red-900 text-xs uppercase tracking-wide border-b border-red-300">
+                      <th className="px-4 py-3 text-right font-medium">Device Fingerprint</th>
+                      <th className="px-4 py-3 text-center font-medium">IPs שונים</th>
+                      <th className="px-4 py-3 text-center font-medium">Cookies שונים</th>
+                      <th className="px-4 py-3 text-right font-medium">כתובות IP</th>
+                      <th className="px-4 py-3 text-right font-medium">זמן אחרון</th>
+                      <th className="px-4 py-3 text-center font-medium">מכשיר</th>
+                      <th className="px-4 py-3 text-center font-medium">פעולה</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-red-100">
+                    {fingerprintSwitcherGroups.map((g) => {
+                      const dev = getDeviceDisplay(null, g.latest_user_agent);
+                      return (
+                        <tr key={g.device_fingerprint} className="hover:bg-red-50/60">
+                          <td
+                            className="px-4 py-3 font-mono text-red-900 text-xs whitespace-nowrap font-semibold max-w-[160px] truncate"
+                            title={g.device_fingerprint}
+                          >
+                            {g.device_fingerprint.slice(0, 16)}…
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="inline-flex items-center justify-center min-w-[2rem] bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                              {g.unique_ip_count}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="inline-flex items-center justify-center min-w-[2rem] bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                              {g.unique_visitor_id_count}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs max-w-[200px]">
+                            <div className="flex flex-wrap gap-1">
+                              {g.unique_ips.map((ip) => (
+                                <span
+                                  key={ip}
+                                  className="inline-block font-mono bg-red-50 border border-red-200 text-red-800 px-1.5 py-0.5 rounded text-[10px]"
+                                >
+                                  {ip}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-red-800 text-xs whitespace-nowrap">
+                            {fmtDisplay(g.latest_at)}
+                          </td>
+                          <td
+                            className="px-4 py-3 text-xs whitespace-nowrap"
+                            title={g.latest_user_agent ?? undefined}
+                          >
+                            <span className="inline-flex items-center gap-1 cursor-help">
+                              <span className="text-base leading-none">{dev.icon}</span>
+                              {dev.text && (
+                                <span className="text-red-800/80">{dev.text}</span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className="inline-flex items-center gap-1 bg-red-600 text-white border border-red-700 text-xs px-2 py-1 rounded-md whitespace-nowrap font-semibold"
+                              title="Incognito + IP rotation — דווח לגוגל אדס"
+                            >
+                              🔴 Fingerprint IP
                             </span>
                           </td>
                         </tr>

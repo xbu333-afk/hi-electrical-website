@@ -6,6 +6,7 @@ import { formatPageLabel } from "@/lib/page-labels";
 import {
   detectSuspiciousGclidIps,
   detectIpSwitcherByVisitorId,
+  detectIpSwitcherByFingerprint,
   detectGeoFraud,
   detectDesktopFraud,
 } from "@/lib/fraud-detection";
@@ -192,6 +193,10 @@ export function DashboardClient({
     () => detectIpSwitcherByVisitorId(filteredRows),
     [filteredRows]
   );
+  const fingerprintSwitcherGroups = useMemo(
+    () => detectIpSwitcherByFingerprint(filteredRows),
+    [filteredRows]
+  );
   const fraudIps = useMemo(
     () => new Set(fraudGroups.map((g) => g.ip_address)),
     [fraudGroups]
@@ -199,6 +204,11 @@ export function DashboardClient({
   const fraudVisitorIds = useMemo(
     () => new Set(ipSwitcherGroups.map((g) => g.visitor_id)),
     [ipSwitcherGroups]
+  );
+  const fraudFingerprints = useMemo(
+    () =>
+      new Set(fingerprintSwitcherGroups.map((g) => g.device_fingerprint)),
+    [fingerprintSwitcherGroups]
   );
   const geoFraudRows = useMemo(
     () => detectGeoFraud(filteredRows),
@@ -224,6 +234,8 @@ export function DashboardClient({
         (r) =>
           fraudIps.has(r.ip_address) ||
           fraudVisitorIds.has(r.visitor_id) ||
+          (r.device_fingerprint != null &&
+            fraudFingerprints.has(r.device_fingerprint)) ||
           geoFraudIds.has(r.id) ||
           desktopFraudIds.has(r.id)
       );
@@ -234,7 +246,15 @@ export function DashboardClient({
         ? r.source === "mumooman"
         : r.source !== "mumooman"
     );
-  }, [filteredRows, sourceFilter, fraudIps, fraudVisitorIds, geoFraudIds, desktopFraudIds]);
+  }, [
+    filteredRows,
+    sourceFilter,
+    fraudIps,
+    fraudVisitorIds,
+    fraudFingerprints,
+    geoFraudIds,
+    desktopFraudIds,
+  ]);
 
   // Stats (based on displayRows — respects both date + source filters)
   const paidCount = displayRows.filter((r) => r.source === "mumooman").length;
@@ -243,6 +263,7 @@ export function DashboardClient({
   const suspiciousCount =
     fraudGroups.length +
     ipSwitcherGroups.length +
+    fingerprintSwitcherGroups.length +
     geoFraudRows.length +
     desktopFraudRows.length;
 
@@ -465,6 +486,7 @@ export function DashboardClient({
         <SuspiciousIpsPanel
           gclidGroups={fraudGroups}
           ipSwitcherGroups={ipSwitcherGroups}
+          fingerprintSwitcherGroups={fingerprintSwitcherGroups}
           geoFraudRows={geoFraudRows}
           desktopFraudRows={desktopFraudRows}
           reportMeta={reportMeta}
@@ -496,10 +518,17 @@ export function DashboardClient({
                 {displayRows.map((row) => {
                   const isGclidFraud = fraudIps.has(row.ip_address);
                   const isIpSwitcher = fraudVisitorIds.has(row.visitor_id);
+                  const isFingerprintSwitcher =
+                    row.device_fingerprint != null &&
+                    fraudFingerprints.has(row.device_fingerprint);
                   const isGeoFraud = geoFraudIds.has(row.id);
                   const isDesktopFraud = desktopFraudIds.has(row.id);
                   const fraud =
-                    isGclidFraud || isIpSwitcher || isGeoFraud || isDesktopFraud;
+                    isGclidFraud ||
+                    isIpSwitcher ||
+                    isFingerprintSwitcher ||
+                    isGeoFraud ||
+                    isDesktopFraud;
                   const pages = formatPages(row);
                   const dev = getDeviceDisplay(row.device, row.user_agent);
                   return (
@@ -606,6 +635,11 @@ export function DashboardClient({
                         {isIpSwitcher && (
                           <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 border border-orange-200 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
                             🔄 IP Switch
+                          </span>
+                        )}
+                        {isFingerprintSwitcher && (
+                          <span className="inline-flex items-center gap-1 bg-red-600 text-white border border-red-700 text-xs px-2 py-0.5 rounded-full whitespace-nowrap font-semibold">
+                            🔴 Fingerprint IP
                           </span>
                         )}
                         {isGeoFraud && (
