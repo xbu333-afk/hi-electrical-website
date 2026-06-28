@@ -35,6 +35,7 @@ type EnterPayload = {
   source: "mumooman" | "organic";
   gclid?: string | null;
   browser_language?: string | null;
+  device_fingerprint?: string | null;
 } & Partial<ValueTrackParams>;
 
 type NotifyPayload =
@@ -161,6 +162,7 @@ export async function POST(req: NextRequest) {
       req.headers.get("referer") ?? req.headers.get("referrer") ?? null;
     const gclid = body.gclid ?? null;
     const browserLanguage = body.browser_language?.trim() || null;
+    const deviceFingerprint = body.device_fingerprint?.trim() || null;
     const valueTrack = normalizeValueTrackPayload(body);
 
     // ── FILTER: Google system crawlers (AdsBot-Google / Googlebot only) ──────
@@ -188,6 +190,7 @@ export async function POST(req: NextRequest) {
         user_agent: userAgent,
         referrer,
         browser_language: browserLanguage,
+        device_fingerprint: deviceFingerprint,
         ...valueTrack,
         clicked_action: false,
       });

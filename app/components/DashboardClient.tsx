@@ -35,6 +35,7 @@ export interface VisitorRow {
   network: string | null;
   match_type: string | null;
   browser_language: string | null;
+  device_fingerprint: string | null;
   country: string | null;
   duration: number | null;
   clicked_action: boolean;
@@ -271,6 +272,7 @@ export function DashboardClient({
       "User Agent",
       "Referrer",
       "Browser Language",
+      "Device Fingerprint",
     ]
       .map(csvCell)
       .join(",");
@@ -295,6 +297,7 @@ export function DashboardClient({
         csvCell(r.user_agent),
         csvCell(r.referrer),
         csvCell(r.browser_language),
+        csvCell(r.device_fingerprint),
       ].join(",")
     );
 

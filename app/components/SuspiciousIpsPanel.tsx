@@ -81,6 +81,7 @@ function exportGoogleAdsReport(
     "Device",
     "Browser Cookie ID (Visitor ID)",
     "Browser Language",
+    "Device Fingerprint Hash",
     "Fraud Type",
   ]
     .map(csvCell)
@@ -98,6 +99,7 @@ function exportGoogleAdsReport(
     device: string | null | undefined;
     visitorId: string | null | undefined;
     browserLang: string | null | undefined;
+    fingerprint: string | null | undefined;
     fraudTypes: string[];
   };
 
@@ -115,6 +117,7 @@ function exportGoogleAdsReport(
     device: string | null | undefined,
     visitorId: string | null | undefined,
     browserLang: string | null | undefined,
+    fingerprint: string | null | undefined,
     fraudType: string
   ) {
     if (!gclid) return;
@@ -138,6 +141,7 @@ function exportGoogleAdsReport(
       device,
       visitorId,
       browserLang,
+      fingerprint,
       fraudTypes: [fraudType],
     });
   }
@@ -156,6 +160,7 @@ function exportGoogleAdsReport(
         r.vt_device,
         r.visitor_id,
         r.browser_language,
+        r.device_fingerprint,
         `Click Fraud — Repeated paid clicks from a single IP address. This IP generated ${g.gclid_visit_count} separate ad clicks (unique GCLIDs) within the reporting period, each resulting in a charge. Behavior is consistent with intentional or automated click fraud.`
       );
     }
@@ -175,6 +180,7 @@ function exportGoogleAdsReport(
         r.vt_device,
         r.visitor_id,
         r.browser_language,
+        r.device_fingerprint,
         `Click Fraud — IP rotation detected. The same browser session (cookie/visitor ID: ${g.visitor_id.slice(0, 8)}…) was recorded across ${g.unique_ip_count} distinct IP addresses, indicating VPN or cellular IP cycling to bypass duplicate-click filters. Each IP produced a separately charged click.`
       );
     }
@@ -194,6 +200,7 @@ function exportGoogleAdsReport(
       r.vt_device,
       r.visitor_id,
       r.browser_language,
+      r.device_fingerprint,
       `Geographic Targeting Violation — Campaign targets Israel (IL) only; paid click originated from ${r.country} (${countryName}). The associated GCLID was charged despite the impression being delivered outside the campaign's defined geographic scope.`
     );
   }
@@ -217,6 +224,7 @@ function exportGoogleAdsReport(
       r.vt_device,
       r.visitor_id,
       r.browser_language,
+      r.device_fingerprint,
       `Device Targeting Violation — Campaign targets mobile devices only; paid click originated from ${deviceLabel}. The associated GCLID was charged despite the click being delivered outside the campaign's device targeting settings.`
     );
   }
@@ -234,6 +242,7 @@ function exportGoogleAdsReport(
       csvCell(row.device),
       csvCell(row.visitorId),
       csvCell(row.browserLang),
+      csvCell(row.fingerprint),
       csvCell(row.fraudTypes.join(" | ")),
     ].join(",")
   );

@@ -21,6 +21,7 @@ export interface FraudClickRow {
   network?: string | null;
   vt_device?: string | null;
   browser_language?: string | null;
+  device_fingerprint?: string | null;
 }
 
 export interface SuspiciousIpGroup {
@@ -44,6 +45,7 @@ export interface IpSwitcherRow {
   network?: string | null;
   vt_device?: string | null;
   browser_language?: string | null;
+  device_fingerprint?: string | null;
 }
 
 export interface IpSwitcherGroup {
@@ -68,6 +70,7 @@ type LogLike = {
   network?: string | null;
   vt_device?: string | null;
   browser_language?: string | null;
+  device_fingerprint?: string | null;
 };
 
 /**
@@ -110,6 +113,7 @@ export function detectSuspiciousGclidIps(logs: LogLike[]): SuspiciousIpGroup[] {
         network: r.network,
         vt_device: r.vt_device,
         browser_language: r.browser_language,
+        device_fingerprint: r.device_fingerprint,
       })),
     });
   }
@@ -159,6 +163,7 @@ export function detectIpSwitcherByVisitorId(logs: LogLike[]): IpSwitcherGroup[] 
         network: r.network,
         vt_device: r.vt_device,
         browser_language: r.browser_language,
+        device_fingerprint: r.device_fingerprint,
       })),
     });
   }
@@ -187,6 +192,7 @@ export interface GeoFraudRow {
   network?: string | null;
   vt_device?: string | null;
   browser_language?: string | null;
+  device_fingerprint?: string | null;
 }
 
 type GeoFraudLogLike = {
@@ -204,6 +210,7 @@ type GeoFraudLogLike = {
   network?: string | null;
   vt_device?: string | null;
   browser_language?: string | null;
+  device_fingerprint?: string | null;
 };
 
 /**
@@ -231,6 +238,7 @@ export function detectGeoFraud(rows: GeoFraudLogLike[]): GeoFraudRow[] {
       network: r.network,
       vt_device: r.vt_device,
       browser_language: r.browser_language,
+      device_fingerprint: r.device_fingerprint,
     }));
 }
 
@@ -252,6 +260,7 @@ export interface DesktopFraudRow {
   network?: string | null;
   vt_device: string | null;
   browser_language?: string | null;
+  device_fingerprint?: string | null;
   device: string | null;
 }
 
@@ -269,6 +278,7 @@ type DesktopFraudLogLike = {
   network?: string | null;
   vt_device?: string | null;
   browser_language?: string | null;
+  device_fingerprint?: string | null;
   device?: string | null;
 };
 
@@ -308,6 +318,7 @@ export function detectDesktopFraud(rows: DesktopFraudLogLike[]): DesktopFraudRow
       network: r.network,
       vt_device: r.vt_device ?? null,
       browser_language: r.browser_language,
+      device_fingerprint: r.device_fingerprint,
       device: r.device ?? null,
     }));
 }

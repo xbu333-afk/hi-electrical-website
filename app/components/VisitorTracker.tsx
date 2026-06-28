@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { extractValueTrackParams } from "@/lib/valuetrack";
+import { generateDeviceFingerprint } from "@/app/components/device-fingerprint";
 
 const VISITOR_ID_KEY = "hi_elec_vid";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year in seconds
@@ -154,19 +155,23 @@ export default function VisitorTracker() {
       const browserLanguage =
         typeof navigator !== "undefined" ? navigator.language : null;
 
-      fetch("/api/notify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "enter",
-          visitor_id: visitorId,
-          page_path: pathname,
-          source,
-          gclid,
-          browser_language: browserLanguage,
-          ...valueTrack,
-        }),
-      })
+      generateDeviceFingerprint()
+        .then((deviceFingerprint) =>
+          fetch("/api/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event: "enter",
+              visitor_id: visitorId,
+              page_path: pathname,
+              source,
+              gclid,
+              browser_language: browserLanguage,
+              device_fingerprint: deviceFingerprint,
+              ...valueTrack,
+            }),
+          })
+        )
         .then((r) => r.json())
         .then((data) => {
           logIdRef.current = data.log_id ?? null;
