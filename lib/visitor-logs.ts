@@ -104,7 +104,24 @@ async function patchOptionalFields(
   }
 }
 
-export async function insertVisitorLog(entry: VisitorLogEntry): Promise<number> {
+/** PostgreSQL unique_violation — e.g. duplicate gclid partial unique index. */
+export function isGclidUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { code?: string; message?: string; details?: string };
+  if (e.code !== "23505") return false;
+  const blob = `${e.message ?? ""} ${e.details ?? ""}`;
+  return /gclid/i.test(blob) || /idx_visitor_logs_gclid_unique/i.test(blob);
+}
+
+export type InsertVisitorLogResult = {
+  id: number;
+  /** True when insert was retried as organic after a gclid unique conflict. */
+  gclidDeduped: boolean;
+};
+
+async function insertVisitorLogRow(
+  entry: VisitorLogEntry
+): Promise<{ data: { id: number } | null; error: unknown }> {
   const admin = getSupabaseAdmin();
 
   const baseRow = {
@@ -145,7 +162,7 @@ export async function insertVisitorLog(entry: VisitorLogEntry): Promise<number> 
   if (error && isSchemaMismatchError(error)) {
     console.warn(
       "[visitor_logs] extended columns missing — retrying base insert:",
-      error.message
+      (error as { message?: string }).message
     );
     ({ data, error } = await admin
       .from("visitor_logs")
@@ -155,6 +172,29 @@ export async function insertVisitorLog(entry: VisitorLogEntry): Promise<number> 
 
     if (!error && data?.id) {
       await patchOptionalFields(data.id as number, entry);
+    }
+  }
+
+  return { data: data as { id: number } | null, error };
+}
+
+export async function insertVisitorLog(
+  entry: VisitorLogEntry
+): Promise<InsertVisitorLogResult> {
+  let { data, error } = await insertVisitorLogRow(entry);
+
+  if (error && entry.gclid && isGclidUniqueViolation(error)) {
+    console.info(
+      "[visitor_logs] gclid unique conflict — retrying as organic:",
+      entry.gclid.slice(0, 12)
+    );
+    ({ data, error } = await insertVisitorLogRow({
+      ...entry,
+      source: "organic",
+      gclid: null,
+    }));
+    if (!error && data?.id) {
+      return { id: data.id, gclidDeduped: true };
     }
   }
 
@@ -169,7 +209,7 @@ export async function insertVisitorLog(entry: VisitorLogEntry): Promise<number> 
     throw err;
   }
 
-  return data.id as number;
+  return { id: data.id, gclidDeduped: false };
 }
 
 export async function updateVisitorLog(
@@ -269,6 +309,28 @@ export async function getVisitorHistoryByIp(ip: string): Promise<VisitorHistory>
     total_count: totalRes.count ?? 0,
   };
 }
+
+/**
+ * True when this GCLID was already stored (e.g. history/bookmark revisit).
+ * Fail-open on query errors so visits are not dropped if Supabase is down.
+ */
+export async function isGclidAlreadyLogged(gclid: string): Promise<boolean> {
+  const trimmed = gclid.trim();
+  if (!trimmed) return false;
+
+  const { count, error } = await getSupabaseAdmin()
+    .from("visitor_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("gclid", trimmed);
+
+  if (error) {
+    logSupabaseError("isGclidAlreadyLogged", error);
+    return false;
+  }
+
+  return (count ?? 0) > 0;
+}
+
 /**
  * Count visitor_logs rows for an IP within a sliding time window.
  * Used for enter Pushover cooldown (bypassed when gclid is present).

@@ -5,6 +5,7 @@ import {
   updateVisitorLog,
   appendPageToLog,
   getVisitorHistoryByIp,
+  isGclidAlreadyLogged,
   type VisitorDevice,
   type VisitorHistory,
 } from "@/lib/visitor-logs";
@@ -160,7 +161,8 @@ export async function POST(req: NextRequest) {
     const userAgent = req.headers.get("user-agent") ?? null;
     const referrer =
       req.headers.get("referer") ?? req.headers.get("referrer") ?? null;
-    const gclid = body.gclid ?? null;
+    let source = body.source;
+    let gclid = body.gclid ?? null;
     const browserLanguage = body.browser_language?.trim() || null;
     const deviceFingerprint = body.device_fingerprint?.trim() || null;
     const valueTrack = normalizeValueTrackPayload(body);
@@ -175,14 +177,26 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: true, skipped: "gtm-gclid" });
     }
 
+    // ── DEDUP: GCLID already logged → treat as organic revisit ─────────────
+    if (gclid) {
+      try {
+        if (await isGclidAlreadyLogged(gclid)) {
+          source = "organic";
+          gclid = null;
+        }
+      } catch (e) {
+        console.error("[notify:enter] isGclidAlreadyLogged failed:", e);
+      }
+    }
+
     // 1) Supabase insert — failures must not block Pushover
     let log_id: number | undefined;
     try {
-      log_id = await insertVisitorLog({
+      const inserted = await insertVisitorLog({
         visitor_id: body.visitor_id,
         ip_address: ip,
         page_path: body.page_path,
-        source: body.source,
+        source,
         device,
         city,
         country,
@@ -194,6 +208,11 @@ export async function POST(req: NextRequest) {
         ...valueTrack,
         clicked_action: false,
       });
+      log_id = inserted.id;
+      if (inserted.gclidDeduped) {
+        source = "organic";
+        gclid = null;
+      }
     } catch (e) {
       console.error("[notify:enter DB] insert failed:", {
         message: e instanceof Error ? e.message : String(e),
@@ -212,7 +231,7 @@ export async function POST(req: NextRequest) {
         payload: {
           visitor_id: body.visitor_id,
           page_path: body.page_path,
-          source: body.source,
+          source,
           ip,
           device,
           city,
@@ -244,7 +263,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendPushover(
         buildVisitorNotification({
-          source: body.source,
+          source,
           pagePath: body.page_path,
           ip,
           history,
@@ -265,7 +284,7 @@ export async function POST(req: NextRequest) {
 
     // 4) Geo-fraud alert — paid click with GCLID from outside Israel (high priority)
     if (
-      isPaidAdClick({ source: body.source, gclid }) &&
+      isPaidAdClick({ source, gclid }) &&
       country &&
       country !== "IL" &&
       gclid
@@ -287,7 +306,7 @@ export async function POST(req: NextRequest) {
 
     // 5) Desktop-fraud alert — paid click on mobile-only campaign from desktop (high priority)
     if (
-      isPaidAdClick({ source: body.source, gclid }) &&
+      isPaidAdClick({ source, gclid }) &&
       gclid &&
       isDesktopPaidClick({
         vt_device: valueTrack.vt_device,
