@@ -53,16 +53,8 @@ function getOrCreateVisitorId(): string {
 }
 
 function detectSource(searchParams: URLSearchParams): "mumooman" | "organic" {
-  const utm = searchParams.get("utm_medium") ?? "";
-  const gclid = searchParams.get("gclid");
-  if (
-    gclid ||
-    utm.toLowerCase().includes("cpc") ||
-    utm.toLowerCase().includes("paid")
-  ) {
-    return "mumooman";
-  }
-  return "organic";
+  // Iron rule: only a real GCLID in the URL counts as paid. UTM alone is organic.
+  return searchParams.get("gclid")?.trim() ? "mumooman" : "organic";
 }
 
 export default function VisitorTracker() {

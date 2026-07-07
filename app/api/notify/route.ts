@@ -161,8 +161,9 @@ export async function POST(req: NextRequest) {
     const userAgent = req.headers.get("user-agent") ?? null;
     const referrer =
       req.headers.get("referer") ?? req.headers.get("referrer") ?? null;
-    let source = body.source;
-    let gclid = body.gclid ?? null;
+    let gclid = body.gclid?.trim() || null;
+    // Iron rule: paid status requires a real GCLID — UTM-only links are organic.
+    let source: "mumooman" | "organic" = gclid ? "mumooman" : "organic";
     const browserLanguage = body.browser_language?.trim() || null;
     const deviceFingerprint = body.device_fingerprint?.trim() || null;
     const valueTrack = normalizeValueTrackPayload(body);
