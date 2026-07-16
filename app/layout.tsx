@@ -44,8 +44,7 @@ export const metadata: Metadata = {
     "יהודה חכמוב",
     "רישיון ראשי",
   ],
-  // TODO: Replace with real domain before launch
-  metadataBase: new URL("https://hi-electrical.co.il"),
+  metadataBase: new URL("https://www.hiservice.org"),
   openGraph: {
     type: "website",
     locale: "he_IL",

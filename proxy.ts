@@ -9,8 +9,51 @@ const PUBLIC_PATHS = [
   "/admin/unauthorized",
 ];
 
+// Google Tag Gateway (first-party GTM proxy) — container GTM-NCBBQJT
+const GTG_PATH_PREFIX = "/metrics";
+const GTG_ORIGIN = "https://gtm-ncbbqjt.fps.goog";
+
+function handleTagGateway(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  const destination = new URL(
+    pathname.slice(GTG_PATH_PREFIX.length) + search,
+    GTG_ORIGIN
+  );
+
+  const reqHeaders = new Headers(request.headers);
+  reqHeaders.set("host", destination.host);
+
+  // Optional but recommended by Google: forward visitor geolocation
+  const country = request.headers.get("x-vercel-ip-country");
+  const region = request.headers.get("x-vercel-ip-country-region");
+  if (country && region) {
+    reqHeaders.set("X-Forwarded-CountryRegion", `${country}-${region}`);
+  }
+  const lat = request.headers.get("x-vercel-ip-latitude");
+  const lon = request.headers.get("x-vercel-ip-longitude");
+  const city = request.headers.get("x-vercel-ip-city");
+  if (lat && lon) {
+    reqHeaders.set(
+      "X-Forwarded-Geolocation",
+      `latlong=${lat},${lon}${city ? `;city=${decodeURIComponent(city)}` : ""}`
+    );
+  }
+
+  return NextResponse.rewrite(destination, { request: { headers: reqHeaders } });
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Never let this proxy touch fraud-detection/API routes, even if the
+  // matcher below is broadened later.
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith(GTG_PATH_PREFIX)) {
+    return handleTagGateway(request);
+  }
 
   // Inject header → root layout renders bare body (no navbar/footer)
   const reqHeaders = new Headers(request.headers);
@@ -57,5 +100,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/metrics/:path*"],
 };
