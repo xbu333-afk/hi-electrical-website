@@ -72,7 +72,8 @@ export default function ShabbatContactMessage({
         </span>
         <div className="min-w-0 space-y-1.5">
           <p className="text-base leading-relaxed font-medium m-0">
-            שבת שלום! אנו שומרים שבת ונשוב לפעילות מיד עם צאת השבת.
+            שבת שלום! המענה הטלפוני אינו פעיל במהלך השבת. נשמח לעמוד לשירותכם מיד
+            עם צאת השבת.
           </p>
           <p className={`m-0 leading-relaxed ${phoneClass}`}>
             <span className="sr-only">מספר טלפון לעיון בלבד, לא ללחיצה: </span>
