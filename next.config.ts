@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
     return [
       // דפים כלליים מהאתר הישן
       {
+        source: "/%D7%97%D7%99%D7%A9%D7%95%D7%91-%D7%A6%D7%A8%D7%99%D7%9B%D7%94",
+        destination: "/device-calculator",
+        permanent: true,
+      },
+      {
         source: "/copy-of-%D7%A0%D7%92%D7%99%D7%A9%D7%95%D7%AA",
         destination: "/accessibility",
         permanent: true,
