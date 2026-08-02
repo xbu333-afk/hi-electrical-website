@@ -84,12 +84,66 @@ function PlanningIcon() {
   );
 }
 
+function ReconnectIcon() {
+  return (
+    <svg viewBox="0 0 44 44" fill="none" className="w-full h-full" aria-hidden="true">
+      <circle cx="22" cy="22" r="14" stroke="currentColor" strokeWidth="1.2" className="text-slate-300" />
+      <path
+        d="M22 12 v10 l7 4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-emerald-600 hero-svc-draw"
+      />
+      <path
+        d="M28 14 a10 10 0 1 1-12 0"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        className="text-slate-300 hero-svc-draw-slow"
+      />
+      <circle cx="22" cy="22" r="2" fill="currentColor" className="text-emerald-500 hero-svc-glow" />
+    </svg>
+  );
+}
+
+function GroundingIcon() {
+  return (
+    <svg viewBox="0 0 44 44" fill="none" className="w-full h-full" aria-hidden="true">
+      <path
+        d="M22 10 l10 5 v7 c0 7-4.5 11-10 13 -5.5-2-10-6-10-13 v-7 z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        className="text-slate-300"
+      />
+      <path
+        d="M22 18 v12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        className="text-emerald-600 hero-svc-draw"
+      />
+      <path
+        d="M17 26 h10 M19 29 h6 M21 32 h2"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+        className="text-emerald-500 hero-svc-slide"
+      />
+    </svg>
+  );
+}
+
 const SERVICE_ICONS = {
   faults: FaultIcon,
   panels: PanelIcon,
   lighting: LightIcon,
   smart: SmartIcon,
   planning: PlanningIcon,
+  reconnect: ReconnectIcon,
+  grounding: GroundingIcon,
 } as const;
 
 function ServiceLabel({ label }: { label: string }) {
@@ -151,9 +205,9 @@ export default function HeroServices({
               </span>
             </span>
 
-            <p className={`flex-1 min-w-0 text-base sm:text-lg font-semibold text-slate-600 leading-snug tracking-tight ${locale === "he" ? "text-right" : "text-left"}`}>
+            <h3 className={`flex-1 min-w-0 text-base sm:text-lg font-semibold text-slate-600 leading-snug tracking-tight m-0 ${locale === "he" ? "text-right" : "text-left"}`}>
               <ServiceLabel label={label} />
-            </p>
+            </h3>
           </li>
           );
         })}
