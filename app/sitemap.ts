@@ -7,6 +7,7 @@ const ARTICLE_SLUGS = [
   "beware-of-scammers",
   "electrical-licenses-guide",
   "grounding",
+  "hachzarat-hashmal",
   "handyman-vs-electrician",
   "how-to-choose-electrician",
   "ma-ze-luch-hashmal",

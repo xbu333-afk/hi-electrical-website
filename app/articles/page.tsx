@@ -9,6 +9,15 @@ export const metadata: Metadata = {
 
 const ARTICLES = [
   {
+    slug: "hachzarat-hashmal",
+    title: "נותקתם מהחשמל? המדריך המלא להחזרת החיבור מול חברת החשמל",
+    excerpt:
+      "ניתוק חברת חשמל מסיבות בטיחות: למה זה קורה, איך מחזירים חשמל שלב-אחר-שלב, ומתי חובה חשמלאי ראשי ואישור תקינות.",
+    category: "מדריך חירום",
+    readTime: "7 דק׳",
+    date: "אוגוסט 2026",
+  },
+  {
     slug: "beware-of-scammers",
     title: 'זהירות מנוכלים: איך תזהו מתחזים והונאות "יצאת צדיק"?',
     excerpt:
