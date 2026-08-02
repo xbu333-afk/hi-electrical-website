@@ -187,10 +187,6 @@ async function resolveIsShabbat(): Promise<boolean> {
  * Fetch runs in useEffect to avoid Vercel edge/page-cache staleness.
  */
 export function useShabbatCheck(): ShabbatCheckResult {
-  // TODO: DESIGN PREVIEW ONLY — remove this forced return and restore the real
-  // Hebcal/fallback time logic below immediately after Shabbat UI design is approved.
-  return { isShabbat: true, isLoading: false };
-
   const [isShabbat, setIsShabbat] = useState(false);
   const [isLoading, setIsLoading] = useState(() => sharedResult === null);
 
