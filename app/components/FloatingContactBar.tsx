@@ -2,8 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { useIsNight } from "@/lib/use-is-night";
+import { useShabbatCheck } from "@/lib/use-shabbat-check";
 import { PHONE } from "@/lib/site";
 import { getUiLabels } from "@/lib/ui-labels";
+import ShabbatContactMessage from "@/app/components/ShabbatContactMessage";
 
 function PhoneIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
@@ -29,6 +31,19 @@ export default function FloatingContactBar() {
   const locale = pathname.startsWith("/ru") ? "ru" : "he";
   const labels = getUiLabels(locale);
   const isNight = useIsNight();
+  const { isShabbat } = useShabbatCheck();
+
+  if (isShabbat) {
+    return (
+      <div
+        className="fixed bottom-4 inset-x-4 z-50 md:hidden"
+        role="region"
+        aria-label="הודעת שבת"
+      >
+        <ShabbatContactMessage variant="floating" />
+      </div>
+    );
+  }
 
   if (isNight) {
     return (
@@ -40,7 +55,7 @@ export default function FloatingContactBar() {
         <a
           href={`tel:${PHONE}`}
           data-analytics-location="floating-night-sos"
-          className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-bold text-sm px-5 py-3 rounded-full transition-colors shadow-sm w-full"
+          className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-bold text-sm px-5 py-3 rounded-full transition-colors shadow-sm w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-red-600"
           aria-label={labels.nightSosAria}
         >
           <PhoneIcon className="w-4 h-4 shrink-0" />
@@ -54,7 +69,7 @@ export default function FloatingContactBar() {
     <a
       href={`tel:${PHONE}`}
       data-analytics-location="floating-call"
-      className="fixed bottom-6 left-4 z-50 md:hidden flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-lg shadow-emerald-600/30 border border-emerald-500/20 animate-fade-up"
+      className="fixed bottom-6 left-4 z-50 md:hidden flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-lg shadow-emerald-600/30 border border-emerald-500/20 animate-fade-up focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
       aria-label={labels.floatingCallAria}
     >
       <PhoneIcon className="w-6 h-6" />
