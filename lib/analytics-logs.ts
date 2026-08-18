@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
-import type { VisitorRow } from "@/app/components/DashboardClient";
+import type { VisitorRow } from "@/lib/visitor-row";
 
 const EXTENDED_COLS =
   "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, country, gclid, user_agent, referrer, keyword, campaign_id, adgroup_id, creative, vt_device, loc_physical_ms, network, match_type, browser_language, device_fingerprint, duration, clicked_action, created_at";
@@ -70,7 +70,7 @@ async function fetchPages(
       return { rows: [], error };
     }
 
-    const batch = (data as Record<string, unknown>[] | null) ?? [];
+    const batch = ((data ?? []) as unknown) as Record<string, unknown>[];
     all.push(...batch);
     if (batch.length < PAGE_SIZE) break;
     offset += PAGE_SIZE;
@@ -105,7 +105,7 @@ export async function getVisitorLogsForRange(
   }
 
   return {
-    rows: (base.rows as Partial<VisitorRow>[]).map(mapBaseRow),
+    rows: (base.rows as unknown as Partial<VisitorRow>[]).map(mapBaseRow),
     warning: `חלק מהעמודות החדשות חסרות בטבלה. הרץ את migrations 002–009 ב-Supabase. שגיאת Supabase: ${extended.error.message ?? ""}`,
   };
 }

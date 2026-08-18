@@ -1,5 +1,6 @@
 import { getVisitorLogsForRange } from "@/lib/analytics-logs";
-import { DashboardClient, type VisitorRow } from "@/app/components/DashboardClient";
+import type { VisitorRow } from "@/lib/visitor-row";
+import { DashboardClient } from "@/app/components/DashboardClient";
 import { getGoogleAdsReportMeta } from "@/lib/google-ads-report-meta";
 import { getIsraelStartOfDay } from "@/lib/visitor-logs";
 
