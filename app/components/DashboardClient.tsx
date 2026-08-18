@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { getDeviceDisplay } from "@/lib/user-agent";
 import { formatPageLabel } from "@/lib/page-labels";
 import {
@@ -96,15 +96,9 @@ function computeDateRange(
           rangeStart: new Date(now.getTime() - 7 * 24 * 3600 * 1000),
           rangeEnd: now,
         };
-      // Parse as local dates; clamp to max 60 days
       const start = new Date(customStart + "T00:00:00");
       const end = new Date(customEnd + "T23:59:59");
-      const MAX_MS = 60 * 24 * 3600 * 1000;
-      const clampedStart =
-        end.getTime() - start.getTime() > MAX_MS
-          ? new Date(end.getTime() - MAX_MS)
-          : start;
-      return { rangeStart: clampedStart, rangeEnd: end };
+      return { rangeStart: start, rangeEnd: end };
     }
   }
 }
@@ -169,20 +163,66 @@ export function DashboardClient({
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
+  const [loadedRows, setLoadedRows] = useState(allRows);
+  const [rangeWarning, setRangeWarning] = useState<string | null>(null);
+  const [loadingRange, setLoadingRange] = useState(false);
+  const skipInitialFetch = useRef(true);
 
   const { rangeStart, rangeEnd } = useMemo(
     () => computeDateRange(preset, customStart, customEnd),
     [preset, customStart, customEnd]
   );
 
+  useEffect(() => {
+    setLoadedRows(allRows);
+  }, [allRows]);
+
+  useEffect(() => {
+    if (skipInitialFetch.current) {
+      skipInitialFetch.current = false;
+      return;
+    }
+    if (preset === "custom" && (!customStart || !customEnd)) return;
+
+    const startIso = rangeStart.toISOString();
+    const endIso = rangeEnd.toISOString();
+    const ac = new AbortController();
+
+    setLoadingRange(true);
+    fetch(
+      `/admin/analytics/data?start=${encodeURIComponent(startIso)}&end=${encodeURIComponent(endIso)}`,
+      { signal: ac.signal, cache: "no-store" }
+    )
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(body?.error || `שגיאה בטעינת טווח התאריכים (${res.status})`);
+        }
+        return res.json() as Promise<{ rows: VisitorRow[]; warning: string | null }>;
+      })
+      .then((data) => {
+        setLoadedRows(data.rows);
+        setRangeWarning(data.warning);
+      })
+      .catch((err: unknown) => {
+        if (ac.signal.aborted) return;
+        setRangeWarning(err instanceof Error ? err.message : "שגיאה בטעינת הנתונים");
+      })
+      .finally(() => {
+        if (!ac.signal.aborted) setLoadingRange(false);
+      });
+
+    return () => ac.abort();
+  }, [preset, customStart, customEnd, rangeStart, rangeEnd]);
+
   // Date-only filtered — used for fraud detection (always full picture)
   const filteredRows = useMemo(
     () =>
-      allRows.filter((r) => {
+      loadedRows.filter((r) => {
         const ts = new Date(r.created_at).getTime();
         return ts >= rangeStart.getTime() && ts <= rangeEnd.getTime();
       }),
-    [allRows, rangeStart, rangeEnd]
+    [loadedRows, rangeStart, rangeEnd]
   );
 
   const fraudGroups = useMemo(
@@ -378,6 +418,11 @@ export function DashboardClient({
             ⚠️ {warning}
           </div>
         )}
+        {rangeWarning && rangeWarning !== warning && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 leading-relaxed">
+            ⚠️ {rangeWarning}
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
@@ -457,17 +502,24 @@ export function DashboardClient({
                   className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
                 />
                 {customStart && customEnd && (() => {
-                  const days = Math.round(
-                    (new Date(customEnd).getTime() - new Date(customStart).getTime()) /
-                      (24 * 3600 * 1000)
-                  );
+                  const days =
+                    Math.round(
+                      (new Date(customEnd).getTime() - new Date(customStart).getTime()) /
+                        (24 * 3600 * 1000)
+                    ) + 1;
                   return (
-                    <span className={`text-xs ${days > 60 ? "text-red-500 font-medium" : "text-slate-400"}`}>
-                      ({Math.min(days, 60)} ימים{days > 60 ? " — מקסימום 60" : ""})
+                    <span className="text-xs text-slate-400">
+                      ({days} ימים)
                     </span>
                   );
                 })()}
+                {loadingRange && (
+                  <span className="text-xs text-blue-600">טוען…</span>
+                )}
               </div>
+            )}
+            {preset !== "custom" && loadingRange && (
+              <span className="text-xs text-blue-600">טוען…</span>
             )}
           </div>
         </div>

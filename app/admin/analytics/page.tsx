@@ -1,93 +1,10 @@
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { getVisitorLogsForRange } from "@/lib/analytics-logs";
 import { DashboardClient, type VisitorRow } from "@/app/components/DashboardClient";
 import { getGoogleAdsReportMeta } from "@/lib/google-ads-report-meta";
+import { getIsraelStartOfDay } from "@/lib/visitor-logs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-// Columns present after all migrations 001–009
-const EXTENDED_COLS =
-  "id, visitor_id, ip_address, page_path, pages_visited, source, device, city, country, gclid, user_agent, referrer, keyword, campaign_id, adgroup_id, creative, vt_device, loc_physical_ms, network, match_type, browser_language, device_fingerprint, duration, clicked_action, created_at";
-
-// Columns guaranteed after migration 001 only
-const BASE_COLS =
-  "id, visitor_id, ip_address, page_path, source, duration, clicked_action, created_at";
-
-const SIXTY_DAYS_ISO = () =>
-  new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
-
-async function getLogs(): Promise<{ rows: VisitorRow[]; warning: string | null }> {
-  const admin = getSupabaseAdmin();
-
-  const { data, error } = await admin
-    .from("visitor_logs")
-    .select(EXTENDED_COLS)
-    .gte("created_at", SIXTY_DAYS_ISO())
-    .order("created_at", { ascending: false })
-    .limit(5000);
-
-  if (!error) {
-    return { rows: (data as VisitorRow[]) ?? [], warning: null };
-  }
-
-  const msg = (error as { message?: string }).message ?? "";
-  const isColMissing =
-    (error as { code?: string }).code === "PGRST204" ||
-    /column.*does not exist/i.test(msg) ||
-    /Could not find the .* column/i.test(msg);
-
-  if (isColMissing) {
-    const { data: baseData, error: baseError } = await admin
-      .from("visitor_logs")
-      .select(BASE_COLS)
-      .gte("created_at", SIXTY_DAYS_ISO())
-      .order("created_at", { ascending: false })
-      .limit(5000);
-
-    if (baseError) {
-      throw new Error(
-        `Supabase base query failed: ${(baseError as { message?: string }).message ?? JSON.stringify(baseError)}`
-      );
-    }
-
-    const rows = ((baseData as Partial<VisitorRow>[]) ?? []).map(
-      (r): VisitorRow => ({
-        id: r.id ?? 0,
-        visitor_id: r.visitor_id ?? "",
-        ip_address: r.ip_address ?? "",
-        page_path: r.page_path ?? "",
-        pages_visited: null,
-        source: r.source ?? "organic",
-        device: null,
-        city: null,
-        country: null,
-        gclid: null,
-        user_agent: null,
-        referrer: null,
-        keyword: null,
-        campaign_id: null,
-        adgroup_id: null,
-        creative: null,
-        vt_device: null,
-        loc_physical_ms: null,
-        network: null,
-        match_type: null,
-        browser_language: null,
-        device_fingerprint: null,
-        duration: r.duration ?? null,
-        clicked_action: r.clicked_action ?? false,
-        created_at: r.created_at ?? "",
-      })
-    );
-
-    return {
-      rows,
-      warning: `חלק מהעמודות החדשות חסרות בטבלה. הרץ את migrations 002–009 ב-Supabase. שגיאת Supabase: ${msg}`,
-    };
-  }
-
-  throw new Error(`Supabase query failed: ${msg || JSON.stringify(error)}`);
-}
 
 function ErrorScreen({ error }: { error: unknown }) {
   const msg =
@@ -133,7 +50,7 @@ export default async function AnalyticsDashboard() {
   let fatalError: unknown = null;
 
   try {
-    const result = await getLogs();
+    const result = await getVisitorLogsForRange(getIsraelStartOfDay(), new Date());
     logs = result.rows;
     warning = result.warning;
   } catch (e) {
