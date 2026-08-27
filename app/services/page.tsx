@@ -1,6 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL, WHATSAPP_HREF } from "@/lib/site";
+import { serviceAreas } from "@/lib/cities";
+import {
+  buildBreadcrumbList,
+  businessRef,
+  jsonLdScriptProps,
+  websiteRef,
+} from "@/lib/schema";
+
+/** אזורי השירות, בפורמט שמשמש את כל ישויות ה-Service בעמוד */
+const SERVICE_AREA_REFS = [
+  {
+    "@type": "AdministrativeArea",
+    name: "מחוז המרכז",
+    alternateName: "Central District, Israel",
+  },
+  ...serviceAreas.map(({ name, slug }) => ({
+    "@type": "City",
+    name,
+    url: `${SITE_URL}/cities/${slug}`,
+  })),
+];
 
 export const metadata: Metadata = {
   title: "שירותי חשמל מקצועיים לבית ולעסק",
@@ -16,11 +37,17 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * `description` עשוי להכיל JSX לצורך תצוגה, ולכן כל שירות מחזיק גם
+ * `schemaText` — גרסת טקסט נקייה ל-JSON-LD (אותה תבנית כמו בעמוד השאלות).
+ */
 const SERVICE_CARDS = [
   {
     icon: "🔍",
     title: "איתור ותיקון קצרים",
     description:
+      "איתור תקלות מורכבות בלוחות חשמל, שקעים וגופי תאורה (כולל קצר בדוד) באמצעות ציוד טכנולוגי מתקדם, ללא פירוקים או הרס מיותר.",
+    schemaText:
       "איתור תקלות מורכבות בלוחות חשמל, שקעים וגופי תאורה (כולל קצר בדוד) באמצעות ציוד טכנולוגי מתקדם, ללא פירוקים או הרס מיותר.",
     wide: false,
   },
@@ -29,12 +56,16 @@ const SERVICE_CARDS = [
     title: "החלפת ושדרוג לוחות חשמל",
     description:
       "מעבר ללוח תלת-פאזי, התקנת לוחות חדשים, החלפת מפסקי מגן (ממסר פחת) והוספת הגנות עומס, הכל לפי דרישות התקן המחמירות.",
+    schemaText:
+      "מעבר ללוח תלת-פאזי, התקנת לוחות חדשים, החלפת מפסקי מגן (ממסר פחת) והוספת הגנות עומס, הכל לפי דרישות התקן המחמירות.",
     wide: false,
   },
   {
     icon: "💡",
     title: "התקנת גופי תאורה ושקעים",
     description:
+      "התקנה בטיחותית ומעוצבת של נברשות, תאורת LED, ספוטים, והוספת שקעי כוח ייעודיים למכשירים צורכי אנרגיה (אינדוקציה, מזגן).",
+    schemaText:
       "התקנה בטיחותית ומעוצבת של נברשות, תאורת LED, ספוטים, והוספת שקעי כוח ייעודיים למכשירים צורכי אנרגיה (אינדוקציה, מזגן).",
     wide: false,
   },
@@ -43,6 +74,8 @@ const SERVICE_CARDS = [
     title: "מערכות בית חכם (Smart Home)",
     description:
       "תכנון והתקנת בקרים חכמים לשליטה מרחוק על תאורה, תריסים, דוד ומיזוג אוויר, בגימור מושלם ואינטגרציה חלקה.",
+    schemaText:
+      "תכנון והתקנת בקרים חכמים לשליטה מרחוק על תאורה, תריסים, דוד ומיזוג אוויר, בגימור מושלם ואינטגרציה חלקה.",
     wide: false,
   },
   {
@@ -50,12 +83,16 @@ const SERVICE_CARDS = [
     title: "חיבור מחדש ובדיקת תקינות לאחר ניתוק",
     description:
       "טיפול חירום בניתוקי רשת, תיקון הליקויים בשטח, והפקת אישור תקינות רשמי מול חברת החשמל.",
+    schemaText:
+      "טיפול חירום בניתוקי רשת, תיקון הליקויים בשטח, והפקת אישור תקינות רשמי מול חברת החשמל.",
     wide: false,
   },
   {
     icon: "🛡️",
     title: "בדיקות הארקה ובטיחות",
     description:
+      "בדיקה מקיפה של מערכת ההארקה, איתור תקלות ווידוא עמידה מלאה בתקני הבטיחות המחמירים של חוק החשמל.",
+    schemaText:
       "בדיקה מקיפה של מערכת ההארקה, איתור תקלות ווידוא עמידה מלאה בתקני הבטיחות המחמירים של חוק החשמל.",
     wide: false,
   },
@@ -65,19 +102,72 @@ const SERVICE_CARDS = [
     description: (
       <>
         בדיקות בטיחות מקיפות, דוחות תקינות לכיבוי אש וביטוח, ו
-        <Link href="/articles/grounding" className="text-emerald-600 font-bold hover:underline">
+        <Link href="/articles/grounding" className="text-emerald-700 font-bold hover:underline">
           בדיקת מערכת הארקה
         </Link>{" "}
         מקצועית לווידוא הגנה מוחלטת מהתחשמלות.
       </>
     ),
+    schemaText:
+      "בדיקות בטיחות מקיפות, דוחות תקינות לכיבוי אש וביטוח, ובדיקת מערכת הארקה מקצועית לווידוא הגנה מוחלטת מהתחשמלות.",
     wide: true,
   },
 ] as const;
 
+const SERVICES_URL = `${SITE_URL}/services`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": `${SERVICES_URL}#webpage`,
+      url: SERVICES_URL,
+      name: "שירותי חשמל מקצועיים לבית ולעסק",
+      description:
+        "כל שירותי החשמל במקום אחד: איתור תקלות, לוחות חשמל, בית חכם והארקה – על ידי יהודה חכמוב, הנדסאי חשמל וחשמלאי מוסמך.",
+      inLanguage: "he-IL",
+      isPartOf: websiteRef,
+      about: businessRef,
+      breadcrumb: { "@id": `${SERVICES_URL}#breadcrumb` },
+    },
+    buildBreadcrumbList(`${SERVICES_URL}#breadcrumb`, [
+      { name: "שירותים", path: "/services" },
+    ]),
+    // כל שירות כישות נפרדת — מאפשר למנועי תשובות לשלוף שירות בודד
+    ...SERVICE_CARDS.map(({ title, schemaText }, index) => ({
+      "@type": "Service",
+      "@id": `${SERVICES_URL}#service-${index + 1}`,
+      name: title,
+      description: schemaText,
+      serviceType: title,
+      category: "שירותי חשמל",
+      inLanguage: "he-IL",
+      provider: businessRef,
+      areaServed: SERVICE_AREA_REFS,
+      url: SERVICES_URL,
+    })),
+    {
+      "@type": "OfferCatalog",
+      "@id": `${SERVICES_URL}#catalog`,
+      name: "מעטפת השירותים של ח.י שירותי חשמל",
+      inLanguage: "he-IL",
+      provider: businessRef,
+      itemListElement: SERVICE_CARDS.map(({ title }, index) => ({
+        "@type": "Offer",
+        position: index + 1,
+        name: title,
+        itemOffered: { "@id": `${SERVICES_URL}#service-${index + 1}` },
+      })),
+    },
+  ],
+};
+
 export default function ServicesPage() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script {...jsonLdScriptProps(jsonLd)} />
+
       <section className="max-w-5xl mx-auto">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol className="flex items-center gap-2 text-xs text-slate-400 list-none flex-wrap" role="list">
@@ -102,7 +192,7 @@ export default function ServicesPage() {
             </div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight text-slate-900 mb-6">
               שירותי חשמל מקצועיים – הסטנדרט של{" "}
-              <Link href="/" className="text-emerald-600 hover:underline">
+              <Link href="/" className="text-emerald-700 hover:underline">
                 ח.י שירותי חשמל
               </Link>
             </h1>
@@ -122,7 +212,7 @@ export default function ServicesPage() {
               השירות שלנו כולל <strong>תכנון, התקנה, תחזוקה ותיקונים</strong>, ברמת
               מקצועיות הנדסית ובסטנדרטים הגבוהים ביותר של בטיחות ואמינות. אנו ערוכים
               לתת מענה גם בשעות חירום כ
-              <Link href="/cities" className="text-emerald-600 hover:underline">
+              <Link href="/cities" className="text-emerald-700 hover:underline">
                 חשמלאי 24/7
               </Link>{" "}
               (למעט שבתות וחגים).
@@ -160,7 +250,7 @@ export default function ServicesPage() {
               </p>
             </div>
             <div className="shrink-0 flex justify-center md:justify-start">
-              <span className="inline-flex items-center gap-2 bg-emerald-500 group-hover:bg-emerald-400 text-white font-bold py-4 px-8 rounded-full transition-all text-base shadow-lg">
+              <span className="inline-flex items-center gap-2 bg-emerald-700 group-hover:bg-emerald-800 text-white font-bold py-4 px-8 rounded-full transition-all text-base shadow-lg">
                 לפרטים והצעת מחיר
                 <svg
                   className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform"
@@ -218,7 +308,7 @@ export default function ServicesPage() {
           <div className="flex flex-col sm:flex-row gap-4 shrink-0">
             <a
               href={`tel:${PHONE}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-full transition-all text-lg shadow-lg text-center"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-8 rounded-full transition-all text-lg shadow-lg text-center"
               aria-label={`חייגו לתיאום ביקור: ${PHONE_DISPLAY}`}
             >
               חייגו לתיאום ביקור

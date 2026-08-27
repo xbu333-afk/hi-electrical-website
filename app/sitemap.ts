@@ -1,19 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { serviceAreas } from "@/lib/cities";
-
-const ARTICLE_SLUGS = [
-  "bayit-chacham",
-  "beware-of-scammers",
-  "electrical-licenses-guide",
-  "grounding",
-  "hachzarat-hashmal",
-  "handyman-vs-electrician",
-  "how-to-choose-electrician",
-  "ma-ze-luch-hashmal",
-  "mimsar-pahat",
-  "shiryutei-hashmal",
-] as const;
+import { ARTICLES } from "@/lib/articles";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -28,15 +16,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // --- Tier 2: Core service pages ---
-  const corePages: MetadataRoute.Sitemap = ["/services", "/business"].map(
-    (path) => ({
-      url: `${SITE_URL}${path}`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    })
-  );
+  // --- Tier 2: Core service pages + עמוד הסמכות (E-E-A-T) ---
+  const corePages: MetadataRoute.Sitemap = [
+    "/about",
+    "/services",
+    "/business",
+  ].map((path) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.9,
+  }));
 
   // --- Tier 3: Cities index + all individual city pages ---
   const citiesIndex: MetadataRoute.Sitemap = [
@@ -65,12 +55,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const articlePages: MetadataRoute.Sitemap = ARTICLE_SLUGS.map((slug) => ({
-    url: `${SITE_URL}/articles/${slug}`,
-    lastModified: now,
-    changeFrequency: "monthly",
-    priority: 0.7,
-  }));
+  const articlePages: MetadataRoute.Sitemap = ARTICLES.map(
+    ({ slug, datePublished, dateModified }) => ({
+      url: `${SITE_URL}/articles/${slug}`,
+      lastModified: new Date(dateModified ?? datePublished),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    })
+  );
 
   // --- Tier 5: Tools & utility pages ---
   const toolPages: MetadataRoute.Sitemap = [

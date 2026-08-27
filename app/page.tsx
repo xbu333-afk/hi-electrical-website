@@ -54,7 +54,7 @@ export default function HomePage() {
         className="bg-white py-16 md:py-24 scroll-mt-20 below-fold"
       >
         <div className="max-w-3xl mx-auto px-6">
-          <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
+          <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
             מי אנחנו
           </p>
           <h2

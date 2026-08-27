@@ -252,6 +252,21 @@ body {
   min-height: 2.75rem;
 }
 
+/* ── Pulsing conversion CTA ────────────────────────────────── */
+/* רק ההילה שמאחורי הכפתור פועמת — הכפתור והטקסט נשארים יציבים
+   וקריאים (ת"י 5568 / WCAG 2.2.2). מחזור של 2.6 שניות הוא הרבה
+   מתחת לסף 3 הבזקים לשנייה של WCAG 2.3.1, וכלל
+   prefers-reduced-motion הגלובלי מנטרל את האנימציה לגמרי. */
+@keyframes cta-pulse-ring {
+  0%   { transform: scale(0.96); opacity: 0.5; }
+  70%  { transform: scale(1.14); opacity: 0; }
+  100% { transform: scale(1.14); opacity: 0; }
+}
+
+.cta-pulse-ring {
+  animation: cta-pulse-ring 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 .carousel-dot {
   display: inline-flex;
   align-items: center;
@@ -279,7 +294,7 @@ button[role="tab"] {
 /* קישורי המרה וניווט — מטרת מגע נוחה במובייל */
 a[data-analytics-location="hero-night-sos"],
 footer nav a,
-.bg-emerald-600 .mt-10 a {
+.bg-emerald-700 .mt-10 a {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
@@ -287,15 +302,17 @@ footer nav a,
 }
 
 /* ── Accessibility: ניגודיות על רקעים כהים/צבעוניים ─────── */
-.bg-emerald-600 .text-emerald-100 {
+/* הרקע הוא emerald-700 ולא emerald-600, כי לבן על emerald-600
+   מגיע ל-3.65:1 בלבד ונכשל בדרישת ה-4.5:1 של ת"י 5568. */
+.bg-emerald-700 .text-emerald-100 {
   color: #ecfdf5;
 }
 
-.bg-emerald-600 a.text-emerald-100 {
+.bg-emerald-700 a.text-emerald-100 {
   color: #ffffff;
 }
 
-.bg-emerald-600 a.text-emerald-100:hover {
+.bg-emerald-700 a.text-emerald-100:hover {
   color: #ffffff;
 }
 

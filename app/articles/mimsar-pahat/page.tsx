@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "למה ממסר הפחת קופץ ואיך מסדרים את זה? | ח.י שירותי חשמל",
@@ -26,6 +28,8 @@ const TOC = [
 export default function MimsarPahatArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script {...jsonLdScriptProps(buildArticleJsonLd("mimsar-pahat"))} />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol
@@ -55,7 +59,7 @@ export default function MimsarPahatArticle() {
         </nav>
 
         <header className="mb-10 border-b border-gray-100 pb-8">
-          <div className="flex items-center gap-2 text-emerald-600 font-bold mb-4 text-sm justify-center md:justify-start">
+          <div className="flex items-center gap-2 text-emerald-700 font-bold mb-4 text-sm justify-center md:justify-start">
             <span>מדריך חירום</span>
             <span aria-hidden="true">•</span>
             <span>קריאה קצרה</span>
@@ -65,7 +69,7 @@ export default function MimsarPahatArticle() {
           </h1>
           <p className="text-xl text-slate-600 font-medium text-center md:text-right">
             מאת:{" "}
-            <Link href="/" className="text-emerald-600 hover:underline">
+            <Link href="/" className="text-emerald-700 hover:underline">
               יהודה חכמוב, הנדסאי חשמל וחשמלאי מוסמך
             </Link>
           </p>
@@ -176,7 +180,7 @@ export default function MimsarPahatArticle() {
                 <p className="m-0 text-slate-600 leading-relaxed">
                   נסו להרים את הפחת למעלה. אם הוא קופץ חזרה למטה מיד כשהכל מנותק
                   – אל תגעו בכלום. יש בעיה בלוח או בפחת עצמו. קראו מיד ל
-                  <Link href="/" className="text-emerald-600 font-bold hover:underline">
+                  <Link href="/" className="text-emerald-700 font-bold hover:underline">
                     חשמלאי מוסמך
                   </Link>
                   .
@@ -234,7 +238,7 @@ export default function MimsarPahatArticle() {
           <p className="text-slate-600">
             הערה: צריכת חשמל חריגה ומכשירים מקצרים משפיעים ישירות על החשבון
             שלכם. תוכלו להיעזר ב
-            <Link href="/calculator" className="text-emerald-600 hover:underline">
+            <Link href="/calculator" className="text-emerald-700 hover:underline">
               מחשבון עלויות החשמל שלנו
             </Link>{" "}
             כדי לבדוק אם יש לכם צריכה מוגזמת.
@@ -257,7 +261,7 @@ export default function MimsarPahatArticle() {
             <a
               href={`tel:${PHONE}`}
               aria-label={`לחיוג חירום: ${PHONE_DISPLAY}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg"
             >
               לחיוג חירום: {PHONE_DISPLAY}
             </a>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "מדריך רישיונות חשמל: מה ההבדל בין עוזר, מוסמך, הנדסאי ובודק? | ח.י שירותי חשמל",
@@ -24,6 +26,10 @@ const TOC = [
 export default function ElectricalLicensesArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script
+        {...jsonLdScriptProps(buildArticleJsonLd("electrical-licenses-guide"))}
+      />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol
@@ -63,7 +69,7 @@ export default function ElectricalLicensesArticle() {
           </h1>
           <p className="text-xl text-slate-600 font-medium text-center md:text-right">
             מאת:{" "}
-            <Link href="/" className="text-emerald-600 hover:underline font-bold">
+            <Link href="/" className="text-emerald-700 hover:underline font-bold">
               יהודה חכמוב — הנדסאי חשמל
             </Link>
           </p>
@@ -198,7 +204,7 @@ export default function ElectricalLicensesArticle() {
             <br />
             <br />
             אם אתם מחפשים אמינות מעל לכל ספק, ודאו שאתם מזמינים{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               חשמלאי מומלץ
             </Link>{" "}
             שלא מסתיר את הרישיון שלו, שולח לכם צילום שלו מראש, ואוחז בהסמכה
@@ -222,7 +228,7 @@ export default function ElectricalLicensesArticle() {
             <a
               href={`tel:${PHONE}`}
               aria-label={`צרו קשר לייעוץ וביקור: ${PHONE_DISPLAY}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg"
             >
               צרו קשר לייעוץ וביקור
             </a>

@@ -94,56 +94,56 @@ const RU_REVIEWS: GoogleReview[] = [
   {
     name: "Mell Goltsman",
     initials: "MG",
-    color: "bg-blue-500",
+    color: "bg-blue-700",
     text: "Иехуда приехал быстро, нашёл неисправность и устранил её меньше чем за 10 минут. Работал быстро, аккуратно и чисто. С удовольствием воспользуюсь его услугами снова.",
     stars: 5,
   },
   {
     name: "Boris",
     initials: "BO",
-    color: "bg-purple-500",
+    color: "bg-purple-700",
     text: "Вызвал Иехуду для устранения сложной неисправности в щитке. Просто обязан поделиться — профессиональный, быстрый и надёжный сервис на уровне, который редко встретишь. Приехал точно в назначенное время, терпеливо объяснил проблему и варианты решения. Всё сделано чисто и аккуратно.",
     stars: 5,
   },
   {
     name: "Alla H",
     initials: "АХ",
-    color: "bg-emerald-500",
+    color: "bg-emerald-700",
     text: "Давно не встречали такого честного и порядочного человека, как Иехуда! Он заслуживает этой награды, а ещё больше — довольных клиентов. Делает ровно то, что нужно, без лишнего, и помогает от всего сердца по честным ценам!",
     stars: 5,
   },
   {
     name: "Aziza Turaev",
     initials: "АТ",
-    color: "bg-rose-500",
+    color: "bg-rose-700",
     text: "Позвонила Иехуде ночью — приехал немедленно и нашёл проблему. Вежливый и профессиональный сервис.",
     stars: 5,
   },
   {
     name: "Sima Mirochnik",
     initials: "СМ",
-    color: "bg-cyan-500",
+    color: "bg-cyan-700",
     text: "Обратилась к Иехуде по поводу замены светильника. С первой же секунды разговора поняла, что обратилась по адресу. Он внимательно выслушал и дал именно тот совет, который был нужен. Очень рекомендую.",
     stars: 5,
   },
   {
     name: "Daniel Gofshtein",
     initials: "ДГ",
-    color: "bg-amber-600",
+    color: "bg-amber-700",
     text: "Иехуда заменил фланец в бойлере и сделал намного больше, чем ожидалось! Он также прочистил весь накипь, смазал соединения — потому что любит своё дело! Очень рекомендую!!!",
     stars: 5,
   },
   {
     name: "keren wissman",
     initials: "KW",
-    color: "bg-indigo-500",
+    color: "bg-indigo-700",
     text: "Иехуда — чемпион!!! Приехал во время войны, за час починил именно то, что было нужно. Ещё 5 минут и минимум денег! Таких людей не бывает. Добрый, приятный, профессиональный, вежливый и честный.",
     stars: 5,
   },
   {
     name: "Gad Shoshany",
     initials: "GS",
-    color: "bg-orange-500",
+    color: "bg-orange-700",
     text: "Иехуда оказывает точный, профессиональный, надёжный и вежливый сервис. Среагировал немедленно, приехал на следующий день, установил светильник мгновенно. Оставил после себя рабочий прибор, чистое пространство и довольного клиента. Рекомендую без оговорок.",
     stars: 5,
   },
@@ -193,7 +193,7 @@ export default function RussianPage() {
                 role="listitem"
                 className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 lift"
               >
-                <span className="flex-shrink-0 w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                <span className="flex-shrink-0 w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
                   {icon}
                 </span>
                 <div>
@@ -221,7 +221,7 @@ export default function RussianPage() {
         dir="ltr"
       >
         <div className="max-w-3xl mx-auto px-6">
-          <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
+          <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
             О нас
           </p>
           <h2
@@ -327,7 +327,7 @@ export default function RussianPage() {
       >
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-10">
-            <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
+            <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
               Отзывы
             </p>
             <h2
@@ -354,7 +354,7 @@ export default function RussianPage() {
         dir="ltr"
       >
         <div className="max-w-4xl mx-auto px-6">
-          <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
+          <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
             Районы обслуживания
           </p>
           <h2

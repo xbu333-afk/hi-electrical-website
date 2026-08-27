@@ -31,7 +31,7 @@ export default function ContactSection({
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="bg-emerald-600 py-16 md:py-24 scroll-mt-20"
+      className="bg-emerald-700 py-16 md:py-24 scroll-mt-20"
     >
       <div className="max-w-3xl mx-auto px-6 text-center">
         <h2

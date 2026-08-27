@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL, WHATSAPP_HREF } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "הארקה - בטיחות בחשמל",
@@ -19,6 +21,8 @@ export const metadata: Metadata = {
 export default function GroundingArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script {...jsonLdScriptProps(buildArticleJsonLd("grounding"))} />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <header className="mb-10 border-b border-gray-100 pb-8 text-center md:text-right">
           <div className="inline-block bg-emerald-100 text-emerald-800 text-sm font-bold px-4 py-1 rounded-full mb-4">
@@ -95,7 +99,7 @@ export default function GroundingArticle() {
           </h2>
           <p>
             כדי לוודא שהמערכת תקינה, נדרשת בדיקה של{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline no-underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline no-underline">
               חשמלאי מוסמך
             </Link>{" "}
             הכוללת:
@@ -106,6 +110,17 @@ export default function GroundingArticle() {
             <li>בדיקת חיבורי הארקה בלוח.</li>
             <li>בדיקת הארקת יסוד.</li>
           </ul>
+          <p>
+            להסבר מעמיק על המדידות עצמן — מהי עכבת לולאת תקלה, איך מחשבים את
+            הערך המרבי המותר לכל מפסק ואיך קוראים דוח בדיקה — ראו{" "}
+            <Link
+              href="/articles/fault-loop-impedance"
+              className="text-emerald-700 font-bold hover:underline no-underline"
+            >
+              בדיקת הארקה ולולאת תקלה
+            </Link>
+            .
+          </p>
 
           <h2 className="text-2xl font-bold text-slate-800 mt-10">
             מתי צריך לשדרג או לתקן מערכת הארקה?
@@ -125,7 +140,7 @@ export default function GroundingArticle() {
               בדיקה תקופתית על ידי איש מקצוע. אם אתם זקוקים ל
               <Link
                 href="/cities/petah-tikva"
-                className="text-emerald-600 font-bold hover:underline no-underline"
+                className="text-emerald-700 font-bold hover:underline no-underline"
               >
                 חשמלאי בפתח תקווה
               </Link>{" "}
@@ -182,7 +197,7 @@ export default function GroundingArticle() {
           <div className="flex flex-col sm:flex-row gap-4">
             <a
               href={`tel:${PHONE}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white text-center font-bold py-4 px-8 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white text-center font-bold py-4 px-8 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
               aria-label={`חייגו עכשיו לבדיקת הארקה: ${PHONE_DISPLAY}`}
             >
               חייגו עכשיו לבדיקת הארקה

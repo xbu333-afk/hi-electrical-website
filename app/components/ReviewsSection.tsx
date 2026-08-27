@@ -32,7 +32,7 @@ export default function ReviewsSection() {
     >
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-10">
-          <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
+          <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
             המלצות
           </p>
           <h2

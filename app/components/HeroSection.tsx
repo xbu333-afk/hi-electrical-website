@@ -36,7 +36,7 @@ export default function HeroSection({
               className="relative z-10 text-base sm:text-lg font-bold text-slate-600 mb-4 leading-snug"
             >
               {labels.cityTaglinePrefix}{" "}
-              <span className="text-emerald-600">
+              <span className="text-emerald-700">
                 {locale === "he" ? `ב${cityName}` : cityName}
               </span>{" "}
               {labels.cityTaglineSuffix}
@@ -49,7 +49,7 @@ export default function HeroSection({
               className="relative z-10 flex items-center justify-center gap-2 text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none text-center"
             >
               <span>
-                <span className="text-emerald-600">{labels.heroBrandPrimary}</span>{" "}
+                <span className="text-emerald-700">{labels.heroBrandPrimary}</span>{" "}
                 <span className="font-extrabold">{labels.heroBrandSecondary}</span>
               </span>
               <Image

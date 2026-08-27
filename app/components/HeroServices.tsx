@@ -9,7 +9,7 @@ function FaultIcon() {
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
-        className="text-emerald-600 hero-svc-draw"
+        className="text-emerald-700 hero-svc-draw"
       />
       <circle cx="36" cy="18" r="1.75" fill="currentColor" className="text-emerald-500 hero-svc-glow" />
     </svg>
@@ -21,7 +21,7 @@ function PanelIcon() {
     <svg viewBox="0 0 44 44" fill="none" className="w-full h-full" aria-hidden="true">
       <rect x="13" y="9" width="18" height="26" rx="2" stroke="currentColor" strokeWidth="1.2" className="text-slate-300" />
       <line x1="17" y1="16" x2="27" y2="16" stroke="currentColor" strokeWidth="1" className="text-slate-300" />
-      <line x1="17" y1="22" x2="27" y2="22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-emerald-600 hero-svc-slide" />
+      <line x1="17" y1="22" x2="27" y2="22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-emerald-700 hero-svc-slide" />
       <line x1="17" y1="28" x2="27" y2="28" stroke="currentColor" strokeWidth="1" className="text-slate-300" />
       <circle cx="27" cy="22" r="1.25" fill="currentColor" className="text-emerald-500 hero-svc-glow" />
     </svg>
@@ -77,7 +77,7 @@ function PlanningIcon() {
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-emerald-600 hero-svc-draw"
+        className="text-emerald-700 hero-svc-draw"
       />
       <circle cx="22" cy="24" r="1.25" fill="currentColor" className="text-emerald-500 hero-svc-glow" />
     </svg>
@@ -94,7 +94,7 @@ function ReconnectIcon() {
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-emerald-600 hero-svc-draw"
+        className="text-emerald-700 hero-svc-draw"
       />
       <path
         d="M28 14 a10 10 0 1 1-12 0"
@@ -123,7 +123,7 @@ function GroundingIcon() {
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
-        className="text-emerald-600 hero-svc-draw"
+        className="text-emerald-700 hero-svc-draw"
       />
       <path
         d="M17 26 h10 M19 29 h6 M21 32 h2"
@@ -154,7 +154,7 @@ function ServiceLabel({ label }: { label: string }) {
   return (
     <>
       {prefix ? `${prefix} ` : null}
-      <span className="text-emerald-600">{lastWord}</span>
+      <span className="text-emerald-700">{lastWord}</span>
     </>
   );
 }

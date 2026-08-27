@@ -33,7 +33,7 @@ export default function HeroContactButtons({
           aria-label={labels.callAria(PHONE_DISPLAY)}
         >
           <svg
-            className="w-4 h-4 text-emerald-600 shrink-0"
+            className="w-4 h-4 text-emerald-700 shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -58,7 +58,7 @@ export default function HeroContactButtons({
           className="flex-1 inline-flex items-center justify-center gap-2 min-h-[52px] bg-white border border-gray-200 hover:border-emerald-400 hover:bg-emerald-50 text-slate-800 font-bold text-sm rounded-2xl shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
           aria-label={labels.whatsappAria}
         >
-          <WhatsAppIcon className="w-5 h-5 text-emerald-600 shrink-0" />
+          <WhatsAppIcon className="w-5 h-5 text-emerald-700 shrink-0" />
           WhatsApp
         </a>
       </div>

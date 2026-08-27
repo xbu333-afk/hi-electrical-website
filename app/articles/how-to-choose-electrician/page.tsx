@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "איך לבחור חשמלאי מוסמך ומומלץ? (המדריך המלא) | ח.י שירותי חשמל",
@@ -27,6 +29,10 @@ const TOC = [
 export default function HowToChooseElectricianArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script
+        {...jsonLdScriptProps(buildArticleJsonLd("how-to-choose-electrician"))}
+      />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol
@@ -56,7 +62,7 @@ export default function HowToChooseElectricianArticle() {
         </nav>
 
         <header className="mb-10 border-b border-gray-100 pb-8">
-          <div className="flex items-center gap-2 text-emerald-600 font-bold mb-4 text-sm justify-center md:justify-start">
+          <div className="flex items-center gap-2 text-emerald-700 font-bold mb-4 text-sm justify-center md:justify-start">
             <span>צרכנות נבונה</span>
             <span aria-hidden="true">•</span>
             <span>בטיחות בחשמל</span>
@@ -66,7 +72,7 @@ export default function HowToChooseElectricianArticle() {
           </h1>
           <p className="text-xl text-slate-600 font-medium text-center md:text-right">
             נכתב ע&quot;י:{" "}
-            <Link href="/" className="text-emerald-600 hover:underline font-bold">
+            <Link href="/" className="text-emerald-700 hover:underline font-bold">
               יהודה חכמוב — הנדסאי חשמל וחשמלאי מוסמך
             </Link>
           </p>
@@ -107,7 +113,7 @@ export default function HowToChooseElectricianArticle() {
           <p className="text-slate-600 leading-relaxed mb-6">
             חוק החשמל בישראל קובע חד משמעית: כל עבודת חשמל – אפילו החלפה של שקע
             פשוט – חייבת להתבצע על ידי{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               חשמלאי מוסמך
             </Link>{" "}
             בעל רישיון בתוקף מטעם משרד העבודה. שיפוצניק או חבר שיודע
@@ -125,7 +131,7 @@ export default function HowToChooseElectricianArticle() {
           <p className="text-slate-600 leading-relaxed mb-4">
             בעידן של היום, קל מאוד לבדוק היסטוריה של בעל מקצוע. לקוחות חכמים
             בודקים דירוגים באתרים אובייקטיביים. אם חיפשתם למשל{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               מידרג חשמלאי
             </Link>{" "}
             או המלצות באתר המקצוענים, כנראה שאתם מחפשים שקט נפשי.
@@ -133,7 +139,7 @@ export default function HowToChooseElectricianArticle() {
           <p className="text-slate-600 leading-relaxed mb-6">
             החותמת האולטימטיבית לאמינות היא תוכנית הטלוויזיה של חיים אתגר. הזמנה
             של{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               חשמלאי יצאת צדיק
             </Link>{" "}
             מעניקה לכם ודאות שמדובר באיש מקצוע שנבדק על ידי מצלמות נסתרות, איתר
@@ -167,7 +173,7 @@ export default function HowToChooseElectricianArticle() {
           <p className="text-slate-600 leading-relaxed mb-6">
             לא כל חשמלאי מתמחה בכל סוגי העבודות. למשל, בחורף, אחת התקלות הנפוצות
             ביותר היא בדוד השמש. דוד שמקצר דורש התערבות של{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               חשמלאי דודים
             </Link>{" "}
             שיודע להפריד בין תקלות גוף חימום (פלאנג&apos;) לתקלות בחיווט של הלוח,
@@ -208,7 +214,7 @@ export default function HowToChooseElectricianArticle() {
             <a
               href={`tel:${PHONE}`}
               aria-label={`חייגו לתיאום ביקור: ${PHONE_DISPLAY}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
             >
               חייגו לתיאום ביקור
             </a>

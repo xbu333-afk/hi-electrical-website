@@ -28,7 +28,7 @@ export default function PricingTable() {
               <h2 className="font-bold text-slate-900 text-base leading-snug mb-2">
                 {item.service}
               </h2>
-              <p className="text-emerald-600 font-black text-xl mb-2">{item.price}</p>
+              <p className="text-emerald-700 font-black text-xl mb-2">{item.price}</p>
               <p className="text-sm text-slate-600 leading-relaxed m-0">{item.notes}</p>
             </article>
           </li>
@@ -61,7 +61,7 @@ export default function PricingTable() {
                 <th scope="row" className="p-5 font-bold text-slate-900">
                   {item.service}
                 </th>
-                <td className="p-5 text-emerald-600 font-black whitespace-nowrap">
+                <td className="p-5 text-emerald-700 font-black whitespace-nowrap">
                   {item.price}
                 </td>
                 <td className="p-5 text-sm">{item.notes}</td>

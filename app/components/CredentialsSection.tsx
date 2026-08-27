@@ -46,7 +46,7 @@ export default function CredentialsSection() {
               role="listitem"
               className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 lift"
             >
-              <span className="flex-shrink-0 w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+              <span className="flex-shrink-0 w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
                 {icon}
               </span>
               <div>

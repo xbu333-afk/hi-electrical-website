@@ -31,7 +31,7 @@ export default function PricingPage() {
           <p className="text-xl text-slate-600 font-medium max-w-3xl leading-relaxed md:mr-0 mx-auto">
             אנו מאמינים בשקיפות מלאה. לפניכם מחירון מומלץ לעבודות החשמל הנפוצות
             ביותר. המחירים הוגנים ותואמים לסטנדרט העבודה הגבוה של{" "}
-            <Link href="/" className="text-emerald-600 hover:underline font-bold">
+            <Link href="/" className="text-emerald-700 hover:underline font-bold">
               הנדסאי חשמל וחשמלאי מוסמך
             </Link>
             . ללא אותיות קטנות וללא &quot;הפתעות&quot; בחשבון.
@@ -71,7 +71,7 @@ export default function PricingPage() {
           <div className="flex-1 bg-white p-6 rounded-xl border border-amber-100/50 shadow-sm">
             <p className="text-slate-600 leading-relaxed m-0 text-sm">
               לקוחות יקרים, אנו מתגאים להיות בעלי תו האיכות{" "}
-              <Link href="/" className="font-bold text-emerald-600 hover:underline">
+              <Link href="/" className="font-bold text-emerald-700 hover:underline">
                 חשמלאי יצאת צדיק
               </Link>
               . המשמעות היא שאצלנו לא תמצאו &quot;מחירי פיתיון&quot; נמוכים

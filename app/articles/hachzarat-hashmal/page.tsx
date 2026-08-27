@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 const LINK_FOCUS =
   "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2";
@@ -28,6 +30,8 @@ const TOC = [
 export default function HachzaratHashmalArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script {...jsonLdScriptProps(buildArticleJsonLd("hachzarat-hashmal"))} />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol
@@ -63,7 +67,7 @@ export default function HachzaratHashmalArticle() {
         </nav>
 
         <header className="mb-10 border-b border-gray-100 pb-8">
-          <div className="flex items-center gap-2 text-emerald-600 font-bold mb-4 text-sm justify-center md:justify-start">
+          <div className="flex items-center gap-2 text-emerald-700 font-bold mb-4 text-sm justify-center md:justify-start">
             <span>מדריך חירום</span>
             <span aria-hidden="true">•</span>
             <span>חברת החשמל</span>
@@ -187,7 +191,7 @@ export default function HachzaratHashmalArticle() {
               זהו השלב הקריטי ביותר. עליכם להזמין{" "}
               <Link
                 href="/"
-                className={`text-emerald-600 font-bold hover:underline ${LINK_FOCUS}`}
+                className={`text-emerald-700 font-bold hover:underline ${LINK_FOCUS}`}
               >
                 חשמלאי מוסמך/ראשי
               </Link>{" "}
@@ -205,7 +209,7 @@ export default function HachzaratHashmalArticle() {
               החשמלאי יבצע{" "}
               <Link
                 href="/"
-                className={`text-emerald-600 font-bold hover:underline ${LINK_FOCUS}`}
+                className={`text-emerald-700 font-bold hover:underline ${LINK_FOCUS}`}
               >
                 תיקון הליקויים
               </Link>{" "}
@@ -248,7 +252,7 @@ export default function HachzaratHashmalArticle() {
               של חברת החשמל. אצלנו ב
               <Link
                 href="/"
-                className={`text-emerald-600 font-bold hover:underline ${LINK_FOCUS}`}
+                className={`text-emerald-700 font-bold hover:underline ${LINK_FOCUS}`}
               >
                 ח.י שירותי חשמל
               </Link>
@@ -291,7 +295,7 @@ export default function HachzaratHashmalArticle() {
           <a
             href={`tel:${PHONE}`}
             aria-label={`חייגו להחזרת חשמל: ${PHONE_DISPLAY}`}
-            className={`inline-flex bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30 ${LINK_FOCUS} focus-visible:ring-offset-slate-900`}
+            className={`inline-flex bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30 ${LINK_FOCUS} focus-visible:ring-offset-slate-900`}
           >
             חייגו עכשיו: {PHONE_DISPLAY}
           </a>

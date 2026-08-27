@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "בית חכם: מה צריך לדעת לפני שמתחילים? | ח.י שירותי חשמל",
@@ -26,6 +28,8 @@ const TOC = [
 export default function SmartHomeArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script {...jsonLdScriptProps(buildArticleJsonLd("bayit-chacham"))} />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol
@@ -55,7 +59,7 @@ export default function SmartHomeArticle() {
         </nav>
 
         <header className="mb-10 border-b border-gray-100 pb-8">
-          <div className="flex items-center gap-2 text-emerald-600 font-bold mb-4 text-sm justify-center md:justify-start">
+          <div className="flex items-center gap-2 text-emerald-700 font-bold mb-4 text-sm justify-center md:justify-start">
             <span>מדריך מקצועי</span>
             <span aria-hidden="true">•</span>
             <span>חדשנות וטכנולוגיה</span>
@@ -65,7 +69,7 @@ export default function SmartHomeArticle() {
           </h1>
           <p className="text-xl text-slate-600 font-medium text-center md:text-right">
             מאת:{" "}
-            <Link href="/" className="text-emerald-600 hover:underline font-bold">
+            <Link href="/" className="text-emerald-700 hover:underline font-bold">
               יהודה חכמוב — הנדסאי חשמל וחשמלאי מוסמך
             </Link>
           </p>
@@ -111,7 +115,7 @@ export default function SmartHomeArticle() {
             שבת מתקדם), וליצור &quot;תרחישים&quot; – כמו לחיצה על כפתור
             &quot;יציאה מהבית&quot; שמכבה את כל האורות, המזגנים והדוד בבת אחת.
             אם אתם רוצים לשלב מערכת כזו בצורה בטוחה, פנו אל{" "}
-            <Link href="/" className="text-emerald-600 font-bold underline">
+            <Link href="/" className="text-emerald-700 font-bold underline">
               ח.י שירותי חשמל
             </Link>{" "}
             לתכנון נכון מהרגע הראשון.
@@ -139,7 +143,7 @@ export default function SmartHomeArticle() {
               ב-100% שבה כל החיווט עובר בתוך הקירות ישירות לארון החשמל. היא
               מתאימה רק לבתים בשלבי בנייה או שיפוץ יסודי, מכיוון שהיא דורשת
               תכנון מקצועי ומורכב בתוך{" "}
-              <Link href="/" className="text-emerald-600 font-bold hover:underline">
+              <Link href="/" className="text-emerald-700 font-bold hover:underline">
                 לוח החשמל הראשי
               </Link>{" "}
               של הבית.
@@ -173,7 +177,7 @@ export default function SmartHomeArticle() {
           <p className="text-slate-600 mt-4">
             טיפ של מקצוענים: שילוב של מערכות חכמות דורש תשתית יציבה ולעיתים
             הגדלת חיבור. מומלץ להתייעץ עם{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               הנדסאי חשמל מוסמך
             </Link>{" "}
             כדי לוודא שהלוח הקיים שלכם מסוגל לעמוד בעומס החדש.
@@ -228,7 +232,7 @@ export default function SmartHomeArticle() {
             <a
               href={`tel:${PHONE}`}
               aria-label={`חייגו עכשיו לייעוץ ראשוני חינם: ${PHONE_DISPLAY}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
             >
               חייגו עכשיו לייעוץ ראשוני חינם
             </a>

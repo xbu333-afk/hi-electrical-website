@@ -7,7 +7,19 @@ import {
   HERO_VIDEO_POSTER_WIDTH,
 } from "@/lib/hero-video";
 
-export default function HeroVideo() {
+type HeroVideoProps = {
+  /**
+   * ברירת המחדל היא טעינה מוקדמת עבור ה-Hero שמעל הקיפול.
+   * בשימושים בתחתית העמוד יש להעביר `false` כדי לא לפגוע ב-LCP.
+   */
+  priority?: boolean;
+  sizes?: string;
+};
+
+export default function HeroVideo({
+  priority = true,
+  sizes = "100vw",
+}: HeroVideoProps) {
   return (
     <div className="relative w-full bg-slate-100">
       <Image
@@ -15,8 +27,8 @@ export default function HeroVideo() {
         alt={HERO_VIDEO_ARIA_LABEL}
         width={HERO_VIDEO_POSTER_WIDTH}
         height={HERO_VIDEO_POSTER_HEIGHT}
-        priority={true}
-        sizes="100vw"
+        priority={priority}
+        sizes={sizes}
         quality={85}
         className="block w-full h-auto"
       />

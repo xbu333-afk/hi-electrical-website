@@ -1,106 +1,65 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ARTICLES } from "@/lib/articles";
+import { SITE_URL } from "@/lib/site";
+import {
+  buildBreadcrumbList,
+  jsonLdScriptProps,
+  personRef,
+  websiteRef,
+} from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "מאמרים ומדריכים | חשמל וחשמלאות",
   description:
     "מדריכים, טיפים ומאמרים מקצועיים בנושאי חשמל — מאת יהודה חכמוב, הנדסאי חשמל מוסמך.",
+  alternates: {
+    canonical: `${SITE_URL}/articles`,
+  },
 };
 
-const ARTICLES = [
-  {
-    slug: "hachzarat-hashmal",
-    title: "נותקתם מהחשמל? המדריך המלא להחזרת החיבור מול חברת החשמל",
-    excerpt:
-      "ניתוק חברת חשמל מסיבות בטיחות: למה זה קורה, איך מחזירים חשמל שלב-אחר-שלב, ומתי חובה חשמלאי ראשי ואישור תקינות.",
-    category: "מדריך חירום",
-    readTime: "7 דק׳",
-    date: "אוגוסט 2026",
-  },
-  {
-    slug: "beware-of-scammers",
-    title: 'זהירות מנוכלים: איך תזהו מתחזים והונאות "יצאת צדיק"?',
-    excerpt:
-      "נוכלים מזייפים תעודות ותמונות עם חיים אתגר בעזרת AI. איך לבדוק רישיון, לזהות חאפרים ולשמור על הבית שלכם.",
-    category: "תחקיר צרכנות",
-    readTime: "7 דק׳",
-    date: "יוני 2026",
-  },
-  {
-    slug: "how-to-choose-electrician",
-    title: "איך לבחור חשמלאי מוסמך (וממה כדאי להיזהר)?",
-    excerpt:
-      "מדריך מלא: רישיון, יצאת צדיק, מידרג, חירום 24 שעות וחשמלאי דודים — איך לסנן חאפרים ולבחור נכון.",
-    category: "צרכנות נבונה",
-    readTime: "6 דק׳",
-    date: "יוני 2026",
-  },
-  {
-    slug: "electrical-licenses-guide",
-    title: "עוזר, מוסמך או הנדסאי? כל מה שצריך לדעת על רישיונות חשמל",
-    excerpt:
-      "לא כל חשמלאי מורשה לבצע כל עבודה. מדריך מקיף לסוגי הרישיונות בישראל: מי רשאי לחתום על לוח תלת-פאזי, איפה זה מופיע ברישיון, וממה כדאי להיזהר.",
-    category: "מדריך צרכנות חכמה",
-    readTime: "6 דק׳",
-    date: "יוני 2026",
-  },
-  {
-    slug: "handyman-vs-electrician",
-    title: "הנדימן הוא לא חשמלאי: למה אלתורים עולים ביוקר?",
-    excerpt:
-      "הנדימן ללא רישיון הוא סכנת חיים. מה אומר החוק, מתי הביטוח לא יכסה — ואיך לוודא חשמלאי מוסמך.",
-    category: "אזהרת בטיחות",
-    readTime: "5 דק׳",
-    date: "יוני 2026",
-  },
-  {
-    slug: "grounding",
-    title: "הארקה – מהי, למה היא חשובה ואיך מוודאים שהיא תקינה?",
-    excerpt:
-      "מהי הארקה? למה היא כל כך חשובה? סכנות, בדיקות תקינות ושירותי בדיקה מקצועיים של חשמלאי מוסמך.",
-    category: "בטיחות בחשמל",
-    readTime: "6 דק׳",
-    date: "יוני 2026",
-  },
-  {
-    slug: "mimsar-pahat",
-    title: "למה ממסר הפחת קופץ (ומה עושים עכשיו)?",
-    excerpt:
-      "החשמל קפץ ואי אפשר להרים את המתג? מדריך חירום פשוט — מה לעשות לבד, איך לאתר את התקלה, ומתי חייבים לקרוא לחשמלאי מוסמך.",
-    category: "מדריך חירום",
-    readTime: "4 דק׳",
-    date: "יוני 2026",
-  },
-  {
-    slug: "ma-ze-luch-hashmal",
-    title: "מה זה לוח חשמל ומתי צריך לשדרג אותו?",
-    excerpt:
-      "המדריך המלא: מה תפקידו של לוח החשמל, סימני עומס יתר, מתי חובה לשדרג לתלת-פאזי — ומתי לפנות לחשמלאי מוסמך.",
-    category: "לוחות חשמל",
-    readTime: "6 דק׳",
-    date: "מאי 2026",
-  },
-  {
-    slug: "bayit-chacham",
-    title: "בית חכם: מה צריך לדעת לפני שמתחילים?",
-    excerpt:
-      "מדריך מעשי: אלחוטי מול קווי, מאיפה להתחיל, ולמה חובה חשמלאי מוסמך — לפני שקונים רכיבים לבית חכם.",
-    category: "בתים חכמים",
-    readTime: "7 דק׳",
-    date: "אפריל 2026",
-  },
-];
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": `${SITE_URL}/articles#webpage`,
+      url: `${SITE_URL}/articles`,
+      name: "מאמרים ומדריכים מקצועיים בנושאי חשמל",
+      description:
+        "מדריכים, טיפים ומאמרים מקצועיים בנושאי חשמל — מאת יהודה חכמוב, הנדסאי חשמל מוסמך.",
+      inLanguage: "he-IL",
+      isPartOf: websiteRef,
+      author: personRef,
+      breadcrumb: { "@id": `${SITE_URL}/articles#breadcrumb` },
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: ARTICLES.map(({ slug, title }, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: title,
+          url: `${SITE_URL}/articles/${slug}`,
+        })),
+      },
+    },
+    buildBreadcrumbList(`${SITE_URL}/articles#breadcrumb`, [
+      { name: "מאמרים ומדריכים", path: "/articles" },
+    ]),
+  ],
+};
 
 export default function ArticlesPage() {
   return (
     <>
+      <script {...jsonLdScriptProps(jsonLd)} />
+
       {/* ── Header ── */}
       <section
         aria-labelledby="articles-heading"
         className="bg-white border-b border-gray-100 py-14 md:py-20"
       >
         <div className="max-w-5xl mx-auto px-6">
-          <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
+          <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
             מאמרים ומדריכים
           </p>
           <h1
@@ -179,7 +138,7 @@ export default function ArticlesPage() {
           </p>
           <Link
             href="/#contact"
-            className="inline-flex items-center bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors shadow-sm"
+            className="inline-flex items-center bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors shadow-sm"
           >
             צרו קשר
           </Link>

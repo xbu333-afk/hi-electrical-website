@@ -3,7 +3,7 @@ import HomePage from "@/app/page";
 
 export const metadata: Metadata = {
   alternates: {
-    canonical: "https://hiservice.org",
+    canonical: "https://www.hiservice.org",
   },
 };
 

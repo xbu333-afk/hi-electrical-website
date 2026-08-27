@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: 'זהירות מנוכלים: איך תזהו חשמלאים מתחזים והונאות "יצאת צדיק"? | ח.י שירותי חשמל',
@@ -27,6 +29,8 @@ const TOC = [
 export default function BewareOfScammersArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script {...jsonLdScriptProps(buildArticleJsonLd("beware-of-scammers"))} />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol
@@ -66,7 +70,7 @@ export default function BewareOfScammersArticle() {
           </h1>
           <p className="text-xl text-slate-600 font-medium text-center md:text-right">
             מאת:{" "}
-            <Link href="/" className="text-emerald-600 hover:underline font-bold">
+            <Link href="/" className="text-emerald-700 hover:underline font-bold">
               יהודה חכמוב — הנדסאי חשמל וחשמלאי מוסמך
             </Link>
           </p>
@@ -107,7 +111,7 @@ export default function BewareOfScammersArticle() {
           </h2>
           <p className="text-slate-600 leading-relaxed mb-6">
             כל מי שמתעסק בחשמל בישראל מחויב לשאת רישיון בתוקף. נקודה.{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               חשמלאי מוסמך
             </Link>{" "}
             אמיתי גאה ברישיון שלו (ובמיוחד הנדסאי חשמל שעבד קשה שנים כדי להשיג
@@ -137,7 +141,7 @@ export default function BewareOfScammersArticle() {
               <strong>אין סרטון? אין אמונה:</strong> מי שבאמת נבדק ויצא צדיק,
               יציג בגאווה סרטון מתוך התוכנית או לפחות תמונה ברורה ואותנטית עם
               חיים אתגר וצוות ההפקה המעניקים לו את המדליה (כמו שאנחנו ב
-              <Link href="/" className="text-emerald-600 font-bold hover:underline">
+              <Link href="/" className="text-emerald-700 font-bold hover:underline">
                 ח.י שירותי חשמל
               </Link>{" "}
               מציגים בשקיפות מלאה).
@@ -146,7 +150,7 @@ export default function BewareOfScammersArticle() {
               <strong>בדקו ברשימות הרשמיות:</strong> אל תסמכו רק על הלוגו באתר.
               חפשו את שם העסק ברשימת הצדיקים הרשמית של ערוץ 12 או באתרי דירוג
               אמינים כמו{" "}
-              <Link href="/" className="text-emerald-600 font-bold hover:underline">
+              <Link href="/" className="text-emerald-700 font-bold hover:underline">
                 מידרג חשמלאים
               </Link>{" "}
               כדי להצליב מידע.
@@ -191,11 +195,11 @@ export default function BewareOfScammersArticle() {
             להיכנס לבית. הוא יגבה מחיר ביקור ריאלי ותקני, יסביר במדויק מה
             התקלה, ויתמחר אותה ביושר לפני שיחליף אפילו בורג אחד. אם אתם מחפשים
             שקט נפשי ובודקים דרך{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               מידרג חשמלאים
             </Link>{" "}
             או מזמינים{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               חשמלאי יצאת צדיק
             </Link>
             , תגלו שהמומחים האמיתיים תמיד יסבירו לכם במדויק מה התקלה, ויתמחרו
@@ -234,7 +238,7 @@ export default function BewareOfScammersArticle() {
             <a
               href={`tel:${PHONE}`}
               aria-label={`חייגו לתיאום ביקור בטוח: ${PHONE_DISPLAY}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
             >
               חייגו לתיאום ביקור בטוח: {PHONE_DISPLAY}
             </a>

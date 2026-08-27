@@ -645,7 +645,7 @@ export function DashboardClient({
                       </td>
                       <td className="px-4 py-3 text-center">
                         {row.clicked_action ? (
-                          <span className="text-emerald-600 font-bold text-sm">
+                          <span className="text-emerald-700 font-bold text-sm">
                             📞
                           </span>
                         ) : (

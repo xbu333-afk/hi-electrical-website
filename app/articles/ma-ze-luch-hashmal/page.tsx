@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "מה זה לוח חשמל ומתי צריך לשדרג אותו? | ח.י שירותי חשמל",
@@ -26,6 +28,8 @@ const TOC = [
 export default function LuahHashmalArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script {...jsonLdScriptProps(buildArticleJsonLd("ma-ze-luch-hashmal"))} />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol
@@ -55,7 +59,7 @@ export default function LuahHashmalArticle() {
         </nav>
 
         <header className="mb-10 border-b border-gray-100 pb-8">
-          <div className="flex items-center gap-2 text-emerald-600 font-bold mb-4 text-sm justify-center md:justify-start">
+          <div className="flex items-center gap-2 text-emerald-700 font-bold mb-4 text-sm justify-center md:justify-start">
             <span>מדריך מקצועי</span>
             <span aria-hidden="true">•</span>
             <span>לוחות ומערכות</span>
@@ -65,7 +69,7 @@ export default function LuahHashmalArticle() {
           </h1>
           <p className="text-xl text-slate-600 font-medium text-center md:text-right">
             מאת:{" "}
-            <Link href="/" className="text-emerald-600 hover:underline font-bold">
+            <Link href="/" className="text-emerald-700 hover:underline font-bold">
               יהודה חכמוב — הנדסאי חשמל וחשמלאי מוסמך
             </Link>
           </p>
@@ -110,10 +114,22 @@ export default function LuahHashmalArticle() {
             המזגן והדוד). בתוך הלוח יושבים מפסקים אוטומטיים (פקקים) שתפקידם
             לקפוץ ולנתק את הזרם במקרה של קצר או עומס יתר, כדי למנוע התחממות של
             החוטים בתוך הקירות. אם אתם חווים בעיות חוזרות ונשנות, מומלץ לפנות אל{" "}
-            <Link href="/" className="text-emerald-600 font-bold underline">
+            <Link href="/" className="text-emerald-700 font-bold underline">
               ח.י שירותי חשמל
             </Link>{" "}
             לאבחון מקצועי של הלוח שלכם.
+          </p>
+          <p className="text-slate-600 leading-relaxed mb-6">
+            מדריך זה מציג את התמונה הכללית. להסבר הנדסי מפורט על תהליך ההחלפה
+            עצמו — מה חייב להיכלל בלוח חדש, אילו בדיקות מסירה מבוצעות ואילו
+            מסמכים אתם אמורים לקבל — ראו את המדריך{" "}
+            <Link
+              href="/articles/panel-upgrade"
+              className="text-emerald-700 font-bold hover:underline"
+            >
+              החלפה ושדרוג לוח חשמל
+            </Link>
+            .
           </p>
 
           <h2
@@ -133,7 +149,7 @@ export default function LuahHashmalArticle() {
               החשמל שלכם עדיין עשוי מעץ – מדובר בסכנת נפשות מוחשית. לוחות עץ
               אינם עמידים בפני אש ומהווים גורם סיכון ראשון לשריפות. חובה
               להחליפם מיד בלוח פלסטיק מודרני וחסין אש על ידי{" "}
-              <Link href="/" className="text-emerald-600 font-bold hover:underline">
+              <Link href="/" className="text-emerald-700 font-bold hover:underline">
                 חשמלאי מוסמך בעל רישיון
               </Link>
               .
@@ -147,7 +163,7 @@ export default function LuahHashmalArticle() {
               <strong>רכישת מכשירים צורכי אנרגיה כבדים:</strong> הוספתם לבית
               כיריים אינדוקציה, מזגנים חזקים, או עמדת טעינה לרכב חשמלי? מכשירים
               אלו דורשים תשתית חזקה ויציבה של{" "}
-              <Link href="/" className="text-emerald-600 font-bold hover:underline">
+              <Link href="/" className="text-emerald-700 font-bold hover:underline">
                 לוח חשמל תלת פאזי
               </Link>
               .
@@ -156,7 +172,7 @@ export default function LuahHashmalArticle() {
               <strong>רעשים משונים או ריח של פלסטיק שרוף:</strong> אם אתם שומעים
               זימזום או ריח מוזר מכיוון ארון החשמל, יש לנתק את המכשירים הכבדים
               וליצור קשר עם{" "}
-              <Link href="/" className="text-emerald-600 font-bold underline">
+              <Link href="/" className="text-emerald-700 font-bold underline">
                 חשמלאי מומלץ וישר
               </Link>{" "}
               ללא דיחוי.
@@ -175,6 +191,24 @@ export default function LuahHashmalArticle() {
             תלת-פאזית (3x25 או 3x40 אמפר) מחלק את עומס החשמל של הבית לשלושה
             ערוצים נפרדים, ומאפשר לכם להפעיל את כל מכשירי החשמל בבית במקביל,
             בראש שקט לחלוטין ומבלי שהחשמל יקפוץ לעולם.
+          </p>
+          <p className="text-slate-600 leading-relaxed mb-6">
+            חשוב להדגיש שהמעבר לתלת-פאזי מועיל רק כאשר המעגלים מחולקים נכון בין
+            שלוש הפאזות. את התהליך המלא מול חברת החשמל מפרט המדריך{" "}
+            <Link
+              href="/articles/three-phase-upgrade"
+              className="text-emerald-700 font-bold hover:underline"
+            >
+              הגדלת חיבור לתלת-פאזי
+            </Link>
+            , ואת החלוקה עצמה מפרט המדריך{" "}
+            <Link
+              href="/articles/load-balancing"
+              className="text-emerald-700 font-bold hover:underline"
+            >
+              איזון עומסים וחלוקת פאזות
+            </Link>
+            .
           </p>
 
           <div className="bg-emerald-50 border-r-4 border-emerald-500 p-6 rounded-l-xl my-8 not-prose">
@@ -225,7 +259,7 @@ export default function LuahHashmalArticle() {
             <a
               href={`tel:${PHONE}`}
               aria-label={`חייגו עכשיו לייעוץ והצעת מחיר: ${PHONE_DISPLAY}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
             >
               חייגו עכשיו לייעוץ והצעת מחיר
             </a>

@@ -195,7 +195,7 @@ export default function DeviceCalculator() {
         </form>
 
         <div
-          className="mt-10 bg-emerald-600 text-white rounded-2xl p-6 text-center shadow-lg shadow-emerald-600/20"
+          className="mt-10 bg-emerald-700 text-white rounded-2xl p-6 text-center shadow-lg shadow-emerald-700/20"
           aria-live="polite"
         >
           <p className="text-3xl font-black">{result || "—"}</p>
@@ -215,22 +215,22 @@ export default function DeviceCalculator() {
           אם חישבתם את הצריכה שלכם והחשבון שמגיע מחברת החשמל עדיין גבוה משמעותית,
           ייתכן שיש לכם זליגת חשמל (קצר סמוי), הארקה פגומה, או מכשיר ישן שצורך
           אנרגיה חריגה. בדיקה מקצועית של{" "}
-          <Link href="/" className="text-emerald-600 font-bold hover:underline">
+          <Link href="/" className="text-emerald-700 font-bold hover:underline">
             חשמלאי מוסמך
           </Link>{" "}
           יכולה לחשוף את מקור הבעיה לפני שהנזק מתגבר.
         </p>
         <p className="text-slate-600 leading-relaxed mb-6">
           מומלץ להזמין{" "}
-          <Link href="/" className="text-emerald-600 font-bold hover:underline">
+          <Link href="/" className="text-emerald-700 font-bold hover:underline">
             חשמלאי מוסמך
           </Link>{" "}
           לבדיקה מקיפה של הלוח ושל הצרכנים הכבדים. אצלנו ב
-          <Link href="/" className="text-emerald-600 font-bold hover:underline">
+          <Link href="/" className="text-emerald-700 font-bold hover:underline">
             ח.י שירותי חשמל
           </Link>{" "}
           תוכלו למצוא{" "}
-          <Link href="/pricing" className="text-emerald-600 font-bold hover:underline">
+          <Link href="/pricing" className="text-emerald-700 font-bold hover:underline">
             מחירון החשמל
           </Link>{" "}
           שקוף והוגן, ולהיות בטוחים שאתם מקבלים שירות ברמה של יצאת צדיק.

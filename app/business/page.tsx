@@ -30,7 +30,7 @@ export default function BusinessPage() {
           </h1>
           <p className="text-xl text-slate-600 font-medium max-w-3xl leading-relaxed md:mr-0 mx-auto">
             בסביבה העסקית, כל דקת השבתה שווה כסף.{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               ח.י שירותי חשמל
             </Link>{" "}
             מספקת מעטפת הנדסית וטכנית מלאה למפעלים, מוסדות ציבור, רשויות
@@ -42,7 +42,7 @@ export default function BusinessPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
           <article className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 hover:shadow-lg transition-shadow">
             <div
-              className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl mb-6"
+              className="w-14 h-14 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-2xl mb-6"
               aria-hidden="true"
             >
               🏢
@@ -109,7 +109,7 @@ export default function BusinessPage() {
                 </span>
                 <span>
                   <strong>השקפה רב-תחומית:</strong> הכשרה כפולה כ
-                  <Link href="/" className="text-emerald-400 hover:underline">
+                  <Link href="/" className="text-emerald-400 underline">
                     הנדסאי חשמל
                   </Link>{" "}
                   וכהנדסאי מכונות מאפשרת לנו הבנה עמוקה של צרכי התעשייה ושילוב
@@ -146,7 +146,7 @@ export default function BusinessPage() {
             </p>
             <a
               href={`mailto:${EMAIL}?subject=${encodeURIComponent("פנייה B2B — מכרז / תמחור")}`}
-              className="block w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-xl transition-all text-lg text-center shadow-lg"
+              className="block w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-8 rounded-xl transition-all text-lg text-center shadow-lg"
             >
               שליחת חומרים למכרז / תמחור
             </a>

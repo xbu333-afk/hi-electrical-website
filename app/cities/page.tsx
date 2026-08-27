@@ -22,7 +22,7 @@ export default function CitiesPage() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
-              <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
+              <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
                 אזורי שירות
               </p>
               <h1
@@ -61,7 +61,7 @@ export default function CitiesPage() {
                   aria-label={`חשמלאי מוסמך ב${name} — זמין 24/7`}
                 >
                   <span
-                    className="w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-emerald-100 border border-gray-100 group-hover:border-emerald-200 flex items-center justify-center text-slate-500 group-hover:text-emerald-600 transition-colors"
+                    className="w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-emerald-100 border border-gray-100 group-hover:border-emerald-200 flex items-center justify-center text-slate-500 group-hover:text-emerald-700 transition-colors"
                     aria-hidden="true"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
@@ -123,7 +123,7 @@ export default function CitiesPage() {
           <div className="hidden md:flex gap-3 justify-center">
             <a
               href={`tel:${PHONE}`}
-              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors shadow-sm"
             >
               חייגו עכשיו
             </a>
@@ -136,7 +136,7 @@ export default function CitiesPage() {
           </div>
           <a
             href={`tel:${PHONE}`}
-            className="md:hidden inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors shadow-sm mx-auto"
+            className="md:hidden inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors shadow-sm mx-auto"
             aria-label={`התקשר: ${PHONE_DISPLAY}`}
           >
             {PHONE_DISPLAY}

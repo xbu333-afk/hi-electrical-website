@@ -20,7 +20,7 @@ export default function CityAboutSection({ content }: CityAboutSectionProps) {
           ))}
         </div>
 
-        <p className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">
+        <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
           מי אנחנו
         </p>
         <h2
@@ -28,7 +28,7 @@ export default function CityAboutSection({ content }: CityAboutSectionProps) {
           className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight mb-6"
         >
           ח.י שירותי חשמל{" "}
-          <span className="text-emerald-600">ב{name}</span>
+          <span className="text-emerald-700">ב{name}</span>
         </h2>
 
         <div className="space-y-4 text-slate-600 text-base leading-[1.9]">

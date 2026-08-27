@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import { buildArticleJsonLd } from "@/lib/articles";
+import { jsonLdScriptProps } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "הנדימן הוא לא חשמלאי! מתי אסור להתפשר על איש מקצוע? | ח.י שירותי חשמל",
@@ -25,6 +27,10 @@ const TOC = [
 export default function HandymanArticle() {
   return (
     <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script
+        {...jsonLdScriptProps(buildArticleJsonLd("handyman-vs-electrician"))}
+      />
+
       <article className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
         <nav aria-label="נתיב דפים" className="mb-8">
           <ol
@@ -64,7 +70,7 @@ export default function HandymanArticle() {
           </h1>
           <p className="text-xl text-slate-600 font-medium text-center md:text-right">
             מאת:{" "}
-            <Link href="/" className="text-emerald-600 hover:underline font-bold">
+            <Link href="/" className="text-emerald-700 hover:underline font-bold">
               יהודה חכמוב — הנדסאי חשמל וחשמלאי מוסמך
             </Link>
           </p>
@@ -108,7 +114,7 @@ export default function HandymanArticle() {
             – אפילו הקטנה ביותר – אלא אם כן יש בידיו רישיון חשמלאי תקף ומתאים
             לסוג העבודה. למה? כי בעוד שמדף עקום אפשר לתקן, חוט אפס שלא מחובר טוב
             יכול לגרום לשריפה או להתחשמלות של ילד שנוגע במקרר. רק{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               חשמלאי מוסמך
             </Link>{" "}
             מכיר את התקנים, יודע למדוד הארקה, ומבין את העומסים בלוח החשמל.
@@ -126,7 +132,7 @@ export default function HandymanArticle() {
             הדבר הראשון שהם יבקשו הוא חשבונית ופרטי רישיון מאיש המקצוע שביצע את
             העבודה. ברגע שיתברר שזה היה אדם ללא רישיון – חברת הביטוח פשוט תתנער
             מכל אחריות. אל תיקחו את הסיכון הזה. עבדו מול צוות{" "}
-            <Link href="/" className="text-emerald-600 font-bold hover:underline">
+            <Link href="/" className="text-emerald-700 font-bold hover:underline">
               ח.י שירותי חשמל
             </Link>{" "}
             כדי להבטיח עבודה מגובה בביטוח.
@@ -164,7 +170,7 @@ export default function HandymanArticle() {
             <a
               href={`tel:${PHONE}`}
               aria-label={`לחיוג מהיר לתיאום ביקור: ${PHONE_DISPLAY}`}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-lg"
             >
               לחיוג מהיר לתיאום ביקור
             </a>

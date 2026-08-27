@@ -69,7 +69,7 @@ export default function FloatingContactBar() {
     <a
       href={`tel:${PHONE}`}
       data-analytics-location="floating-call"
-      className="fixed bottom-6 left-4 z-50 md:hidden flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-lg shadow-emerald-600/30 border border-emerald-500/20 animate-fade-up focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+      className="fixed bottom-6 left-4 z-50 md:hidden flex items-center justify-center w-14 h-14 rounded-full bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white shadow-lg shadow-emerald-600/30 border border-emerald-500/20 animate-fade-up focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
       aria-label={labels.floatingCallAria}
     >
       <PhoneIcon className="w-6 h-6" />

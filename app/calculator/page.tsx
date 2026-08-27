@@ -113,7 +113,7 @@ export default function ElectricityCalculator() {
             <button
               type="button"
               onClick={calculateStyled}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg transition-all shadow-md hover:shadow-lg"
+              className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 rounded-xl text-lg transition-all shadow-md hover:shadow-lg"
             >
               חשב עלות
             </button>
@@ -184,7 +184,7 @@ export default function ElectricityCalculator() {
         <a
           href={`tel:${PHONE}`}
           aria-label={`חייגו לייעוץ ללא התחייבות: ${PHONE_DISPLAY}`}
-          className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
+          className="inline-block bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-8 rounded-full transition-all text-lg shadow-lg hover:shadow-emerald-500/30"
         >
           חייגו לייעוץ ללא התחייבות
         </a>

@@ -8,15 +8,16 @@ export type GoogleReview = {
   stars: number;
 };
 
+/* גוונים כהים (700) כדי שראשי התיבות בלבן יעמדו ביחס ניגודיות 4.5:1 */
 const AVATAR_COLORS = [
-  "bg-blue-500",
-  "bg-purple-500",
-  "bg-orange-500",
-  "bg-emerald-500",
-  "bg-rose-500",
-  "bg-cyan-500",
-  "bg-amber-600",
-  "bg-indigo-500",
+  "bg-blue-700",
+  "bg-purple-700",
+  "bg-orange-700",
+  "bg-emerald-700",
+  "bg-rose-700",
+  "bg-cyan-700",
+  "bg-amber-700",
+  "bg-indigo-700",
 ];
 
 function getInitials(name: string): string {

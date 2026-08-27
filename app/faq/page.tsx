@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
+import {
+  buildBreadcrumbList,
+  businessRef,
+  jsonLdScriptProps,
+  personRef,
+  websiteRef,
+} from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "שאלות ותשובות – כל מה שרציתם לדעת על תקלות חשמל | ח.י שירותי חשמל",
@@ -24,7 +31,7 @@ const FAQ_ITEMS = [
         אם הפחת בלוח החשמל קופץ לעיתים קרובות, אם יש ריח שרוף משקע או מתג,
         או אם מכשירים מפסיקים לעבוד בפתאומיות – סביר להניח שיש קצר חשמלי.
         מומלץ לא לנסות לתקן לבד בשום אופן ולפנות ל
-        <Link href="/" className="text-emerald-600 hover:underline font-bold">
+        <Link href="/" className="text-emerald-700 hover:underline font-bold">
           חשמלאי מוסמך
         </Link>{" "}
         לאיתור בטוח.
@@ -40,7 +47,7 @@ const FAQ_ITEMS = [
         מומלץ לבצע בדיקה תקופתית מקיפה (כולל{" "}
         <Link
           href="/articles/grounding"
-          className="text-emerald-600 hover:underline font-bold"
+          className="text-emerald-700 hover:underline font-bold"
         >
           בדיקת הארקה
         </Link>{" "}
@@ -69,7 +76,7 @@ const FAQ_ITEMS = [
     answer: (
       <>
         זמני ההגעה משתנים בהתאם ל
-        <Link href="/cities" className="text-emerald-600 hover:underline">
+        <Link href="/cities" className="text-emerald-700 hover:underline">
           אזור השירות
         </Link>{" "}
         ועומס הקריאות. עם זאת, כאנשי מקצוע הדוגלים בסטנדרט של &apos;יצאת
@@ -87,13 +94,13 @@ const FAQ_ITEMS = [
       <>
         <Link
           href="/services"
-          className="text-emerald-600 hover:underline font-bold"
+          className="text-emerald-700 hover:underline font-bold"
         >
           סל השירותים שלנו
         </Link>{" "}
         כולל את כל עבודות החשמל מ-א&apos; ועד ת&apos;: החל מתיקון תקלות
         וקצרים, בדיקות תקינות, התקנת{" "}
-        <Link href="/services" className="text-emerald-600 hover:underline">
+        <Link href="/services" className="text-emerald-700 hover:underline">
           גופי תאורה
         </Link>{" "}
         וספוטים, דרך החלפה והגדלת לוחות חשמל תלת-פאזיים, ועד לתכנון והקמת
@@ -109,7 +116,7 @@ const FAQ_ITEMS = [
     answer: (
       <>
         ההבדל הוא קריטי. רק{" "}
-        <Link href="/" className="text-emerald-600 hover:underline font-bold">
+        <Link href="/" className="text-emerald-700 hover:underline font-bold">
           חשמלאי מוסמך
         </Link>{" "}
         (וקל וחומר הנדסאי חשמל בעל רישיון ראשי כמו בח.י שירותי חשמל) מחזיק
@@ -140,26 +147,45 @@ const ChevronIcon = () => (
   </svg>
 );
 
-export default function FAQPage() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: FAQ_ITEMS.map(({ question, schemaText }) => ({
-      "@type": "Question",
-      name: question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: schemaText,
-      },
-    })),
-  };
+const FAQ_URL = `${SITE_URL}/faq`;
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "FAQPage",
+      "@id": `${FAQ_URL}#webpage`,
+      url: FAQ_URL,
+      name: "שאלות ותשובות בחשמל",
+      description:
+        "מתי להזמין חשמלאי? מה לעשות כשהפחת קופץ? הנדסאי חשמל וחשמלאי מוסמך עונה על השאלות הנפוצות.",
+      inLanguage: "he-IL",
+      isPartOf: websiteRef,
+      about: businessRef,
+      author: personRef,
+      publisher: businessRef,
+      breadcrumb: { "@id": `${FAQ_URL}#breadcrumb` },
+      mainEntity: FAQ_ITEMS.map(({ question, schemaText }, index) => ({
+        "@type": "Question",
+        "@id": `${FAQ_URL}#question-${index + 1}`,
+        name: question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: schemaText,
+          author: personRef,
+        },
+      })),
+    },
+    buildBreadcrumbList(`${FAQ_URL}#breadcrumb`, [
+      { name: "שאלות ותשובות", path: "/faq" },
+    ]),
+  ],
+};
+
+export default function FAQPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script {...jsonLdScriptProps(jsonLd)} />
 
       <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
         <section className="max-w-4xl mx-auto">
@@ -202,7 +228,7 @@ export default function FAQPage() {
               הנה התשובות לכל השאלות ששואלים אותנו שוב ושוב ב
               <Link
                 href="/"
-                className="font-bold text-emerald-600 hover:underline"
+                className="font-bold text-emerald-700 hover:underline"
               >
                 ח.י שירותי חשמל
               </Link>
@@ -241,7 +267,7 @@ export default function FAQPage() {
             <a
               href={`tel:${PHONE}`}
               aria-label={`חייגו לייעוץ: ${PHONE_DISPLAY}`}
-              className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-all hover:scale-105 text-lg"
+              className="inline-block bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-all hover:scale-105 text-lg"
             >
               חייגו עכשיו לייעוץ: {PHONE_DISPLAY}
             </a>
