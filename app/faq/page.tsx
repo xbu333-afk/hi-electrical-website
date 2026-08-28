@@ -238,6 +238,7 @@ export default function FAQPage() {
             </p>
             <a
               href={`tel:${PHONE}`}
+              data-analytics-location="faq-call"
               aria-label={`חייגו עכשיו וקבלו יעוץ מחשמלאי מומחה — יהודה חכמוב, ${PHONE_DISPLAY}`}
               className="inline-flex min-h-[3.5rem] items-center justify-center rounded-full bg-emerald-700 px-10 py-4 text-lg font-bold text-white shadow-lg transition-colors hover:bg-emerald-800"
             >

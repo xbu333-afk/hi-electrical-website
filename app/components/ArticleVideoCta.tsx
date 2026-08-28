@@ -62,6 +62,7 @@ export default function ArticleVideoCta({
             />
             <a
               href={`tel:${PHONE}`}
+              data-analytics-location="article-cta-call"
               aria-label={`חייגו עכשיו וקבלו יעוץ מחשמלאי מומחה — יהודה חכמוב, ${callPurpose}, ${PHONE_DISPLAY}`}
               className="relative inline-flex min-h-[3.5rem] items-center justify-center rounded-full bg-white px-8 py-4 text-center text-lg font-black leading-snug text-emerald-800 shadow-lg transition-colors hover:bg-emerald-50"
             >
@@ -73,6 +74,7 @@ export default function ArticleVideoCta({
             href={WHATSAPP_HREF}
             target="_blank"
             rel="noopener noreferrer"
+            data-analytics-location="article-cta-whatsapp"
             aria-label="שליחת הודעת וואטסאפ — אפשר בכל שפה (נפתח בחלון חדש)"
             className="inline-flex min-h-[3.5rem] items-center justify-center rounded-full border border-white/40 bg-white/10 px-10 py-4 text-lg font-bold text-white transition-colors hover:bg-white/20"
           >
