@@ -85,6 +85,14 @@ function AnswerText({ answer }: { answer: readonly FaqSegment[] }) {
           return <span key={index}>{part}</span>;
         }
 
+        if ("strong" in part) {
+          return (
+            <strong key={index} className="font-bold text-slate-900">
+              {part.text}
+            </strong>
+          );
+        }
+
         if (part.external) {
           return (
             <a
