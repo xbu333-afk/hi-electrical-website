@@ -161,7 +161,7 @@ export default function LuahHashmalArticle() {
             </li>
             <li>
               <strong>רכישת מכשירים צורכי אנרגיה כבדים:</strong> הוספתם לבית
-              כיריים אינדוקציה, מזגנים חזקים, או עמדת טעינה לרכב חשמלי? מכשירים
+              כיריים אינדוקציה, מזגנים חזקים, או משאבת חום? מכשירים
               אלו דורשים תשתית חזקה ויציבה של{" "}
               <Link href="/" className="text-emerald-700 font-bold hover:underline">
                 לוח חשמל תלת פאזי

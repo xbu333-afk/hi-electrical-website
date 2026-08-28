@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
 import {
+  FAQ_CATEGORIES,
+  FAQ_ITEMS,
+  faqAnswerText,
+  type FaqSegment,
+} from "@/lib/faq";
+import {
   buildBreadcrumbList,
   businessRef,
   jsonLdScriptProps,
@@ -12,140 +18,16 @@ import {
 export const metadata: Metadata = {
   title: "שאלות ותשובות – כל מה שרציתם לדעת על תקלות חשמל | ח.י שירותי חשמל",
   description:
-    "מתי להזמין חשמלאי? מה לעשות כשהפחת קופץ? הנדסאי חשמל וחשמלאי מוסמך עונה על השאלות הנפוצות. זמינות 24/7 (למעט שבתות).",
+    "למה הפחת קופץ בלילה? מתי צריך תלת-פאזי? מה ההבדל בין חשמלאי מוסמך להנדסאי חשמל? תשובות מקצועיות מאת הנדסאי חשמל בעל רישיון ראשי ועד מומחה לבתי משפט.",
   alternates: {
     canonical: `${SITE_URL}/faq`,
   },
   openGraph: {
     title: "שאלות ותשובות בחשמל – ח.י שירותי חשמל",
     description:
-      "תשובות מקצועיות לכל שאלה: קצרים, לוחות חשמל, הארקה, בטיחות ועוד.",
+      "תשובות מקצועיות לקצרים סמויים, זליגות זרם, תלת-פאזי, איזון עומסים, רישוי וחוות דעת מומחה.",
   },
 };
-
-const FAQ_ITEMS = [
-  {
-    question: "איך אני יודע אם יש קצר חשמלי בבית שלי?",
-    answer: (
-      <>
-        אם הפחת בלוח החשמל קופץ לעיתים קרובות, אם יש ריח שרוף משקע או מתג,
-        או אם מכשירים מפסיקים לעבוד בפתאומיות – סביר להניח שיש קצר חשמלי.
-        מומלץ לא לנסות לתקן לבד בשום אופן ולפנות ל
-        <Link href="/" className="text-emerald-700 hover:underline font-bold">
-          חשמלאי מוסמך
-        </Link>{" "}
-        לאיתור בטוח.
-      </>
-    ),
-    schemaText:
-      "אם הפחת בלוח החשמל קופץ לעיתים קרובות, אם יש ריח שרוף משקע או מתג, או אם מכשירים מפסיקים לעבוד בפתאומיות – סביר להניח שיש קצר חשמלי. מומלץ לא לנסות לתקן לבד בשום אופן ולפנות לחשמלאי מוסמך לאיתור בטוח.",
-  },
-  {
-    question: "כל כמה זמן כדאי לבצע בדיקה למערכת החשמל?",
-    answer: (
-      <>
-        מומלץ לבצע בדיקה תקופתית מקיפה (כולל{" "}
-        <Link
-          href="/articles/grounding"
-          className="text-emerald-700 hover:underline font-bold"
-        >
-          בדיקת הארקה
-        </Link>{" "}
-        ולוח החשמל) אחת ל-5 שנים, ובמיוחד אם יש קצרים חוזרים, אם הוספתם
-        מכשירים כבדים היוצרים עומס יתר, או לאחר שיפוצים בבית.
-      </>
-    ),
-    schemaText:
-      "מומלץ לבצע בדיקה תקופתית מקיפה (כולל בדיקת הארקה ולוח החשמל) אחת ל-5 שנים, ובמיוחד אם יש קצרים חוזרים, אם הוספתם מכשירים כבדים, או לאחר שיפוצים בבית.",
-  },
-  {
-    question: "האם אפשר להחליף שקע חשמל לבד?",
-    answer: (
-      <>
-        <strong>מבחינה חוקית ומעשית – לא!</strong> בישראל, רק חשמלאי מוסמך
-        בעל רישיון בתוקף רשאי לבצע עבודות חשמל, גם אם הן נראות פשוטות כמו
-        החלפת שקע או מפסק. מדובר בבטיחות הישירה שלך ושל המשפחה שלך, ויש
-        להקפיד על כך.
-      </>
-    ),
-    schemaText:
-      "מבחינה חוקית ומעשית – לא. בישראל, רק חשמלאי מוסמך בעל רישיון בתוקף רשאי לבצע עבודות חשמל, גם אם הן נראות פשוטות כמו החלפת שקע או מפסק.",
-  },
-  {
-    question: "כמה זמן לוקחת הגעה לטיפול בתקלה?",
-    answer: (
-      <>
-        זמני ההגעה משתנים בהתאם ל
-        <Link href="/cities" className="text-emerald-700 hover:underline">
-          אזור השירות
-        </Link>{" "}
-        ועומס הקריאות. עם זאת, כאנשי מקצוע הדוגלים בסטנדרט של &apos;יצאת
-        צדיק&apos;, במקרי חירום (קצר כללי, סכנת התחשמלות) אנו פועלים כ
-        <strong>חשמלאי 24/7</strong> (למעט שבתות וחגים) ועושים מאמץ עליון
-        להגיע בהקדם האפשרי.
-      </>
-    ),
-    schemaText:
-      "זמני ההגעה משתנים בהתאם לאזור השירות ועומס הקריאות. במקרי חירום אנו פועלים כחשמלאי 24/7 (למעט שבתות וחגים) ועושים מאמץ עליון להגיע בהקדם האפשרי.",
-  },
-  {
-    question: "אילו סוגי עבודות חשמל אתם מבצעים?",
-    answer: (
-      <>
-        <Link
-          href="/services"
-          className="text-emerald-700 hover:underline font-bold"
-        >
-          סל השירותים שלנו
-        </Link>{" "}
-        כולל את כל עבודות החשמל מ-א&apos; ועד ת&apos;: החל מתיקון תקלות
-        וקצרים, בדיקות תקינות, התקנת{" "}
-        <Link href="/services" className="text-emerald-700 hover:underline">
-          גופי תאורה
-        </Link>{" "}
-        וספוטים, דרך החלפה והגדלת לוחות חשמל תלת-פאזיים, ועד לתכנון והקמת
-        מערכות בית חכם מתקדמות. אנו נותנים מענה מקצועי גם לבתים פרטיים וגם
-        לעסקים ומוסדות.
-      </>
-    ),
-    schemaText:
-      "סל השירותים שלנו כולל את כל עבודות החשמל: תיקון תקלות וקצרים, בדיקות תקינות, התקנת גופי תאורה, החלפת לוחות חשמל, ותכנון מערכות בית חכם לבתים ועסקים.",
-  },
-  {
-    question: 'מה ההבדל בין "סתם" חשמלאי ל"חשמלאי מוסמך"?',
-    answer: (
-      <>
-        ההבדל הוא קריטי. רק{" "}
-        <Link href="/" className="text-emerald-700 hover:underline font-bold">
-          חשמלאי מוסמך
-        </Link>{" "}
-        (וקל וחומר הנדסאי חשמל בעל רישיון ראשי כמו בח.י שירותי חשמל) מחזיק
-        בהכשרה המקצועית הנדרשת על פי חוק, בתעודה מוכרת של משרד הכלכלה, ובביטוח
-        מקיף לכל עבודה. בחירה בחשמלאי לא מוסמך עלולה להסתיים בפסילת ביטוח
-        במקרה של שריפה או חלילה באסון.
-      </>
-    ),
-    schemaText:
-      "רק חשמלאי מוסמך מחזיק בהכשרה המקצועית הנדרשת על פי חוק, בתעודה מוכרת של משרד הכלכלה, ובביטוח מקיף. בחירה בחשמלאי לא מוסמך עלולה להסתיים בפסילת ביטוח במקרה של שריפה.",
-  },
-] as const;
-
-const ChevronIcon = () => (
-  <svg
-    fill="none"
-    height="24"
-    shapeRendering="geometricPrecision"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="1.5"
-    viewBox="0 0 24 24"
-    width="24"
-    aria-hidden="true"
-  >
-    <path d="M6 9l6 6 6-6" />
-  </svg>
-);
 
 const FAQ_URL = `${SITE_URL}/faq`;
 
@@ -158,20 +40,26 @@ const jsonLd = {
       url: FAQ_URL,
       name: "שאלות ותשובות בחשמל",
       description:
-        "מתי להזמין חשמלאי? מה לעשות כשהפחת קופץ? הנדסאי חשמל וחשמלאי מוסמך עונה על השאלות הנפוצות.",
+        "תשובות מקצועיות לשאלות נפוצות בחשמל: קצרים סמויים, זליגות זרם, תלת-פאזי, איזון עומסים, רישוי וחוות דעת מומחה.",
       inLanguage: "he-IL",
       isPartOf: websiteRef,
       about: businessRef,
       author: personRef,
       publisher: businessRef,
       breadcrumb: { "@id": `${FAQ_URL}#breadcrumb` },
-      mainEntity: FAQ_ITEMS.map(({ question, schemaText }, index) => ({
+      // הטקסט נגזר מאותו מקור שמרנדר את העמוד, ולכן הסכימה תואמת ל-DOM במדויק
+      mainEntity: FAQ_ITEMS.map(({ id, question, answer }) => ({
         "@type": "Question",
-        "@id": `${FAQ_URL}#question-${index + 1}`,
+        "@id": `${FAQ_URL}#${id}`,
+        url: `${FAQ_URL}#${id}`,
         name: question,
+        inLanguage: "he-IL",
+        answerCount: 1,
         acceptedAnswer: {
           "@type": "Answer",
-          text: schemaText,
+          text: faqAnswerText(answer),
+          inLanguage: "he-IL",
+          url: `${FAQ_URL}#${id}`,
           author: personRef,
         },
       })),
@@ -182,97 +70,177 @@ const jsonLd = {
   ],
 };
 
+const ANSWER_LINK =
+  "font-bold text-emerald-700 underline underline-offset-2 hover:text-emerald-800";
+
+/**
+ * מרנדר את מקטעי התשובה. הטקסט הנראה זהה למחרוזת שנשלחת ל-JSON-LD,
+ * משום ששניהם נגזרים מאותו מערך מקטעים.
+ */
+function AnswerText({ answer }: { answer: readonly FaqSegment[] }) {
+  return (
+    <>
+      {answer.map((part, index) => {
+        if (typeof part === "string") {
+          return <span key={index}>{part}</span>;
+        }
+
+        if (part.external) {
+          return (
+            <a
+              key={index}
+              href={part.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${part.text} (נפתח בחלון חדש)`}
+              className={`${ANSWER_LINK} break-all`}
+            >
+              {part.text}
+            </a>
+          );
+        }
+
+        return (
+          <Link key={index} href={part.href} className={ANSWER_LINK}>
+            {part.text}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 export default function FAQPage() {
   return (
     <>
       <script {...jsonLdScriptProps(jsonLd)} />
 
-      <div className="bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
-        <section className="max-w-4xl mx-auto">
-          {/* Breadcrumb */}
-          <nav aria-label="נתיב דפים" className="mb-10">
-            <ol
-              className="flex items-center gap-2 text-xs text-slate-400 list-none flex-wrap"
-              role="list"
-            >
+      <div className="bg-slate-50 px-6 py-12 text-slate-900 md:py-20">
+        <div className="mx-auto max-w-4xl">
+          <nav aria-label="מסלול ניווט" className="mb-10 text-sm text-slate-600">
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <li>
-                <Link
-                  href="/"
-                  className="hover:text-emerald-700 transition-colors"
-                >
+                <Link href="/" className="hover:text-emerald-700 hover:underline">
                   דף הבית
                 </Link>
               </li>
-              <li aria-hidden="true" className="text-slate-300">
-                ›
-              </li>
-              <li
-                className="text-slate-600 font-medium"
-                aria-current="page"
-              >
-                שאלות ותשובות
+              <li aria-hidden="true">/</li>
+              <li>
+                <span aria-current="page" className="font-medium text-slate-700">
+                  שאלות ותשובות
+                </span>
               </li>
             </ol>
           </nav>
 
-          {/* Header */}
-          <header className="text-center mb-14">
-            <div className="inline-block bg-emerald-100 text-emerald-800 text-sm font-bold px-4 py-1 rounded-full mb-4">
-              מידע מקצועי ושקוף
-            </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 mb-6">
+          <header className="mb-14 text-center">
+            <p className="mb-4">
+              <span className="inline-block rounded-full bg-emerald-100 px-4 py-1 text-sm font-bold text-emerald-800">
+                מידע מקצועי ושקוף
+              </span>
+            </p>
+            <h1 className="mb-6 text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
               שאלות ותשובות בחשמל
             </h1>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              לא בטוחים אם צריך להזמין חשמלאי? מתלבטים מה לעשות כשהחשמל קופץ?
-              הנה התשובות לכל השאלות ששואלים אותנו שוב ושוב ב
-              <Link
-                href="/"
-                className="font-bold text-emerald-700 hover:underline"
-              >
-                ח.י שירותי חשמל
-              </Link>
-              .
+            <p className="mx-auto max-w-2xl text-xl leading-relaxed text-slate-600">
+              תשובות ישירות לשאלות שחוזרות אצלי בשטח שוב ושוב — מאת יהודה חכמוב,
+              הנדסאי חשמל והנדסאי מכונות בעל רישיון חשמלאי ראשי, מרצה ומכשיר
+              הנדסאי חשמל ונותן חוות דעת מומחה לבתי משפט.
             </p>
           </header>
 
-          {/* Accordion */}
-          <div className="space-y-4">
-            {FAQ_ITEMS.map(({ question, answer }) => (
-              <details
-                key={question}
-                className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-emerald-200 transition-colors [&_summary::-webkit-details-marker]:hidden"
-              >
-                <summary className="flex cursor-pointer items-center justify-between gap-4 p-6 font-bold text-lg text-slate-800 hover:text-emerald-700 transition-colors list-none">
-                  <span>{question}</span>
-                  <span className="shrink-0 transition-transform duration-300 group-open:rotate-180 text-emerald-500">
-                    <ChevronIcon />
-                  </span>
-                </summary>
-                <div className="px-6 pb-6 text-slate-600 leading-relaxed border-t border-gray-100 pt-4">
-                  {answer}
-                </div>
-              </details>
-            ))}
-          </div>
+          <nav
+            aria-label="נושאי השאלות"
+            className="mb-12 rounded-2xl border border-slate-200 bg-white p-6"
+          >
+            <h2 className="mb-3 text-lg font-bold text-slate-900">
+              הנושאים בעמוד
+            </h2>
+            <ol className="list-decimal space-y-2 pe-5 text-slate-700 marker:font-bold marker:text-emerald-700">
+              {FAQ_CATEGORIES.map(({ id, title }) => (
+                <li key={id}>
+                  <a href={`#${id}`} className="text-emerald-700 hover:underline">
+                    {title}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
 
-          {/* CTA */}
-          <div className="mt-14 bg-slate-900 text-white p-10 md:p-12 rounded-3xl shadow-xl text-center">
-            <h2 className="text-2xl md:text-3xl font-black mb-3">
+          {FAQ_CATEGORIES.map(({ id, title, items }) => (
+            <section key={id} aria-labelledby={id} className="mb-12">
+              <h2
+                id={id}
+                className="mb-5 scroll-mt-24 text-2xl font-bold text-slate-900 md:text-3xl"
+              >
+                {title}
+              </h2>
+
+              <div className="space-y-4">
+                {items.map((item) => (
+                  <details
+                    key={item.id}
+                    id={item.id}
+                    className="group scroll-mt-24 rounded-2xl border border-gray-100 bg-white shadow-sm transition-colors hover:border-emerald-200 open:border-emerald-200"
+                  >
+                    {/* summary מכיל אך ורק כותרת אחת — מבנה תקני שמקשר
+                        באופן חד-משמעי בין השאלה לתשובה שמתחתיה */}
+                    <summary className="cursor-pointer list-none rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 [&::-webkit-details-marker]:hidden">
+                      <h3 className="flex items-center justify-between gap-4 p-6 text-lg font-bold text-slate-800 group-open:text-emerald-800">
+                        <span>{item.question}</span>
+                        <span
+                          aria-hidden="true"
+                          className="shrink-0 text-emerald-700 transition-transform duration-300 group-open:rotate-180"
+                        >
+                          <svg
+                            fill="none"
+                            height="24"
+                            width="24"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.5"
+                          >
+                            <path d="M6 9l6 6 6-6" />
+                          </svg>
+                        </span>
+                      </h3>
+                    </summary>
+
+                    <p className="border-t border-gray-100 px-6 pb-6 pt-4 leading-relaxed text-slate-700">
+                      <AnswerText answer={item.answer} />
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </section>
+          ))}
+
+          <section
+            aria-labelledby="faq-cta"
+            className="mt-14 rounded-3xl bg-slate-900 p-10 text-center text-white shadow-xl md:p-12"
+          >
+            <h2 id="faq-cta" className="mb-3 text-2xl font-black md:text-3xl">
               לא מצאתם את התשובה שחיפשתם?
             </h2>
-            <p className="text-lg text-slate-300 mb-8">
-              נשמח לענות על כל שאלה ולתת ייעוץ ראשוני ללא עלות.
+            <p className="mb-8 text-lg text-slate-200">
+              נשמח לענות על כל שאלה ולתת ייעוץ ראשוני. השירות והייעוץ ניתנים
+              בעברית, ברוסית ובאנגלית, וניתן לפנות בוואטסאפ בכל שפה.
             </p>
             <a
               href={`tel:${PHONE}`}
-              aria-label={`חייגו לייעוץ: ${PHONE_DISPLAY}`}
-              className="inline-block bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-all hover:scale-105 text-lg"
+              aria-label={`חייגו עכשיו וקבלו יעוץ מחשמלאי מומחה — יהודה חכמוב, ${PHONE_DISPLAY}`}
+              className="inline-flex min-h-[3.5rem] items-center justify-center rounded-full bg-emerald-700 px-10 py-4 text-lg font-bold text-white shadow-lg transition-colors hover:bg-emerald-800"
             >
-              חייגו עכשיו לייעוץ: {PHONE_DISPLAY}
+              חייגו עכשיו וקבלו יעוץ מחשמלאי מומחה
             </a>
-          </div>
-        </section>
+            <p className="mt-6 text-sm text-slate-300">
+              <span aria-hidden="true">☎ </span>
+              {PHONE_DISPLAY}
+            </p>
+          </section>
+        </div>
       </div>
     </>
   );
