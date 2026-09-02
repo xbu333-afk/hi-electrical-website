@@ -32,6 +32,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { type: "link", href: "/services", label: "שירותים" },
   { type: "link", href: "/business", label: "לעסקים ומוסדות" },
   { type: "link", href: "/cities", label: "אזורי שירות" },
+  { type: "link", href: "/reviews", label: "המלצות" },
   {
     type: "group",
     label: "כלים ומדריכים",
@@ -53,6 +54,7 @@ export const FOOTER_NAV_LINKS: readonly SiteLink[] = [
   { href: "/services", label: "שירותים" },
   { href: "/business", label: "לעסקים ומוסדות" },
   { href: "/cities", label: "אזורי שירות" },
+  { href: "/reviews", label: "המלצות" },
   { href: "/#contact", label: "צור קשר" },
 ];
 
@@ -66,6 +68,7 @@ export const USEFUL_INFO_LINKS: readonly SiteLink[] = [
 ];
 
 export const LEGAL_LINKS: readonly SiteLink[] = [
+  { href: "/get-quote", label: "לקבלת הצעת מחיר" },
   { href: "/privacy", label: "מדיניות פרטיות" },
   { href: "/accessibility", label: "הצהרת נגישות" },
 ];

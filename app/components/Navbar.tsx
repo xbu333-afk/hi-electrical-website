@@ -220,6 +220,16 @@ export default function Navbar() {
                 </li>
               )
             )}
+            {/* CTA להצעת מחיר — תפריט נייד בלבד, לא בכותרת הדסקטופ */}
+            <li>
+              <Link
+                href="/get-quote"
+                onClick={closeMenu}
+                className="flex items-center px-6 py-4 text-sm font-bold text-emerald-800 hover:text-emerald-900 hover:bg-emerald-50 transition-colors border-b border-gray-50"
+              >
+                לקבלת הצעת מחיר
+              </Link>
+            </li>
             <li className="p-4">
               {isShabbat ? (
                 <ShabbatContactMessage variant="default" />

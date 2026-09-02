@@ -70,6 +70,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/faq",
     "/calculator",
     "/device-calculator",
+    "/reviews",
   ].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: now,
