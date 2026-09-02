@@ -98,3 +98,19 @@ export const PROFILE_VALIDATION_URLS = {
 /** סרטון נוסף ביוטיוב — מדיה *על* הישות, ולכן משויך כ-VideoObject ולא כפרופיל */
 export const YOUTUBE_FEATURE_URL =
   "https://www.youtube.com/watch?v=Ty-v9miiC7U";
+
+/**
+ * זוגות hreflang של דף הבית.
+ *
+ * hreflang חייב להיות הדדי וברמת העמוד: כל עמוד מצהיר על המקבילות *שלו* בלבד.
+ * מכיוון שכיום רק דף הבית מתורגם (/ru), רשימה זו שייכת ל-/ ול-/ru בלבד —
+ * הצהרה גורפת בכל האתר תטען שלכל עמוד יש גרסה רוסית, וגוגל מתעלם מכלל
+ * האנוטציות כשהוא מגלה הצהרה שאינה הדדית.
+ *
+ * כשיתורגם עמוד נוסף יש להגדיר לו רשימה משלו ולא להרחיב את זו.
+ */
+export const HOME_LANGUAGE_ALTERNATES = {
+  "he-IL": "/",
+  "ru-RU": "/ru",
+  "x-default": "/",
+} as const;

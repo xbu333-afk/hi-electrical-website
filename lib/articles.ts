@@ -1,8 +1,8 @@
 import { SITE_URL } from "@/lib/site";
+import { OG_IMAGE_SIZE, articleOgImageUrl } from "@/lib/og";
 import {
   buildBreadcrumbList,
   businessRef,
-  logoRef,
   personRef,
   websiteRef,
 } from "@/lib/schema";
@@ -96,9 +96,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "ניתוק חברת חשמל מסיבות בטיחות: למה זה קורה, איך מחזירים חשמל שלב-אחר-שלב, ומתי חובה חשמלאי ראשי ואישור תקינות.",
     category: "מדריך חירום",
-    readTime: "7 דק׳",
+    readTime: "10 דק׳",
     date: "אוגוסט 2026",
     datePublished: "2026-08-01",
+    dateModified: "2026-09-02",
   },
   {
     slug: "beware-of-scammers",
@@ -106,9 +107,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "נוכלים מזייפים תעודות ותמונות עם חיים אתגר בעזרת AI. איך לבדוק רישיון, לזהות חאפרים ולשמור על הבית שלכם.",
     category: "תחקיר צרכנות",
-    readTime: "7 דק׳",
+    readTime: "10 דק׳",
     date: "יוני 2026",
     datePublished: "2026-06-01",
+    dateModified: "2026-09-02",
   },
   {
     slug: "how-to-choose-electrician",
@@ -116,9 +118,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "מדריך מלא: רישיון, יצאת צדיק, מידרג, חירום 24 שעות וחשמלאי דודים — איך לסנן חאפרים ולבחור נכון.",
     category: "צרכנות נבונה",
-    readTime: "6 דק׳",
+    readTime: "9 דק׳",
     date: "יוני 2026",
     datePublished: "2026-06-01",
+    dateModified: "2026-09-02",
   },
   {
     slug: "electrical-licenses-guide",
@@ -126,9 +129,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "לא כל חשמלאי מורשה לבצע כל עבודה. מדריך מקיף לסוגי הרישיונות בישראל: מי רשאי לחתום על לוח תלת-פאזי, איפה זה מופיע ברישיון, וממה כדאי להיזהר.",
     category: "מדריך צרכנות חכמה",
-    readTime: "6 דק׳",
+    readTime: "10 דק׳",
     date: "יוני 2026",
     datePublished: "2026-06-01",
+    dateModified: "2026-09-02",
   },
   {
     slug: "handyman-vs-electrician",
@@ -136,9 +140,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "הנדימן ללא רישיון הוא סכנת חיים. מה אומר החוק, מתי הביטוח לא יכסה — ואיך לוודא חשמלאי מוסמך.",
     category: "אזהרת בטיחות",
-    readTime: "5 דק׳",
+    readTime: "10 דק׳",
     date: "יוני 2026",
     datePublished: "2026-06-01",
+    dateModified: "2026-09-02",
   },
   {
     slug: "grounding",
@@ -146,9 +151,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "מהי הארקה? למה היא כל כך חשובה? סכנות, בדיקות תקינות ושירותי בדיקה מקצועיים של חשמלאי מוסמך.",
     category: "בטיחות בחשמל",
-    readTime: "6 דק׳",
+    readTime: "10 דק׳",
     date: "יוני 2026",
     datePublished: "2026-06-01",
+    dateModified: "2026-09-02",
   },
   {
     slug: "mimsar-pahat",
@@ -156,9 +162,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "החשמל קפץ ואי אפשר להרים את המתג? מדריך חירום פשוט — מה לעשות לבד, איך לאתר את התקלה, ומתי חייבים לקרוא לחשמלאי מוסמך.",
     category: "מדריך חירום",
-    readTime: "4 דק׳",
+    readTime: "10 דק׳",
     date: "יוני 2026",
     datePublished: "2026-06-01",
+    dateModified: "2026-09-02",
   },
   {
     slug: "ma-ze-luch-hashmal",
@@ -166,9 +173,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "המדריך המלא: מה תפקידו של לוח החשמל, סימני עומס יתר, מתי חובה לשדרג לתלת-פאזי — ומתי לפנות לחשמלאי מוסמך.",
     category: "לוחות חשמל",
-    readTime: "6 דק׳",
+    readTime: "9 דק׳",
     date: "מאי 2026",
     datePublished: "2026-05-01",
+    dateModified: "2026-09-02",
   },
   {
     slug: "bayit-chacham",
@@ -176,9 +184,10 @@ export const ARTICLES: readonly Article[] = [
     excerpt:
       "מדריך מעשי: אלחוטי מול קווי, מאיפה להתחיל, ולמה חובה חשמלאי מוסמך — לפני שקונים רכיבים לבית חכם.",
     category: "בתים חכמים",
-    readTime: "7 דק׳",
+    readTime: "10 דק׳",
     date: "אפריל 2026",
     datePublished: "2026-04-01",
+    dateModified: "2026-09-02",
   },
 ];
 
@@ -188,6 +197,27 @@ export function getArticle(slug: string): Article {
     throw new Error(`Unknown article slug: ${slug}`);
   }
   return article;
+}
+
+const HEBREW_MONTHS = [
+  "ינואר",
+  "פברואר",
+  "מרץ",
+  "אפריל",
+  "מאי",
+  "יוני",
+  "יולי",
+  "אוגוסט",
+  "ספטמבר",
+  "אוקטובר",
+  "נובמבר",
+  "דצמבר",
+];
+
+/** "2026-09-02" → "ספטמבר 2026" — תווית תצוגה לתאריך עדכון */
+export function hebrewMonthYear(iso: string): string {
+  const [year, month] = iso.split("-");
+  return `${HEBREW_MONTHS[Number(month) - 1]} ${year}`;
 }
 
 /** "7 דק׳" → "PT7M" (ISO-8601 duration) */
@@ -207,6 +237,20 @@ export function buildArticleJsonLd(slug: string, faq?: readonly ArticleFaq[]) {
   const url = `${SITE_URL}/articles/${slug}`;
   const hasFaq = Boolean(faq?.length);
 
+  /**
+   * תמונה ייחודית למאמר. בעבר כל המאמרים הצהירו על לוגו האתר,
+   * מה שפוסל אותם לתוצאות עשירות — גוגל דורש תמונה שמייצגת את התוכן עצמו.
+   */
+  const imageRef = {
+    "@type": "ImageObject",
+    "@id": `${url}#primaryimage`,
+    url: articleOgImageUrl(slug),
+    contentUrl: articleOgImageUrl(slug),
+    width: OG_IMAGE_SIZE.width,
+    height: OG_IMAGE_SIZE.height,
+    caption: article.title,
+  };
+
   const graph: Record<string, unknown>[] = [
     {
       "@type": "Article",
@@ -222,7 +266,7 @@ export function buildArticleJsonLd(slug: string, faq?: readonly ArticleFaq[]) {
       author: personRef,
       creator: personRef,
       publisher: businessRef,
-      image: logoRef,
+      image: { "@id": `${url}#primaryimage` },
       isPartOf: websiteRef,
       mainEntityOfPage: { "@id": `${url}#webpage` },
       about: businessRef,
@@ -235,10 +279,11 @@ export function buildArticleJsonLd(slug: string, faq?: readonly ArticleFaq[]) {
       description: article.excerpt,
       inLanguage: "he-IL",
       isPartOf: websiteRef,
-      primaryImageOfPage: logoRef,
+      primaryImageOfPage: { "@id": `${url}#primaryimage` },
       breadcrumb: { "@id": `${url}#breadcrumb` },
       ...(hasFaq ? { hasPart: { "@id": `${url}#faq` } } : {}),
     },
+    imageRef,
     buildBreadcrumbList(`${url}#breadcrumb`, [
       { name: "מאמרים ומדריכים", path: "/articles" },
       { name: article.title, path: `/articles/${slug}` },

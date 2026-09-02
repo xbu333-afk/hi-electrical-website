@@ -1,8 +1,27 @@
+import Link from "next/link";
 import type { CityContent } from "@/lib/city-content";
 
 type CityAboutSectionProps = {
   content: CityContent;
 };
+
+/**
+ * קישורים פנימיים קבועים מכל עמוד עיר.
+ * רשימת השירותים עצמה מוצגת ב-HeroServices, ולכן כאן מקשרים להעמקה בלבד
+ * ולא חוזרים על אותם שירותים פעם שנייה באותו עמוד.
+ */
+const FURTHER_READING = [
+  { href: "/services", label: "כל שירותי החשמל שאנחנו מבצעים" },
+  { href: "/pricing", label: "מחירון שירותי חשמל — טווחי מחיר שקופים" },
+  { href: "/articles/panel-upgrade", label: "מדריך: החלפה ושדרוג לוח חשמל" },
+  { href: "/articles/ghost-tripping", label: "מדריך: קפיצות פחת וקצרים סמויים" },
+  {
+    href: "/articles/fault-loop-impedance",
+    label: "מדריך: בדיקת הארקה ולולאת תקלה",
+  },
+  { href: "/articles", label: "כל המאמרים והמדריכים" },
+  { href: "/faq", label: "שאלות ותשובות נפוצות" },
+] as const;
 
 export default function CityAboutSection({ content }: CityAboutSectionProps) {
   const { name, intro, about, highlightAreas } = content;
@@ -57,6 +76,27 @@ export default function CityAboutSection({ content }: CityAboutSectionProps) {
             {highlightAreas}
           </p>
         </div>
+
+        <nav aria-labelledby="city-further-reading" className="mt-8">
+          <h3
+            id="city-further-reading"
+            className="mb-3 text-base font-bold text-slate-900"
+          >
+            להעמקה
+          </h3>
+          <ul className="flex flex-wrap gap-x-6 gap-y-2 list-none">
+            {FURTHER_READING.map(({ href, label }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="rounded text-sm font-semibold text-emerald-700 underline underline-offset-4 transition-colors hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
         <p className="text-slate-500 text-xs leading-relaxed mt-6 pt-6 border-t border-gray-200 text-center">
           כל השירותים מבוצעים על ידי חשמלאי מוסמך בלבד, תוך עמידה בתקנים

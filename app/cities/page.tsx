@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description:
     "יהודה חכמוב — חשמלאי מוסמך ומומלץ. שירות חשמל מקצועי בפתח תקווה, כפר סבא, רעננה, רמת גן, הרצליה ועוד יישובים. חשמלאי 24 שעות לחירום.",
   keywords: ["חשמלאי מוסמך", "חשמלאי מומלץ", "חשמלאי יצאת צדיק", "חשמלאי 24 שעות"],
+  alternates: { canonical: "/cities" },
 };
 
 export default function CitiesPage() {
@@ -31,7 +32,7 @@ export default function CitiesPage() {
               >
                 חשמלאי מוסמך
                 <br />
-                ב-30 ערים ויישובים
+                ב-{serviceAreas.length} ערים ויישובים
               </h1>
             </div>
             <p className="text-slate-500 text-sm md:text-base max-w-xs leading-relaxed md:text-left">

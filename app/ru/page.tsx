@@ -5,7 +5,7 @@ import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
 import LazyReviewsCarousel from "@/app/components/LazyReviewsCarousel";
 import PressSection from "@/app/components/PressSection";
 import ContactSection from "@/app/components/ContactSection";
-import { WHATSAPP_HREF } from "@/lib/site";
+import { HOME_LANGUAGE_ALTERNATES, WHATSAPP_HREF } from "@/lib/site";
 import { serviceAreas } from "@/lib/cities";
 import type { GoogleReview } from "@/lib/google-reviews";
 
@@ -42,6 +42,10 @@ export const metadata: Metadata = {
   title: "Электрик в Центре Израиля | Х.И. Электросервис — Профессиональный инженер-электрик",
   description:
     "Иехуда Хахамов — практический инженер-электрик с главной лицензией. Аварийный вызов 24/7, устранение коротких замыканий, замена щитков. Петах-Тиква, Рамат-Ган, Герцлия и весь Центральный округ.",
+  alternates: {
+    canonical: "/ru",
+    languages: HOME_LANGUAGE_ALTERNATES,
+  },
 };
 
 /* ─── Сведения об инженере ────────────────────────────────── */

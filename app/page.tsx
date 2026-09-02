@@ -8,11 +8,16 @@ import {
   LazyTrustStatement,
   LazyYatzaTzadikBlock,
 } from "@/app/components/LazyHomeSections";
+import { HOME_LANGUAGE_ALTERNATES } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "יהודה חכמוב | הנדסאי חשמל מוסמך — חשמלאי יצאת צדיק",
   description:
     "יהודה חכמוב — הנדסאי חשמל, בעל רישיון ראשי. חשמלאי מוסמך ומומלץ, נבדק ונמצא צדיק בתוכנית יצאת צדיק עם חיים אתגר. חשמלאי 24 שעות לחירום.",
+  alternates: {
+    canonical: "/",
+    languages: HOME_LANGUAGE_ALTERNATES,
+  },
 };
 
 /* ─── סמכויות מקצועיות מיוחדות ─────────────────────────────── */

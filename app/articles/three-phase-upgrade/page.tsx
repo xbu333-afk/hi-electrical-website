@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ArticleDateline from "@/app/components/ArticleDateline";
+import ArticleFaqList from "@/app/components/ArticleFaqList";
 import ArticleVideoCta from "@/app/components/ArticleVideoCta";
 import { buildArticleJsonLd, getArticle, type ArticleFaq } from "@/lib/articles";
+import { articleOgImageUrl } from "@/lib/og";
 import { jsonLdScriptProps } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 
@@ -27,6 +30,14 @@ export const metadata: Metadata = {
     description:
       "סימני האזהרה שהחיבור שלכם קטן מדי, התהליך המלא מול חברת החשמל, ומי מורשה לחתום על העבודה — מדריך מאת הנדסאי חשמל בעל רישיון ראשי.",
     type: "article",
+    images: [
+      {
+        url: articleOgImageUrl(SLUG),
+        width: 1200,
+        height: 630,
+        alt: article.title,
+      },
+    ],
   },
 };
 
@@ -123,11 +134,7 @@ export default function ThreePhaseUpgradeArticle() {
             הנדסאי חשמל ונותן חוות דעת מומחה לבתי משפט.
           </p>
 
-          <p className="mt-2 text-sm text-slate-600">
-            <time dateTime={article.datePublished}>{article.date}</time>
-            <span aria-hidden="true"> · </span>
-            <span>זמן קריאה: {article.readTime}</span>
-          </p>
+          <ArticleDateline slug={SLUG} />
         </header>
 
         <section
@@ -459,28 +466,7 @@ export default function ThreePhaseUpgradeArticle() {
             שאלות נפוצות
           </h2>
 
-          <div className="mt-6 space-y-4">
-            {FAQ.map(({ question, answer }, index) => (
-              <details
-                key={question}
-                open={index === 0}
-                className="group rounded-2xl border border-slate-200 bg-slate-50 p-5 open:bg-white"
-              >
-                <summary className="cursor-pointer list-none text-lg font-bold text-slate-900 marker:content-none">
-                  <span className="flex items-start justify-between gap-4">
-                    <span>{question}</span>
-                    <span
-                      aria-hidden="true"
-                      className="mt-1 shrink-0 text-emerald-700 transition-transform group-open:rotate-180"
-                    >
-                      ▾
-                    </span>
-                  </span>
-                </summary>
-                <p className="mt-3 leading-relaxed text-slate-700">{answer}</p>
-              </details>
-            ))}
-          </div>
+          <ArticleFaqList items={FAQ} />
         </section>
 
         <ArticleVideoCta
