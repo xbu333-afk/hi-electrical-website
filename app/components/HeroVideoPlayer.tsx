@@ -55,6 +55,13 @@ export default function HeroVideoPlayer() {
     const video = videoRef.current;
     if (!video) return;
 
+    /**
+     * React מגדיר muted כמאפיין DOM בלבד ולא ככותרת ב-HTML, וחלק מהדפדפנים
+     * בודקים דווקא את הכותרת לפני שהם מתירים ניגון אוטומטי.
+     */
+    video.muted = true;
+    video.setAttribute("muted", "");
+
     const markPlaying = () => setPlaying(true);
     const markPaused = () => setPlaying(false);
 

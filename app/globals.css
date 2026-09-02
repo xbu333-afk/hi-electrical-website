@@ -212,7 +212,7 @@ body {
 
 /* ── AA-compliant focus ring — ת"י 5568 ───────────────────── */
 :focus-visible {
-  outline: 2px solid #10b981; /* emerald-500 */
+  outline: 2px solid #047857; /* emerald-700 — 5.2:1 מול רקעי האתר, WCAG 1.4.11 */
   outline-offset: 3px;
   border-radius: 6px;
 }
