@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ArticleVideoCta from "@/app/components/ArticleVideoCta";
 import NightOnlyText from "@/app/components/NightOnlyText";
 import { serviceAreas } from "@/lib/cities";
 import { PHONE, PHONE_DISPLAY } from "@/lib/site";
@@ -79,6 +80,64 @@ export default function CitiesPage() {
           </ul>
         </div>
       </section>
+
+      {/* ── GEO / SEO copy for AI + search ── */}
+      <section
+        aria-labelledby="cities-geo-heading"
+        className="bg-white border-t border-gray-100 py-14 md:py-20"
+      >
+        <article className="mx-auto max-w-3xl px-6">
+          <h2
+            id="cities-geo-heading"
+            className="text-2xl font-black leading-tight text-slate-900 sm:text-3xl"
+          >
+            אזורי שירות של חשמלאי מוסמך במרכז
+          </h2>
+          <p className="mt-5 text-base leading-[1.9] text-slate-600">
+            ח.י שירותי חשמל מספקת שירותי חשמל מקצועיים ברחבי גוש דן, השרון והמרכז
+            — מפתח תקווה, רמת גן, גבעתיים ושוהם ועד כפר סבא, רעננה, הרצליה, ראש
+            העין ויישובי הסביבה. בכל עמוד עיר תמצאו פירוט מקומי על סוגי העבודה
+            שאנחנו מבצעים באזור, לצד קישורים למדריכים מקצועיים על לוחות חשמל,
+            קצרים, הארקה ומחירון שקוף.
+          </p>
+          <h3 className="mt-10 text-xl font-extrabold text-slate-900">
+            למה לבחור בנו
+          </h3>
+          <p className="mt-4 text-base leading-[1.9] text-slate-600">
+            העבודה מבוצעת על ידי יהודה חכמוב — הנדסאי חשמל מוסמך בעל רישיון ראשי,
+            שנבדק בשטח בתוכנית &quot;יצאת צדיק&quot; עם חיים אתגר בערוץ 12. מעבר
+            לתיקון תקלות אנחנו מביאים סטנדרט הנדסי: אבחון מדויק, חומרים איכותיים,
+            הסבר ברור ללקוח ומחיר הוגן בלי הפתעות.
+          </p>
+          <p className="mt-4 text-base leading-[1.9] text-slate-600">
+            זמן התגובה חשוב במיוחד בקריאות חירום — קצרים, נפילות מתח, לוח שקפץ או
+            תקלה באמצע הלילה. אנחנו משתדלים להגיע במהירות לפי זמינות, כולל מענה
+            דחוף מחוץ לשעות העבודה הרגילות (למעט שבתות וחגים), וממשיכים ללוות
+            גם מול חברת החשמל כשנדרש.
+          </p>
+          <p className="mt-4 text-base leading-[1.9] text-slate-600">
+            מחפשים חשמלאי מוסמך קרוב אליכם? בחרו את היישוב ברשימה למעלה, או צרו
+            קשר ישירות בטלפון{" "}
+            <a
+              href={`tel:${PHONE}`}
+              className="font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-900"
+            >
+              {PHONE_DISPLAY}
+            </a>{" "}
+            לקבלת הצעת מחיר וייעוץ מקצועי.
+          </p>
+        </article>
+      </section>
+
+      <div className="bg-slate-50 px-6 pb-14 md:pb-20">
+        <div className="mx-auto max-w-4xl">
+          <ArticleVideoCta
+            heading="צריכים חשמלאי מוסמך באזור שלכם?"
+            description="מענה מהיר לקריאות חירום ותיקונים, בדיקות ותכנון — על ידי הנדסאי חשמל בעל רישיון ראשי. אפשר להתקשר או לשלוח וואטסאפ בכל שפה."
+            callPurpose="לייעוץ ושירות חשמל באזורי המרכז והשרון"
+          />
+        </div>
+      </div>
 
       {/* ── Trust strip ── */}
       <section
