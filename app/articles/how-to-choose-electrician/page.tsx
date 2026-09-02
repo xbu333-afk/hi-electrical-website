@@ -12,7 +12,7 @@ const SLUG = "how-to-choose-electrician";
 const article = getArticle(SLUG);
 
 export const metadata: Metadata = {
-  title: "איך לבחור חשמלאי מוסמך ומומלץ? (המדריך המלא) | ח.י שירותי חשמל",
+  title: "איך לבחור חשמלאי מוסמך ומומלץ? (המדריך המלא)",
   description:
     "מחפשים חשמלאי? כך תדעו לסנן חאפרים. מה ההבדל בין חשמלאי רגיל למוסמך, למה חשוב לבדוק תעודות, ואיך מוצאים חשמלאי יצאת צדיק שזמין 24 שעות.",
   keywords: [

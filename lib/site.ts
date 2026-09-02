@@ -9,6 +9,11 @@ export const WHATSAPP_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(
   "שלום יהודה, אני צריך שירות חשמל. אשמח לקבל פרטים."
 )}`;
 
+/** קישור wa.me עם הודעה מוכנה מראש. */
+export function buildWhatsAppUrl(message: string): string {
+  return `${WHATSAPP_BASE}?text=${encodeURIComponent(message)}`;
+}
+
 export type SiteLink = { href: string; label: string };
 
 export type NavLinkItem = { type: "link"; href: string; label: string };

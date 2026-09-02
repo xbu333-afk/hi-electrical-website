@@ -12,7 +12,7 @@ const SLUG = "handyman-vs-electrician";
 const article = getArticle(SLUG);
 
 export const metadata: Metadata = {
-  title: "הנדימן הוא לא חשמלאי! מתי אסור להתפשר על איש מקצוע? | ח.י שירותי חשמל",
+  title: "הנדימן הוא לא חשמלאי! מתי אסור להתפשר על איש מקצוע?",
   description:
     "תיקונים קטנים בבית זה נחמד, אבל כשזה מגיע לחשמל - הנדימן ללא רישיון הוא סכנת חיים. קראו למה החוק אוסר זאת ואיך שומרים על בטיחות הבית.",
   keywords: [

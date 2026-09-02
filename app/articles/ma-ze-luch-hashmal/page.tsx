@@ -12,7 +12,7 @@ const SLUG = "ma-ze-luch-hashmal";
 const article = getArticle(SLUG);
 
 export const metadata: Metadata = {
-  title: "מה זה לוח חשמל ומתי צריך לשדרג אותו? | ח.י שירותי חשמל",
+  title: "מה זה לוח חשמל ומתי צריך לשדרג אותו?",
   description:
     "המדריך המלא של הנדסאי חשמל: מה תפקידו של לוח החשמל בבית, אילו סימנים מראים שהלוח סובל מעומס יתר, ומתי חובה לבצע שדרוג ללוח תלת-פאזי.",
   keywords: [

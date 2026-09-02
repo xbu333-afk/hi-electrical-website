@@ -4,7 +4,7 @@ import PricingTable from "@/app/components/PricingTable";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "מחירון עבודות חשמל 2026 | כמה עולה חשמלאי מוסמך? | ח.י שירותי חשמל",
+  title: "מחירון עבודות חשמל 2026 | כמה עולה חשמלאי מוסמך?",
   description:
     "מחירון שקוף והוגן לעבודות חשמל. כמה עולה ביקור חשמלאי, החלפת שקע, התקנת גוף תאורה ושדרוג לוח. שקיפות מלאה ללא הפתעות.",
   alternates: {

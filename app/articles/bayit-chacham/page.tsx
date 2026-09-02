@@ -12,7 +12,7 @@ const SLUG = "bayit-chacham";
 const article = getArticle(SLUG);
 
 export const metadata: Metadata = {
-  title: "בית חכם: מה צריך לדעת לפני שמתחילים? | ח.י שירותי חשמל",
+  title: "בית חכם: מה צריך לדעת לפני שמתחילים?",
   description:
     "מדריך מעשי ופשוט מאת הנדסאי חשמל: איך מתכננים מערכת בית חכם, מה ההבדל בין מערכת קווית לאלחוטית, ואיך מונעים תקלות יקרות בתשתית.",
   alternates: {

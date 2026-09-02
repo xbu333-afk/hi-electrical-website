@@ -3,7 +3,7 @@ import Link from "next/link";
 import { EMAIL, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "שירותי חשמל לעסקים, מוסדות וקבלנים | ח.י שירותי חשמל",
+  title: "שירותי חשמל לעסקים, מוסדות וקבלנים",
   description:
     "פתרונות חשמל מתקדמים למגזר העסקי והמוסדי. ביצוע פרויקטים מורכבים, תאורה מוניציפלית, תחזוקת שבר ומונעת למפעלים, והסכמי ריטיינר לוועדי בתים. ניהול הנדסי מלא.",
   alternates: {

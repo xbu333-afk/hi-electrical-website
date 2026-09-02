@@ -128,6 +128,64 @@ export function buildClickNotification(opts: {
   };
 }
 
+/**
+ * Sent when the /get-quote form is submitted.
+ *
+ * Priority 1 = high, matching the click notification — this is a warm lead, but
+ * not worth the priority-2 retry loop reserved for fraud alerts.
+ *
+ * When `unsaved` is true the Supabase write failed, so this message is the only
+ * surviving record of the lead. It therefore carries the full contact details.
+ */
+export function buildLeadNotification(opts: {
+  name: string;
+  /** Normalized E.164 */
+  phone: string;
+  /** Exactly as typed */
+  phoneRaw: string;
+  city?: string | null;
+  issue?: string | null;
+  source: "mumooman" | "organic";
+  pagePath: string;
+  ip: string;
+  device: VisitorDevice;
+  gclid?: string | null;
+  geoCity?: string | null;
+  keyword?: string | null;
+  network?: string | null;
+  match_type?: string | null;
+  unsaved?: boolean;
+}) {
+  const keywordLine = opts.keyword?.trim()
+    ? `🎯 חיפש: ${opts.keyword} | רשת: ${formatAdsNetwork(opts.network ?? null)} | התאמה: ${formatMatchType(opts.match_type ?? null)}`
+    : null;
+
+  return {
+    title: opts.unsaved
+      ? "🔥 ליד חדש — לא נשמר במסד!"
+      : "🔥 ליד חדש מטופס הצעת מחיר",
+    message: lines(
+      `👤 שם: ${opts.name}`,
+      `📞 טלפון: ${opts.phoneRaw}`,
+      opts.city ? `🏙️ עיר: ${opts.city}` : null,
+      opts.issue ? `🔧 התקלה: ${opts.issue}` : null,
+      "———",
+      `מקור: ${opts.source === "mumooman" ? "ממומן (גוגל אדס)" : "אורגני"}`,
+      keywordLine,
+      opts.gclid ? `🎟️ GCLID: ${opts.gclid}` : null,
+      `עמוד: ${formatPageLabel(opts.pagePath)}`,
+      opts.device === "mobile" ? "📱 מכשיר: נייד" : "💻 מכשיר: מחשב",
+      opts.geoCity ? `📍 עיר (משוערת): ${opts.geoCity}` : null,
+      `🌐 IP: ${opts.ip}`,
+      opts.unsaved
+        ? "⚠️ שמירת הליד ב-Supabase נכשלה — העתיקו את הפרטים מההודעה הזו!"
+        : null
+    ),
+    priority: 1 as PushoverPriority,
+    sound: "cashregister",
+  };
+}
+
 /** ISO country code → Hebrew country name (common fraud origins). */
 const COUNTRY_NAMES: Record<string, string> = {
   RU: "רוסיה",

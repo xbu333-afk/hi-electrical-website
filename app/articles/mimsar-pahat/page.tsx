@@ -12,7 +12,7 @@ const SLUG = "mimsar-pahat";
 const article = getArticle(SLUG);
 
 export const metadata: Metadata = {
-  title: "למה ממסר הפחת קופץ ואיך מסדרים את זה? | ח.י שירותי חשמל",
+  title: "למה ממסר הפחת קופץ ואיך מסדרים את זה?",
   description:
     "החשמל קפץ ואי אפשר להרים את המתג? מדריך מעשי ופשוט לאיתור התקלה. מה מותר לעשות לבד ומתי חייבים לקרוא לחשמלאי מוסמך.",
   alternates: {
