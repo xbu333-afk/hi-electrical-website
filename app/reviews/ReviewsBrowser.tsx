@@ -5,7 +5,6 @@ import type { ReviewServiceId, SiteReview } from "@/lib/reviews";
 
 type ReviewsBrowserProps = {
   reviews: readonly SiteReview[];
-  cities: readonly string[];
   services: readonly { id: ReviewServiceId; label: string }[];
 };
 
@@ -36,23 +35,16 @@ const SELECT_CLASS =
 
 export default function ReviewsBrowser({
   reviews,
-  cities,
   services,
 }: ReviewsBrowserProps) {
-  const [city, setCity] = useState("");
   const [service, setService] = useState("");
 
   const filtered = useMemo(() => {
-    return reviews.filter((review) => {
-      if (city && !review.cities.includes(city)) return false;
-      if (service && !review.services.includes(service as ReviewServiceId)) {
-        return false;
-      }
-      return true;
-    });
-  }, [reviews, city, service]);
-
-  const hasActiveFilter = Boolean(city || service);
+    if (!service) return reviews;
+    return reviews.filter((review) =>
+      review.services.includes(service as ReviewServiceId)
+    );
+  }, [reviews, service]);
 
   return (
     <div>
@@ -61,57 +53,27 @@ export default function ReviewsBrowser({
         aria-label="סינון המלצות"
         onSubmit={(e) => e.preventDefault()}
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="review-city" className="mb-2 block text-sm font-bold text-slate-800">
-              סינון לפי עיר
-            </label>
-            <select
-              id="review-city"
-              className={SELECT_CLASS}
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              disabled={cities.length === 0}
-            >
-              <option value="">כל הערים</option>
-              {cities.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <p className="mt-2 text-sm text-slate-500">
-              הסינון לפי עיר מציג רק המלצות שבהן צוינה עיר בטקסט עצמו.
-            </p>
-          </div>
+        <label htmlFor="review-service" className="mb-2 block text-sm font-bold text-slate-800">
+          סינון לפי סוג שירות
+        </label>
+        <select
+          id="review-service"
+          className={SELECT_CLASS}
+          value={service}
+          onChange={(e) => setService(e.target.value)}
+        >
+          <option value="">כל סוגי השירות</option>
+          {services.map(({ id, label }) => (
+            <option key={id} value={id}>
+              {label}
+            </option>
+          ))}
+        </select>
 
-          <div>
-            <label htmlFor="review-service" className="mb-2 block text-sm font-bold text-slate-800">
-              סינון לפי סוג שירות
-            </label>
-            <select
-              id="review-service"
-              className={SELECT_CLASS}
-              value={service}
-              onChange={(e) => setService(e.target.value)}
-            >
-              <option value="">כל סוגי השירות</option>
-              {services.map(({ id, label }) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {hasActiveFilter && (
+        {service && (
           <button
             type="button"
-            onClick={() => {
-              setCity("");
-              setService("");
-            }}
+            onClick={() => setService("")}
             className="mt-4 text-sm font-bold text-emerald-800 underline underline-offset-2 hover:text-emerald-900"
           >
             נקו סינון
@@ -121,7 +83,6 @@ export default function ReviewsBrowser({
 
       <p className="mt-5 text-sm text-slate-600" aria-live="polite">
         מציגים {filtered.length} מתוך {reviews.length} המלצות
-        {city ? ` · ${city}` : ""}
         {service
           ? ` · ${services.find((s) => s.id === service)?.label ?? ""}`
           : ""}
@@ -132,7 +93,10 @@ export default function ReviewsBrowser({
           לא נמצאו המלצות להתאמה הזו. נסו לבחור סינון רחב יותר.
         </p>
       ) : (
-        <ul className="mt-6 grid list-none grid-cols-1 gap-4 md:grid-cols-2" role="list">
+        <ul
+          className="mt-6 grid list-none grid-cols-1 gap-4 md:grid-cols-2"
+          role="list"
+        >
           {filtered.map((review) => (
             <li
               key={review.id}
@@ -152,21 +116,11 @@ export default function ReviewsBrowser({
                     </p>
                     <Stars count={review.rating} />
                   </div>
-                  {(review.cities.length > 0 ||
-                    (review.services.length > 0 &&
-                      !(
-                        review.services.length === 1 &&
-                        review.services[0] === "general"
-                      ))) && (
-                    <ul className="mt-2 flex list-none flex-wrap gap-1.5" aria-label="תגיות">
-                      {review.cities.map((c) => (
-                        <li
-                          key={c}
-                          className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700"
-                        >
-                          {c}
-                        </li>
-                      ))}
+                  {review.services.some((id) => id !== "general") && (
+                    <ul
+                      className="mt-2 flex list-none flex-wrap gap-1.5"
+                      aria-label="תגיות שירות"
+                    >
                       {review.services
                         .filter((id) => id !== "general")
                         .map((id) => (

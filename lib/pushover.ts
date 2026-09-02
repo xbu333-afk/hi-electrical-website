@@ -186,6 +186,53 @@ export function buildLeadNotification(opts: {
   };
 }
 
+/** המלצה חיובית מהטופס — להודעה פנימית בלבד, לא לפרסום אוטומטי. */
+export function buildPositiveReviewNotification(opts: {
+  name: string;
+  rating: number;
+  text: string;
+  ip: string;
+}) {
+  return {
+    title: `⭐ המלצה חדשה — ${opts.rating} כוכבים (לאישור ידני)`,
+    message: lines(
+      `👤 שם: ${opts.name}`,
+      `⭐ דירוג: ${opts.rating}/5`,
+      `💬 ${opts.text}`,
+      `🌐 IP: ${opts.ip}`,
+      "⛔ לא פורסם באתר — העתיקו והוסיפו ידנית אם מתאים"
+    ),
+    priority: 1 as PushoverPriority,
+    sound: "cashregister",
+  };
+}
+
+/**
+ * משוב שלילי (1–3 כוכבים) — לא נשמר באתר.
+ * Priority 1 = דחוף, כדי לטפל בלקוח מאוכזב לפני שהתלונה מתפשטת.
+ */
+export function buildNegativeFeedbackNotification(opts: {
+  name: string;
+  rating: number;
+  text: string;
+  phone?: string | null;
+  ip: string;
+}) {
+  return {
+    title: `⚠️ משוב שלילי — ${opts.rating} כוכבים (לא פורסם)`,
+    message: lines(
+      `👤 שם: ${opts.name}`,
+      opts.phone ? `📞 טלפון: ${opts.phone}` : null,
+      `⭐ דירוג: ${opts.rating}/5`,
+      `💬 ${opts.text}`,
+      `🌐 IP: ${opts.ip}`,
+      "⛔ לא נשמר באתר — לטיפול אישי בלבד"
+    ),
+    priority: 1 as PushoverPriority,
+    sound: "siren",
+  };
+}
+
 /** ISO country code → Hebrew country name (common fraud origins). */
 const COUNTRY_NAMES: Record<string, string> = {
   RU: "רוסיה",

@@ -1,38 +1,40 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ReviewsBrowser from "./ReviewsBrowser";
+import WriteReviewForm from "./WriteReviewForm";
 import {
   GOOGLE_AVERAGE_RATING,
   GOOGLE_REVIEW_TOTAL,
 } from "@/lib/google-reviews";
 import {
   buildReviewsJsonLd,
-  getReviewCityOptions,
   getReviewServiceOptions,
-  SITE_REVIEWS,
 } from "@/lib/reviews";
+import { getPublishedReviews } from "@/lib/reviews-db";
 import { jsonLdScriptProps } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "המלצות מהרשת",
   description:
-    "המלצות של לקוחות על שירותי חשמל של יהודה חכמוב — ח.י שירותי חשמל. סננו לפי עיר או סוג שירות וקראו חוויות אמיתיות מהשטח.",
+    "המלצות של לקוחות על שירותי חשמל של יהודה חכמוב — ח.י שירותי חשמל. סננו לפי סוג שירות וכתבו המלצה משלכם.",
   alternates: {
     canonical: `${SITE_URL}/reviews`,
   },
   openGraph: {
     title: "המלצות מהרשת | ח.י שירותי חשמל",
     description:
-      "המלצות לקוחות על חשמלאי מוסמך במרכז ובשרון — סנן לפי עיר או סוג שירות.",
+      "המלצות לקוחות על חשמלאי מוסמך במרכז ובשרון — סנן לפי סוג שירות.",
     url: `${SITE_URL}/reviews`,
   },
 };
 
-export default function ReviewsPage() {
-  const cities = getReviewCityOptions();
-  const services = getReviewServiceOptions();
-  const jsonLd = buildReviewsJsonLd();
+export const dynamic = "force-dynamic";
+
+export default async function ReviewsPage() {
+  const reviews = await getPublishedReviews();
+  const services = getReviewServiceOptions(reviews);
+  const jsonLd = buildReviewsJsonLd(reviews);
 
   return (
     <>
@@ -67,8 +69,8 @@ export default function ReviewsPage() {
               המלצות מהרשת
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              חוויות אמיתיות של לקוחות שקיבלו שירות חשמל. אפשר לסנן לפי עיר או
-              לפי סוג השירות שמופיע בהמלצה.
+              חוויות אמיתיות של לקוחות שקיבלו שירות חשמל. אפשר לסנן לפי סוג
+              השירות, או לכתוב המלצה משלכם.
             </p>
 
             <div className="mt-6 inline-flex flex-wrap items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-950">
@@ -78,18 +80,21 @@ export default function ReviewsPage() {
                 המלצות ברשת
               </span>
               <span className="font-medium text-amber-800/80">
-                · {SITE_REVIEWS.length} מוצגות כאן
+                · {reviews.length} מוצגות כאן
               </span>
             </div>
           </div>
         </header>
 
         <main className="mx-auto max-w-5xl px-5 py-10 sm:px-6 sm:py-12">
-          <ReviewsBrowser
-            reviews={SITE_REVIEWS}
-            cities={cities}
-            services={services}
-          />
+          <section aria-labelledby="write-review-heading" className="mb-12">
+            <h2 id="write-review-heading" className="sr-only">
+              כתיבת המלצה
+            </h2>
+            <WriteReviewForm />
+          </section>
+
+          <ReviewsBrowser reviews={reviews} services={services} />
 
           <section
             aria-labelledby="reviews-cta-heading"

@@ -1,10 +1,9 @@
-import { serviceAreas } from "@/lib/cities";
 import {
   GOOGLE_AVERAGE_RATING,
   GOOGLE_REVIEW_TOTAL,
 } from "@/lib/google-reviews";
 import { SITE_URL } from "@/lib/site";
-import { allTestimonials, type Testimonial } from "@/lib/testimonials-data";
+import { allTestimonials } from "@/lib/testimonials-data";
 
 export type ReviewServiceId =
   | "emergency"
@@ -21,7 +20,9 @@ export type ReviewService = {
   label: string;
 };
 
-/** סוגי שירות לסינון — נגזרים מתוכן ההמלצות הקיימות. */
+export type ReviewStatus = "published" | "hidden";
+
+/** סוגי שירות לסינון — נגזרים מתוכן ההמלצות. */
 export const REVIEW_SERVICES: readonly ReviewService[] = [
   { id: "emergency", label: "קריאת חירום / לילה" },
   { id: "panel", label: "לוח חשמל ותקלות" },
@@ -65,12 +66,15 @@ const SERVICE_PATTERNS: { id: ReviewServiceId; pattern: RegExp }[] = [
   },
 ];
 
-export type SiteReview = Testimonial & {
+export type SiteReview = {
   id: string;
-  cities: string[];
+  name: string;
+  text: string;
+  rating: number;
   services: ReviewServiceId[];
   initials: string;
   color: string;
+  createdAt?: string;
 };
 
 const AVATAR_COLORS = [
@@ -84,7 +88,7 @@ const AVATAR_COLORS = [
   "bg-indigo-700",
 ] as const;
 
-function getInitials(name: string): string {
+export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length >= 2) {
     return parts[0].charAt(0) + parts[parts.length - 1].charAt(0);
@@ -92,24 +96,11 @@ function getInitials(name: string): string {
   return name.slice(0, 2);
 }
 
-/** ערים ארוכות קודם — כדי שלא ייחתכו שמות חלקיים (למשל "רמת" מתוך "רמת גן"). */
-const CITY_NAMES = [...serviceAreas.map((a) => a.name)].sort(
-  (a, b) => b.length - a.length
-);
-
-function detectCities(text: string): string[] {
-  const found: string[] = [];
-  for (const city of CITY_NAMES) {
-    if (text.includes(city) && !found.includes(city)) found.push(city);
-  }
-  // רחוב ברנדיס מופיע בהמלצה אחת — נמצא בפתח תקווה
-  if (/ברנדיס/i.test(text) && !found.includes("פתח תקווה")) {
-    found.push("פתח תקווה");
-  }
-  return found;
+export function avatarColorForIndex(index: number): string {
+  return AVATAR_COLORS[index % AVATAR_COLORS.length];
 }
 
-function detectServices(text: string): ReviewServiceId[] {
+export function detectServices(text: string): ReviewServiceId[] {
   const found: ReviewServiceId[] = [];
   for (const { id, pattern } of SERVICE_PATTERNS) {
     if (pattern.test(text) && !found.includes(id)) found.push(id);
@@ -118,59 +109,71 @@ function detectServices(text: string): ReviewServiceId[] {
   return found;
 }
 
-function slugifyReviewId(name: string, index: number): string {
-  return `r-${index + 1}-${name
-    .toLowerCase()
-    .replace(/[^a-z0-9\u0590-\u05ff]+/gi, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 40)}`;
+function isServiceId(value: string): value is ReviewServiceId {
+  return REVIEW_SERVICES.some((s) => s.id === value);
 }
 
-export const SITE_REVIEWS: SiteReview[] = allTestimonials.map(
+export function normalizeServiceTags(
+  tags: string[] | null | undefined
+): ReviewServiceId[] {
+  if (!tags?.length) return ["general"];
+  const out: ReviewServiceId[] = [];
+  for (const tag of tags) {
+    if (isServiceId(tag) && !out.includes(tag)) out.push(tag);
+  }
+  return out.length ? out : ["general"];
+}
+
+export function toSiteReview(
+  row: {
+    id: string;
+    name: string;
+    text: string;
+    rating: number;
+    service_tags?: string[] | null;
+    created_at?: string | null;
+  },
+  index: number
+): SiteReview {
+  return {
+    id: row.id,
+    name: row.name,
+    text: row.text,
+    rating: row.rating,
+    services: normalizeServiceTags(row.service_tags),
+    initials: getInitials(row.name),
+    color: avatarColorForIndex(index),
+    createdAt: row.created_at ?? undefined,
+  };
+}
+
+/**
+ * Fallback מקומי — רק אם מסד הנתונים עדיין ריק (לפני הייבוא הראשוני).
+ * הקרוסלה בדף הבית ממשיכה להשתמש ב-testimonials-data.ts בנפרד.
+ */
+export const FALLBACK_REVIEWS: SiteReview[] = allTestimonials.map(
   (review, index) => ({
-    ...review,
-    id: slugifyReviewId(review.name, index),
-    cities: detectCities(review.text),
+    id: `fallback-${index + 1}`,
+    name: review.name,
+    text: review.text,
+    rating: review.rating,
     services: detectServices(review.text),
     initials: getInitials(review.name),
-    color: AVATAR_COLORS[index % AVATAR_COLORS.length],
+    color: avatarColorForIndex(index),
   })
 );
 
-/** ערים שיש להן לפחות המלצה אחת מתויגת — לרשימת הסינון. */
-export function getReviewCityOptions(): string[] {
-  const set = new Set<string>();
-  for (const review of SITE_REVIEWS) {
-    for (const city of review.cities) set.add(city);
-  }
-  return [...set].sort((a, b) => a.localeCompare(b, "he"));
-}
-
-export function getReviewServiceOptions(): ReviewService[] {
+export function getReviewServiceOptions(
+  reviews: readonly SiteReview[]
+): ReviewService[] {
   const used = new Set<ReviewServiceId>();
-  for (const review of SITE_REVIEWS) {
+  for (const review of reviews) {
     for (const id of review.services) used.add(id);
   }
   return REVIEW_SERVICES.filter((s) => used.has(s.id));
 }
 
-export function filterReviews(opts: {
-  city: string | null;
-  service: ReviewServiceId | null;
-}): SiteReview[] {
-  return SITE_REVIEWS.filter((review) => {
-    if (opts.city && !review.cities.includes(opts.city)) return false;
-    if (opts.service && !review.services.includes(opts.service)) return false;
-    return true;
-  });
-}
-
-/**
- * JSON-LD לעמוד ההמלצות.
- * AggregateRating משתמש במספר הכולל שכבר מוצג באתר; רשימת Review
- * מבוססת על ההמלצות שמוצגות בעמוד (מקור נתונים מקומי בלבד).
- */
-export function buildReviewsJsonLd() {
+export function buildReviewsJsonLd(reviews: readonly SiteReview[]) {
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -197,7 +200,7 @@ export function buildReviewsJsonLd() {
           bestRating: 5,
           worstRating: 1,
         },
-        review: SITE_REVIEWS.map((review) => ({
+        review: reviews.map((review) => ({
           "@type": "Review",
           author: {
             "@type": "Person",
