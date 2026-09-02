@@ -10,6 +10,8 @@ import { trackWhatsAppClick } from "@/lib/analytics";
 
 /** אותו מפתח שבו VisitorTracker שומר את מזהה המבקר. */
 const VISITOR_ID_KEY = "hi_elec_vid";
+const SESSION_GCLID_KEY = "hi_elec_gclid";
+const SESSION_VT_KEY = "hi_elec_vt";
 
 type Field = "name" | "phone" | "city" | "issue";
 
@@ -53,6 +55,43 @@ function readVisitorId(): string | null {
     return localStorage.getItem(VISITOR_ID_KEY);
   } catch {
     return null;
+  }
+}
+
+/** GCLID שנשמר בכניסת הסשן (VisitorTracker) — גיבוי כש־URL כבר בלי הפרמטר. */
+function readSessionGclid(): string | null {
+  try {
+    const value = sessionStorage.getItem(SESSION_GCLID_KEY)?.trim();
+    if (!value || value.startsWith("gtm_")) return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+function readSessionValueTrack(): ReturnType<typeof extractValueTrackParams> {
+  try {
+    const raw = sessionStorage.getItem(SESSION_VT_KEY);
+    if (!raw) return extractValueTrackParams(new URLSearchParams());
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      keyword: typeof parsed.keyword === "string" ? parsed.keyword : null,
+      campaign_id:
+        typeof parsed.campaign_id === "string" ? parsed.campaign_id : null,
+      adgroup_id:
+        typeof parsed.adgroup_id === "string" ? parsed.adgroup_id : null,
+      creative: typeof parsed.creative === "string" ? parsed.creative : null,
+      vt_device: typeof parsed.vt_device === "string" ? parsed.vt_device : null,
+      loc_physical_ms:
+        typeof parsed.loc_physical_ms === "string"
+          ? parsed.loc_physical_ms
+          : null,
+      network: typeof parsed.network === "string" ? parsed.network : null,
+      match_type:
+        typeof parsed.match_type === "string" ? parsed.match_type : null,
+    };
+  } catch {
+    return extractValueTrackParams(new URLSearchParams());
   }
 }
 
@@ -117,6 +156,8 @@ export default function QuoteForm() {
 
     try {
       const params = new URLSearchParams(searchParams.toString());
+      const urlTrack = extractValueTrackParams(params);
+      const sessionTrack = readSessionValueTrack();
       const response = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,9 +169,17 @@ export default function QuoteForm() {
           company: honeypotRef.current?.value ?? "",
           elapsed_ms: Date.now() - mountedAtRef.current,
           visitor_id: readVisitorId(),
-          gclid: params.get("gclid"),
+          gclid: params.get("gclid") || readSessionGclid(),
           page_path: window.location.pathname,
-          ...extractValueTrackParams(params),
+          keyword: urlTrack.keyword || sessionTrack.keyword,
+          campaign_id: urlTrack.campaign_id || sessionTrack.campaign_id,
+          adgroup_id: urlTrack.adgroup_id || sessionTrack.adgroup_id,
+          creative: urlTrack.creative || sessionTrack.creative,
+          vt_device: urlTrack.vt_device || sessionTrack.vt_device,
+          loc_physical_ms:
+            urlTrack.loc_physical_ms || sessionTrack.loc_physical_ms,
+          network: urlTrack.network || sessionTrack.network,
+          match_type: urlTrack.match_type || sessionTrack.match_type,
         }),
       });
 

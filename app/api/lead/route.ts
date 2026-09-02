@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { extractClientIp } from "@/lib/client-ip";
 import {
   countRecentLeadsByIp,
-  findRecentVisitorLogId,
+  findRecentVisitorSession,
   insertLead,
 } from "@/lib/leads";
 import { normalizeIsraeliPhone } from "@/lib/phone";
@@ -136,18 +136,38 @@ export async function POST(req: NextRequest) {
     const referrer =
       req.headers.get("referer") ?? req.headers.get("referrer") ?? null;
 
-    const rawGclid = body.gclid?.trim() || null;
+    const visitorId = body.visitor_id?.trim() || null;
+    const pagePath = body.page_path?.trim() || "/get-quote";
+
+    // סשן לפי cookie hi_elec_vid → visitor_logs: משמר GCLID גם אחרי ניווט פנימי
+    const session = visitorId
+      ? await findRecentVisitorSession(visitorId)
+      : null;
+    const visitorLogId = session?.visitor_log_id ?? null;
+
+    const bodyGclid = body.gclid?.trim() || null;
+    const rawGclid =
+      (bodyGclid && !bodyGclid.startsWith("gtm_") ? bodyGclid : null) ||
+      session?.paid?.gclid ||
+      null;
     // Same iron rule as /api/notify: paid status requires a real GCLID, and
     // Tag Manager's synthetic gtm_ ids are not real clicks.
     const gclid = rawGclid?.startsWith("gtm_") ? null : rawGclid;
     const source: "mumooman" | "organic" = gclid ? "mumooman" : "organic";
-    const valueTrack = normalizeValueTrackPayload(body);
-    const visitorId = body.visitor_id?.trim() || null;
-    const pagePath = body.page_path?.trim() || "/get-quote";
 
-    const visitorLogId = visitorId
-      ? await findRecentVisitorLogId(visitorId)
-      : null;
+    const bodyTrack = normalizeValueTrackPayload(body);
+    const sessionTrack = session?.paid ?? null;
+    const valueTrack = normalizeValueTrackPayload({
+      keyword: bodyTrack.keyword || sessionTrack?.keyword || null,
+      campaign_id: bodyTrack.campaign_id || sessionTrack?.campaign_id || null,
+      adgroup_id: bodyTrack.adgroup_id || sessionTrack?.adgroup_id || null,
+      creative: bodyTrack.creative || sessionTrack?.creative || null,
+      vt_device: bodyTrack.vt_device || sessionTrack?.vt_device || null,
+      loc_physical_ms:
+        bodyTrack.loc_physical_ms || sessionTrack?.loc_physical_ms || null,
+      network: bodyTrack.network || sessionTrack?.network || null,
+      match_type: bodyTrack.match_type || sessionTrack?.match_type || null,
+    });
 
     const whatsappMessage = buildLeadMessage({
       name,

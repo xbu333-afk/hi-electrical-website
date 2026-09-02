@@ -172,7 +172,7 @@ export default function HeroServices({
     : labels.ourServices;
 
   return (
-    <div
+    <section
       id="services"
       dir={locale === "ru" ? "ltr" : undefined}
       className="mt-8 w-full max-w-md mx-auto animate-fade-up [animation-delay:300ms] scroll-mt-20"
@@ -212,6 +212,6 @@ export default function HeroServices({
           );
         })}
       </ul>
-    </div>
+    </section>
   );
 }

@@ -54,10 +54,33 @@ function logLeadError(context: string, error: unknown): void {
 export async function findRecentVisitorLogId(
   visitorId: string
 ): Promise<string | null> {
+  const session = await findRecentVisitorSession(visitorId);
+  return session?.visitor_log_id ?? null;
+}
+
+export type VisitorSessionAttribution = {
+  visitor_log_id: string;
+  /** שורת הסשן האחרונה עם GCLID אמיתי (אם יש) — לשימור ייחוס ממומן אחרי ניווט פנימי */
+  paid: ({ gclid: string } & ValueTrackParams) | null;
+};
+
+const SESSION_ATTR_COLUMNS =
+  "id, gclid, keyword, campaign_id, adgroup_id, creative, vt_device, loc_physical_ms, network, match_type";
+
+/**
+ * קורא את סשן המבקר לפי cookie hi_elec_vid (visitor_id):
+ * - השורה האחרונה לקישור visitor_log_id
+ * - השורה הממומנת האחרונה (עם GCLID) לשימור ייחוס כש־?gclid= נעלם מה-URL
+ */
+export async function findRecentVisitorSession(
+  visitorId: string
+): Promise<VisitorSessionAttribution | null> {
   const trimmed = visitorId.trim();
   if (!trimmed) return null;
 
-  const { data, error } = await getSupabaseAdmin()
+  const db = getSupabaseAdmin();
+
+  const { data: latest, error: latestErr } = await db
     .from("visitor_logs")
     .select("id")
     .eq("visitor_id", trimmed)
@@ -65,12 +88,51 @@ export async function findRecentVisitorLogId(
     .limit(1)
     .maybeSingle();
 
-  if (error) {
-    logLeadError("findRecentVisitorLogId", error);
+  if (latestErr) {
+    logLeadError("findRecentVisitorSession/latest", latestErr);
     return null;
   }
 
-  return (data?.id as string | undefined) ?? null;
+  const visitorLogId = (latest?.id as string | undefined) ?? null;
+  if (!visitorLogId) return null;
+
+  const { data: paidRow, error: paidErr } = await db
+    .from("visitor_logs")
+    .select(SESSION_ATTR_COLUMNS)
+    .eq("visitor_id", trimmed)
+    .not("gclid", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (paidErr) {
+    logLeadError("findRecentVisitorSession/paid", paidErr);
+    return { visitor_log_id: visitorLogId, paid: null };
+  }
+
+  const rawGclid =
+    typeof paidRow?.gclid === "string" ? paidRow.gclid.trim() : "";
+  const gclid =
+    rawGclid && !rawGclid.startsWith("gtm_") ? rawGclid : null;
+
+  if (!gclid || !paidRow) {
+    return { visitor_log_id: visitorLogId, paid: null };
+  }
+
+  return {
+    visitor_log_id: visitorLogId,
+    paid: {
+      gclid,
+      keyword: (paidRow.keyword as string | null) ?? null,
+      campaign_id: (paidRow.campaign_id as string | null) ?? null,
+      adgroup_id: (paidRow.adgroup_id as string | null) ?? null,
+      creative: (paidRow.creative as string | null) ?? null,
+      vt_device: (paidRow.vt_device as string | null) ?? null,
+      loc_physical_ms: (paidRow.loc_physical_ms as string | null) ?? null,
+      network: (paidRow.network as string | null) ?? null,
+      match_type: (paidRow.match_type as string | null) ?? null,
+    },
+  };
 }
 
 /**

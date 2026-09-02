@@ -147,6 +147,16 @@ export default function VisitorTracker() {
       const browserLanguage =
         typeof navigator !== "undefined" ? navigator.language : null;
 
+      // שימור GCLID לסשן הדפדפן — כדי ש-/get-quote יקבל ייחוס גם בלי ?gclid= בכתובת
+      if (gclid && !gclid.startsWith("gtm_")) {
+        try {
+          sessionStorage.setItem("hi_elec_gclid", gclid);
+          sessionStorage.setItem("hi_elec_vt", JSON.stringify(valueTrack));
+        } catch {
+          /* private mode / blocked storage */
+        }
+      }
+
       generateDeviceFingerprint()
         .then((deviceFingerprint) =>
           fetch("/api/notify", {
