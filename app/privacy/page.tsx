@@ -49,7 +49,7 @@ export default function PrivacyPage() {
         </div>
       </header>
 
-      <main className="bg-slate-50 py-10 md:py-14" role="main">
+      <div className="bg-slate-50 py-10 md:py-14">
         <article className="max-w-3xl mx-auto px-6">
           <section aria-labelledby="intro">
             <h2 id="intro" className={H2}>
@@ -191,7 +191,7 @@ export default function PrivacyPage() {
             </Link>
           </div>
         </article>
-      </main>
+      </div>
     </>
   );
 }

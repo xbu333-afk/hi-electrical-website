@@ -65,7 +65,11 @@ export default function HeroSection({
               />
             </h1>
 
-            <div className="hero-hanging-sign mt-2 relative z-10" aria-label={labels.heroHangingSignAria}>
+            <div
+              className="hero-hanging-sign mt-2 relative z-10"
+              role="img"
+              aria-label={labels.heroHangingSignAria}
+            >
               <svg
                 className="hero-hanging-wires"
                 viewBox="0 0 120 22"

@@ -173,6 +173,95 @@ export function getReviewServiceOptions(
   return REVIEW_SERVICES.filter((s) => used.has(s.id));
 }
 
+export type LaidOutReview = SiteReview;
+
+/** איכות ≈ אורך מלל + דירוג (המלצות מפורטות עולות למעלה). */
+function qualityScore(review: SiteReview): number {
+  return review.text.length + review.rating * 35;
+}
+
+/** סיפור ניצולת השואה — תמיד בין 4 ההמלצות הראשונות. */
+function isPinnedFeaturedReview(review: SiteReview): boolean {
+  return /ניצולת שואה|ניצולי שואה/.test(review.text);
+}
+
+/**
+ * סידור טבעי: ההמלצות האיכותיות בחלק העליון,
+ * עם ערבוב קל כדי שלא ייראה כמו דפוס ארוך־קצר מכוון.
+ * המלצה מודגשת (ניצולת שואה) מובטחת בתוך 4 הראשונות.
+ */
+export function interleaveReviewsByLength(
+  reviews: readonly SiteReview[]
+): LaidOutReview[] {
+  if (reviews.length === 0) return [];
+
+  const pinned = reviews.filter(isPinnedFeaturedReview);
+  const unpinned = reviews.filter((r) => !isPinnedFeaturedReview(r));
+
+  const ranked = [...unpinned].sort(
+    (a, b) => qualityScore(b) - qualityScore(a)
+  );
+
+  const topN = Math.min(14, ranked.length);
+  const midN = Math.min(28, Math.max(0, ranked.length - topN));
+  const top = ranked.slice(0, topN);
+  const mid = ranked.slice(topN, topN + midN);
+  const rest = ranked.slice(topN + midN);
+
+  const out: SiteReview[] = [];
+  let ti = 0;
+  let mi = 0;
+  let ri = 0;
+  let step = 0;
+
+  while (ti < top.length || mi < mid.length || ri < rest.length) {
+    const roll = step % 5;
+    if (roll === 0 || roll === 2) {
+      if (ti < top.length) out.push(top[ti++]);
+      else if (mi < mid.length) out.push(mid[mi++]);
+      else if (ri < rest.length) out.push(rest[ri++]);
+    } else if (roll === 1 || roll === 4) {
+      if (mi < mid.length) out.push(mid[mi++]);
+      else if (ti < top.length) out.push(top[ti++]);
+      else if (ri < rest.length) out.push(rest[ri++]);
+    } else {
+      if (ri < rest.length) out.push(rest[ri++]);
+      else if (mi < mid.length) out.push(mid[mi++]);
+      else if (ti < top.length) out.push(top[ti++]);
+    }
+    step += 1;
+  }
+
+  // מניעת צמד של שתי המלצות ארוכות מאוד ברצף
+  for (let i = 0; i < out.length - 1; i++) {
+    const a = out[i];
+    const b = out[i + 1];
+    if (a.text.length > 220 && b.text.length > 220) {
+      const swapAt = out.findIndex(
+        (r, j) => j > i + 1 && r.text.length < 160
+      );
+      if (swapAt !== -1) {
+        const tmp = out[i + 1];
+        out[i + 1] = out[swapAt];
+        out[swapAt] = tmp;
+      }
+    }
+  }
+
+  // שיבוץ ההמלצה המודגשת במקום 2 (אינדקס 1) — בתוך ארבע הראשונות, בלי לדחוף הכול
+  if (pinned.length === 0) return out;
+
+  const featured = [...pinned].sort(
+    (a, b) => qualityScore(b) - qualityScore(a)
+  )[0];
+  const othersPinned = pinned.filter((r) => r.id !== featured.id);
+  const withoutFeatured = out.filter((r) => r.id !== featured.id);
+  const insertAt = Math.min(1, withoutFeatured.length);
+  withoutFeatured.splice(insertAt, 0, featured);
+  // שאר pinned (אם יש) אחרי הרביעייה הראשונה כדי לא לדחוס את הראש
+  return [...withoutFeatured.slice(0, 4), ...othersPinned, ...withoutFeatured.slice(4)];
+}
+
 export function buildReviewsJsonLd(reviews: readonly SiteReview[]) {
   return {
     "@context": "https://schema.org",

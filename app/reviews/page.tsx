@@ -79,14 +79,11 @@ export default async function ReviewsPage() {
                 {GOOGLE_AVERAGE_RATING.toFixed(1)} מתוך 5 · {GOOGLE_REVIEW_TOTAL}{" "}
                 המלצות ברשת
               </span>
-              <span className="font-medium text-amber-800/80">
-                · {reviews.length} מוצגות כאן
-              </span>
             </div>
           </div>
         </header>
 
-        <main className="mx-auto max-w-5xl px-5 py-10 sm:px-6 sm:py-12">
+        <div className="mx-auto max-w-5xl px-5 py-10 sm:px-6 sm:py-12">
           <section aria-labelledby="write-review-heading" className="mb-12">
             <h2 id="write-review-heading" className="sr-only">
               כתיבת המלצה
@@ -116,7 +113,7 @@ export default async function ReviewsPage() {
               לקבלת הצעת מחיר
             </Link>
           </section>
-        </main>
+        </div>
       </div>
     </>
   );

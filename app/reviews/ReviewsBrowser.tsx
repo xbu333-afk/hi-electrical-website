@@ -1,12 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { ReviewServiceId, SiteReview } from "@/lib/reviews";
+import { useEffect, useMemo, useState } from "react";
+import {
+  interleaveReviewsByLength,
+  type ReviewServiceId,
+  type SiteReview,
+} from "@/lib/reviews";
 
 type ReviewsBrowserProps = {
   reviews: readonly SiteReview[];
   services: readonly { id: ReviewServiceId; label: string }[];
 };
+
+const INITIAL_COUNT = 20;
+const LOAD_MORE_COUNT = 10;
 
 function Stars({ count }: { count: number }) {
   return (
@@ -38,13 +45,24 @@ export default function ReviewsBrowser({
   services,
 }: ReviewsBrowserProps) {
   const [service, setService] = useState("");
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
 
-  const filtered = useMemo(() => {
-    if (!service) return reviews;
-    return reviews.filter((review) =>
-      review.services.includes(service as ReviewServiceId)
-    );
+  const ordered = useMemo(() => {
+    const filtered = service
+      ? reviews.filter((review) =>
+          review.services.includes(service as ReviewServiceId)
+        )
+      : reviews;
+    return interleaveReviewsByLength(filtered);
   }, [reviews, service]);
+
+  // איפוס העמוד הראשון בכל שינוי סינון
+  useEffect(() => {
+    setVisibleCount(INITIAL_COUNT);
+  }, [service]);
+
+  const visible = ordered.slice(0, visibleCount);
+  const hasMore = visibleCount < ordered.length;
 
   return (
     <div>
@@ -53,7 +71,10 @@ export default function ReviewsBrowser({
         aria-label="סינון המלצות"
         onSubmit={(e) => e.preventDefault()}
       >
-        <label htmlFor="review-service" className="mb-2 block text-sm font-bold text-slate-800">
+        <label
+          htmlFor="review-service"
+          className="mb-2 block text-sm font-bold text-slate-800"
+        >
           סינון לפי סוג שירות
         </label>
         <select
@@ -81,66 +102,77 @@ export default function ReviewsBrowser({
         )}
       </form>
 
-      <p className="mt-5 text-sm text-slate-600" aria-live="polite">
-        מציגים {filtered.length} מתוך {reviews.length} המלצות
-        {service
-          ? ` · ${services.find((s) => s.id === service)?.label ?? ""}`
-          : ""}
-      </p>
-
-      {filtered.length === 0 ? (
+      {ordered.length === 0 ? (
         <p className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-600">
           לא נמצאו המלצות להתאמה הזו. נסו לבחור סינון רחב יותר.
         </p>
       ) : (
-        <ul
-          className="mt-6 grid list-none grid-cols-1 gap-4 md:grid-cols-2"
-          role="list"
-        >
-          {filtered.map((review) => (
-            <li
-              key={review.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  aria-hidden="true"
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${review.color}`}
-                >
-                  {review.initials}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-base font-bold text-slate-900">
-                      {review.name}
-                    </p>
-                    <Stars count={review.rating} />
+        <>
+          <ul
+            className="mt-6 grid list-none grid-cols-1 gap-4 md:grid-cols-2"
+            role="list"
+          >
+            {visible.map((review) => (
+              <li
+                key={review.id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${review.color}`}
+                  >
+                    {review.initials}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-base font-bold text-slate-900">
+                        {review.name}
+                      </p>
+                      <Stars count={review.rating} />
+                    </div>
+                    {review.services.some((id) => id !== "general") && (
+                      <ul
+                        className="mt-2 flex list-none flex-wrap gap-1.5"
+                        aria-label="תגיות שירות"
+                      >
+                        {review.services
+                          .filter((id) => id !== "general")
+                          .map((id) => (
+                            <li
+                              key={id}
+                              className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-900"
+                            >
+                              {services.find((s) => s.id === id)?.label ?? id}
+                            </li>
+                          ))}
+                      </ul>
+                    )}
                   </div>
-                  {review.services.some((id) => id !== "general") && (
-                    <ul
-                      className="mt-2 flex list-none flex-wrap gap-1.5"
-                      aria-label="תגיות שירות"
-                    >
-                      {review.services
-                        .filter((id) => id !== "general")
-                        .map((id) => (
-                          <li
-                            key={id}
-                            className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-900"
-                          >
-                            {services.find((s) => s.id === id)?.label ?? id}
-                          </li>
-                        ))}
-                    </ul>
-                  )}
                 </div>
-              </div>
-              <p className="mt-4 text-sm leading-relaxed text-slate-700">
-                {review.text}
-              </p>
-            </li>
-          ))}
-        </ul>
+                <p className="mt-4 text-sm leading-relaxed text-slate-700">
+                  {review.text}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          {hasMore && (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibleCount((n) =>
+                    Math.min(n + LOAD_MORE_COUNT, ordered.length)
+                  )
+                }
+                className="inline-flex min-h-[52px] items-center justify-center rounded-xl border-2 border-emerald-700 bg-white px-8 text-base font-bold text-emerald-800 transition-colors hover:bg-emerald-50"
+              >
+                הצג עוד
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

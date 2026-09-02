@@ -45,7 +45,7 @@ export default function AccessibilityPage() {
             נגישות באתר
           </h1>
           <p className="text-slate-500 text-sm font-semibold">
-            עודכן לאחרונה: יוני 2025
+            עודכן לאחרונה: ספטמבר 2026
           </p>
         </div>
       </header>
@@ -90,6 +90,10 @@ export default function AccessibilityPage() {
             <p className={P}>
               סרטון YouTube המוטמע באתר מסופק על ידי Google. נגישותו כפופה למדיניות
               ולכלים של YouTube, וייתכנו חלקים שאינם נגישים במלואם.
+            </p>
+            <p className={P}>
+              סרטון הרקע בדף הבית מוצג ללא שמע (<span lang="en">muted</span>) ומשמש
+              כאלמנט ויזואלי בלבד; לכן אינו כולל כתוביות. לסרטון יש תווית נגישה לקוראי מסך.
             </p>
             <p className={P}>
               האתר אינו כולל ווידג&apos;ט נגישות חיצוני. ההתאמות מובנות בעיצוב ובקוד האתר,
