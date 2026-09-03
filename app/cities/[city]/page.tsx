@@ -7,6 +7,7 @@ import CityAboutSection from "@/app/components/CityAboutSection";
 import ReviewsSection from "@/app/components/ReviewsSection";
 import ContactSection from "@/app/components/ContactSection";
 import TrustStatement from "@/app/components/TrustStatement";
+import LocalSeoContent from "@/app/components/LocalSeoContent";
 import { serviceAreas } from "@/lib/cities";
 import { getCityContent } from "@/lib/city-content";
 import { WHATSAPP_BASE } from "@/lib/site";
@@ -83,6 +84,8 @@ export default async function CityPage(props: PageProps<"/cities/[city]">) {
         subtext={`יהודה חכמוב — חשמלאי מוסמך ב${cityName} והסביבה. הנדסאי חשמל, בעל רישיון ראשי וחשמלאי יצאת צדיק. מענה בחירום לפי היכולת והזמינות.`}
         whatsappHref={waHref}
       />
+
+      <LocalSeoContent cityName={cityName} citySlug={city} />
 
       <div className="bg-white border-t border-gray-100 py-6 text-center">
         <Link
