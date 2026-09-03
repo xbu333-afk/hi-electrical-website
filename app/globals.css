@@ -147,55 +147,60 @@
 
 @keyframes brand-tagline-shine {
   0% {
-    background-position: 100% center;
+    background-position: 120% center;
   }
   100% {
-    background-position: -100% center;
+    background-position: -20% center;
   }
 }
 
 /*
- * Text shine — spotlight sweep on clipped text.
- * Peak = #047857 (AA on white); trough = #115e59 / #064e3b (darker → visible motion).
- * Animation only when motion is allowed (same idea as Tailwind motion-safe:).
+ * Text shine — visible spotlight on emerald text.
+ * Base stays #047857 (AA). A brief light band sweeps for the effect;
+ * prefers-reduced-motion → solid AA green, no animation.
  */
 .text-shine {
   display: inline-block;
-  color: #047857; /* solid AA fallback */
+  color: #047857;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .text-shine {
     background-image: linear-gradient(
-      100deg,
-      #115e59 0%,
-      #115e59 32%,
-      #047857 42%,
-      #0f766e 50%,
-      #047857 58%,
-      #115e59 68%,
-      #115e59 100%
+      110deg,
+      #047857 0%,
+      #047857 38%,
+      #059669 44%,
+      #6ee7b7 49%,
+      #ecfdf5 50%,
+      #6ee7b7 51%,
+      #059669 56%,
+      #047857 62%,
+      #047857 100%
     );
     background-size: 220% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: brand-tagline-shine 2.8s linear infinite;
+    /* Override the global reduce-motion shorthand so the sweep actually loops */
+    animation: brand-tagline-shine 3.2s ease-in-out infinite !important;
+    animation-iteration-count: infinite !important;
   }
 
   .text-shine--fast {
-    animation-duration: 1.6s;
+    animation-duration: 1.8s !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .text-shine {
+  .text-shine,
+  .text-shine--fast {
     animation: none !important;
-    color: #047857;
-    -webkit-text-fill-color: #047857;
-    background-image: none;
-    -webkit-background-clip: unset;
-    background-clip: unset;
+    color: #047857 !important;
+    -webkit-text-fill-color: #047857 !important;
+    background-image: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
   }
 }
 
