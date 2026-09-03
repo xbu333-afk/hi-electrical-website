@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { isValidIsraeliPhone } from "@/lib/phone";
 
-type Mode = "idle" | "rating" | "public" | "private" | "sending" | "done" | "error";
+type Mode = "idle" | "rating" | "form" | "sending" | "done" | "error";
+
+const SUCCESS_TITLE = "תודה רבה!";
+const SUCCESS_BODY =
+  "ההמלצה שלך נשלחה והתקבלה בהצלחה במערכת. (עקב רענון שרתים אוטומטי, ייתכן שייקח לה מספר דקות להופיע באתר המעודכן).";
 
 const INPUT_CLASS =
   "w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 " +
@@ -68,15 +72,16 @@ export default function WriteReviewForm() {
     setRating(n);
     setErrors({});
     setServerError(null);
-    setMode(n >= 4 ? "public" : "private");
+    setMode("form");
   }
 
   function validate(): boolean {
     const next: typeof errors = {};
     if (name.trim().length < 2) next.name = "נא להזין שם";
     if (text.trim().length < 10) next.text = "נא לכתוב לפחות משפט קצר";
-    if (mode === "private" && !isValidIsraeliPhone(phone)) {
-      next.phone = "נא להזין מספר טלפון לחזרה אליכם";
+    const phoneTrimmed = phone.trim();
+    if (phoneTrimmed && !isValidIsraeliPhone(phoneTrimmed)) {
+      next.phone = "נא להזין מספר טלפון תקין";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -103,20 +108,20 @@ export default function WriteReviewForm() {
           elapsed_ms: Date.now() - mountedAtRef.current,
         }),
       });
-      const data: { ok?: boolean; error?: string; mode?: string } = await res
+      const data: { ok?: boolean; error?: string } = await res
         .json()
         .catch(() => ({}));
 
       if (!res.ok || !data.ok) {
         setServerError(data.error === "rate" ? "rate" : "generic");
-        setMode(rating >= 4 ? "public" : "private");
+        setMode("form");
         return;
       }
 
       setMode("done");
     } catch {
       setServerError("generic");
-      setMode(rating >= 4 ? "public" : "private");
+      setMode("form");
     }
   }
 
@@ -161,13 +166,9 @@ export default function WriteReviewForm() {
         role="status"
         className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center sm:p-8"
       >
-        <p className="text-lg font-extrabold text-emerald-950">
-          {rating >= 4 ? "תודה רבה!" : "תודה שפניתם אלינו"}
-        </p>
+        <p className="text-lg font-extrabold text-emerald-950">{SUCCESS_TITLE}</p>
         <p className="mt-2 text-sm leading-relaxed text-emerald-900/80">
-          {rating >= 4
-            ? "ההמלצה שלך נשלחה והתקבלה בהצלחה במערכת. (עקב רענון שרתים אוטומטי, ייתכן שייקח לה מספר דקות להופיע באתר המעודכן)."
-            : "קיבלנו את הפרטים ונחזור אליכם בהקדם לטיפול אישי."}
+          {SUCCESS_BODY}
         </p>
         <button
           type="button"
@@ -180,7 +181,6 @@ export default function WriteReviewForm() {
     );
   }
 
-  const isPrivate = mode === "private" || (mode === "sending" && rating <= 3);
   const busy = mode === "sending";
 
   return (
@@ -209,7 +209,11 @@ export default function WriteReviewForm() {
         <legend className="mb-3 text-sm font-bold text-slate-800">
           איך הייתה החוויה? בחרו דירוג
         </legend>
-        <div className="flex flex-wrap items-center gap-1" role="group" aria-label="דירוג כוכבים">
+        <div
+          className="flex flex-wrap items-center gap-1"
+          role="group"
+          aria-label="דירוג כוכבים"
+        >
           {[1, 2, 3, 4, 5].map((n) => (
             <StarButton
               key={n}
@@ -221,8 +225,12 @@ export default function WriteReviewForm() {
         </div>
       </fieldset>
 
-      {(mode === "public" || mode === "private" || mode === "sending") && (
-        <form className="relative mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
+      {(mode === "form" || mode === "sending") && (
+        <form
+          className="relative mt-6 space-y-5"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -right-[9999px] h-0 w-0 overflow-hidden"
@@ -238,25 +246,15 @@ export default function WriteReviewForm() {
             />
           </div>
 
-          {isPrivate ? (
-            <div
-              role="status"
-              className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-950"
-            >
-              <p className="font-bold">חשוב לנו שתצאו מרוצים.</p>
-              <p className="mt-1">
-                ספרו לנו מה קרה ונחזור אליכם לטיפול אישי. המשוב הזה לא יפורסם
-                באתר.
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-600">
-              תודה! כתבו בקצרה מה עבד טוב — ההמלצה תופיע בעמוד ההמלצות באתר.
-            </p>
-          )}
+          <p className="text-sm text-slate-600">
+            תודה! כתבו בקצרה על החוויה — ההמלצה תתקבל במערכת.
+          </p>
 
           <div>
-            <label htmlFor="review-name" className="mb-2 block text-sm font-bold text-slate-800">
+            <label
+              htmlFor="review-name"
+              className="mb-2 block text-sm font-bold text-slate-800"
+            >
               שם <span aria-hidden="true">*</span>
             </label>
             <input
@@ -278,38 +276,41 @@ export default function WriteReviewForm() {
             )}
           </div>
 
-          {isPrivate && (
-            <div>
-              <label htmlFor="review-phone" className="mb-2 block text-sm font-bold text-slate-800">
-                טלפון לחזרה <span aria-hidden="true">*</span>
-              </label>
-              <input
-                id="review-phone"
-                name="phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                dir="ltr"
-                required
-                placeholder="050-1234567"
-                className={`${INPUT_CLASS} text-right`}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                aria-invalid={errors.phone ? true : undefined}
-                disabled={busy}
-              />
-              {errors.phone && (
-                <p role="alert" className="mt-2 text-sm font-semibold text-red-700">
-                  {errors.phone}
-                </p>
-              )}
-            </div>
-          )}
+          <div>
+            <label
+              htmlFor="review-phone"
+              className="mb-2 block text-sm font-bold text-slate-800"
+            >
+              טלפון ליצירת קשר{" "}
+              <span className="font-medium text-slate-500">(אופציונלי)</span>
+            </label>
+            <input
+              id="review-phone"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              dir="ltr"
+              placeholder="050-1234567"
+              className={`${INPUT_CLASS} text-right`}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              aria-invalid={errors.phone ? true : undefined}
+              disabled={busy}
+            />
+            {errors.phone && (
+              <p role="alert" className="mt-2 text-sm font-semibold text-red-700">
+                {errors.phone}
+              </p>
+            )}
+          </div>
 
           <div>
-            <label htmlFor="review-text" className="mb-2 block text-sm font-bold text-slate-800">
-              {isPrivate ? "מה קרה?" : "ההמלצה שלכם"}{" "}
-              <span aria-hidden="true">*</span>
+            <label
+              htmlFor="review-text"
+              className="mb-2 block text-sm font-bold text-slate-800"
+            >
+              ההמלצה שלכם <span aria-hidden="true">*</span>
             </label>
             <textarea
               id="review-text"
@@ -322,11 +323,7 @@ export default function WriteReviewForm() {
               onChange={(e) => setText(e.target.value)}
               aria-invalid={errors.text ? true : undefined}
               disabled={busy}
-              placeholder={
-                isPrivate
-                  ? "ספרו בקצרה מה לא הסתדר — נטפל בזה אישית"
-                  : "לדוגמה: הגיע מהר, תיקן את לוח החשמל והסביר בסבלנות"
-              }
+              placeholder="לדוגמה: הגיע מהר, תיקן את לוח החשמל והסביר בסבלנות"
             />
             {errors.text && (
               <p role="alert" className="mt-2 text-sm font-semibold text-red-700">
@@ -348,7 +345,7 @@ export default function WriteReviewForm() {
             disabled={busy}
             className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-emerald-700 px-6 text-base font-black text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-500 sm:w-auto"
           >
-            {busy ? "שולחים…" : isPrivate ? "שלחו לטיפול אישי" : "שלחו המלצה"}
+            {busy ? "שולחים…" : "שלחו המלצה"}
           </button>
         </form>
       )}

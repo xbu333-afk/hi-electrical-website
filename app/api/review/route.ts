@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
     if (text.length < 10 || text.length > MAX_LENGTH.text) return invalid("text");
 
     const phoneRaw = (body.phone ?? "").trim();
-    if (rating <= 3) {
-      if (!phoneRaw || phoneRaw.length > MAX_LENGTH.phone) return invalid("phone");
+    if (phoneRaw) {
+      if (phoneRaw.length > MAX_LENGTH.phone) return invalid("phone");
       if (!isValidIsraeliPhone(phoneRaw)) return invalid("phone");
     }
 
@@ -72,14 +72,15 @@ export async function POST(req: NextRequest) {
             name,
             rating,
             text,
-            phone: phoneRaw,
+            phone: phoneRaw || "לא נמסר",
             ip,
           })
         );
       } catch (e) {
         console.error("[review] negative pushover failed:", e);
       }
-      return Response.json({ ok: true, mode: "private" as const });
+      // Same success shape as 4–5 so clients cannot probe the branch
+      return Response.json({ ok: true, mode: "public" as const });
     }
 
     // ── 4–5 stars: internal alert only — moderated before any site publish ──
