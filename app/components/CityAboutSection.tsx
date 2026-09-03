@@ -23,6 +23,20 @@ const FURTHER_READING = [
   { href: "/faq", label: "שאלות ותשובות נפוצות" },
 ] as const;
 
+/** אותן סמכויות כמו בדף הבית — מרצה + חוות דעת לבתי משפט */
+const AUTHORITY_HIGHLIGHTS = [
+  {
+    icon: "🎓",
+    title: "מרצה ומכשיר הנדסאי חשמל",
+    body: "יהודה חכמוב מרצה ומכשיר הנדסאי חשמל במכללת אורט תעשייה אוירית — מעביר ידע מקצועי לדור הבא של אנשי החשמל בישראל.",
+  },
+  {
+    icon: "⚖️",
+    title: "חוות דעת לבתי משפט",
+    body: "נותן חוות דעת מקצועיות לבתי משפט בתחום החשמל.",
+  },
+] as const;
+
 export default function CityAboutSection({ content }: CityAboutSectionProps) {
   const { name, intro, about, highlightAreas } = content;
 
@@ -53,6 +67,30 @@ export default function CityAboutSection({ content }: CityAboutSectionProps) {
         <div className="space-y-4 text-slate-600 text-base leading-[1.9]">
           {about.map((paragraph) => (
             <p key={paragraph.slice(0, 24)}>{paragraph}</p>
+          ))}
+        </div>
+
+        <div
+          className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2"
+          role="list"
+          aria-label="סמכויות מקצועיות מיוחדות"
+        >
+          {AUTHORITY_HIGHLIGHTS.map(({ icon, title, body }) => (
+            <div
+              key={title}
+              role="listitem"
+              className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm"
+            >
+              <div className="mb-2 flex items-center gap-2.5">
+                <span className="text-2xl" aria-hidden="true">
+                  {icon}
+                </span>
+                <h3 className="text-sm font-bold leading-snug text-slate-900">
+                  {title}
+                </h3>
+              </div>
+              <p className="text-sm leading-relaxed text-slate-600">{body}</p>
+            </div>
           ))}
         </div>
 
