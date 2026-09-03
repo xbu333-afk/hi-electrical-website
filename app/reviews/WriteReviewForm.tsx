@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { isValidIsraeliPhone } from "@/lib/phone";
 
@@ -158,6 +159,12 @@ export default function WriteReviewForm() {
         <p className="mt-2 text-sm leading-relaxed text-emerald-900/80">
           {SUCCESS_BODY}
         </p>
+        <Link
+          href="/"
+          className="mt-5 inline-flex min-h-[48px] items-center justify-center rounded-xl bg-emerald-700 px-6 text-sm font-bold text-white transition-colors hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+        >
+          חזרה לעמוד הבית
+        </Link>
       </div>
     );
   }
