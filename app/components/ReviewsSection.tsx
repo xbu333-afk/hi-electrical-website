@@ -1,3 +1,4 @@
+import Link from "next/link";
 import LazyReviewsCarousel from "@/app/components/LazyReviewsCarousel";
 import {
   GOOGLE_AVERAGE_RATING,
@@ -46,13 +47,22 @@ export default function ReviewsSection() {
             <span className="text-slate-600 text-sm font-medium">
               {GOOGLE_AVERAGE_RATING.toFixed(1)} ·
             </span>
-            <span className="text-slate-400 text-sm">
+            <span className="text-slate-500 text-sm">
               {GOOGLE_REVIEW_TOTAL} המלצות
             </span>
           </div>
         </div>
 
         <LazyReviewsCarousel reviews={GOOGLE_REVIEWS} />
+
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/reviews"
+            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-emerald-700 bg-white px-6 py-3 text-base font-bold text-emerald-800 shadow-sm transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+          >
+            לקריאת כל ההמלצות
+          </Link>
+        </div>
       </div>
     </section>
   );
