@@ -58,7 +58,7 @@ export default function ReviewsSection() {
         <div className="mt-8 flex justify-center">
           <Link
             href="/reviews"
-            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-emerald-700 bg-white px-6 py-3 text-base font-bold text-emerald-800 shadow-sm transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+            className="text-sm font-medium text-emerald-700 underline-offset-4 transition-colors hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 rounded-sm"
           >
             לקריאת כל ההמלצות
           </Link>
