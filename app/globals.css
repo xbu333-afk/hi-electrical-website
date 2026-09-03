@@ -145,12 +145,13 @@
   }
 }
 
+/* RTL: highlight starts on the right and sweeps left (reading direction) */
 @keyframes brand-tagline-shine {
   0% {
-    background-position: 120% center;
+    background-position: -20% center;
   }
   100% {
-    background-position: -20% center;
+    background-position: 120% center;
   }
 }
 
@@ -167,7 +168,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .text-shine {
     background-image: linear-gradient(
-      110deg,
+      250deg,
       #047857 0%,
       #047857 38%,
       #059669 44%,
