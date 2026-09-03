@@ -89,7 +89,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   // --- Tier 7: Legal / low-value pages ---
-  const legalPages: MetadataRoute.Sitemap = ["/privacy", "/accessibility"].map(
+  const legalPages: MetadataRoute.Sitemap = [
+    "/privacy",
+    "/terms",
+    "/accessibility",
+  ].map(
     (path) => ({
       url: `${SITE_URL}${path}`,
       lastModified: now,

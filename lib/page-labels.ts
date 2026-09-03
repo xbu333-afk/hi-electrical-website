@@ -19,6 +19,7 @@ const STATIC_LABELS: Record<string, string> = {
   "/articles": "מאמרים",
   "/cities": "אזורי שירות",
   "/privacy": "מדיניות פרטיות",
+  "/terms": "תקנון ותנאי שימוש",
   "/accessibility": "הצהרת נגישות",
   "/reviews": "המלצות",
   "/ru": "דף רוסי",

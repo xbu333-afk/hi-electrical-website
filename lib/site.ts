@@ -70,6 +70,7 @@ export const USEFUL_INFO_LINKS: readonly SiteLink[] = [
 export const LEGAL_LINKS: readonly SiteLink[] = [
   { href: "/get-quote", label: "לקבלת הצעת מחיר" },
   { href: "/privacy", label: "מדיניות פרטיות" },
+  { href: "/terms", label: "תקנון ותנאי שימוש" },
   { href: "/accessibility", label: "הצהרת נגישות" },
 ];
 
