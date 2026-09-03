@@ -1,7 +1,22 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { serviceAreas } from "@/lib/cities";
+import { CITY_NEIGHBORHOODS } from "@/lib/local-seo-data";
 import { ARTICLES } from "@/lib/articles";
+
+/**
+ * City route slugs for /cities/[city].
+ * Primary source = serviceAreas (same as generateStaticParams).
+ * Also include every key from CITY_NEIGHBORHOODS so local-SEO cities stay discoverable.
+ */
+function citySitemapSlugs(): string[] {
+  return Array.from(
+    new Set([
+      ...serviceAreas.map(({ slug }) => slug),
+      ...Object.keys(CITY_NEIGHBORHOODS),
+    ])
+  ).sort();
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -38,10 +53,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const cityPages: MetadataRoute.Sitemap = serviceAreas.map(({ slug }) => ({
+  const cityPages: MetadataRoute.Sitemap = citySitemapSlugs().map((slug) => ({
     url: `${SITE_URL}/cities/${slug}`,
     lastModified: now,
-    changeFrequency: "weekly",
+    changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
@@ -64,7 +79,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   );
 
-  // --- Tier 5: Tools & utility pages ---
+  // --- Tier 5: Tools & utility pages (incl. /reviews) ---
   const toolPages: MetadataRoute.Sitemap = [
     "/pricing",
     "/faq",
@@ -78,7 +93,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  // --- Tier 6: Russian landing page ---
+  // --- Tier 6: Russian homepage ---
   const ruPage: MetadataRoute.Sitemap = [
     {
       url: `${SITE_URL}/ru`,
@@ -88,19 +103,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // --- Tier 7: Legal / low-value pages ---
+  // --- Tier 7: Legal pages (incl. /terms) ---
   const legalPages: MetadataRoute.Sitemap = [
     "/privacy",
     "/terms",
     "/accessibility",
-  ].map(
-    (path) => ({
-      url: `${SITE_URL}${path}`,
-      lastModified: now,
-      changeFrequency: "yearly" as const,
-      priority: 0.3,
-    })
-  );
+  ].map((path) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: now,
+    changeFrequency: "yearly" as const,
+    priority: 0.3,
+  }));
 
   return [
     ...homepage,
