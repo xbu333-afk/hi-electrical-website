@@ -125,18 +125,6 @@ export default function WriteReviewForm() {
     }
   }
 
-  function startOver() {
-    setOpen(true);
-    setMode("rating");
-    setRating(0);
-    setName("");
-    setText("");
-    setPhone("");
-    setErrors({});
-    setServerError(null);
-    mountedAtRef.current = Date.now();
-  }
-
   if (!open) {
     return (
       <div className="rounded-2xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white p-6 text-center shadow-sm sm:p-8">
@@ -170,13 +158,6 @@ export default function WriteReviewForm() {
         <p className="mt-2 text-sm leading-relaxed text-emerald-900/80">
           {SUCCESS_BODY}
         </p>
-        <button
-          type="button"
-          onClick={startOver}
-          className="mt-5 text-sm font-bold text-emerald-800 underline underline-offset-2"
-        >
-          כתיבת המלצה נוספת
-        </button>
       </div>
     );
   }
