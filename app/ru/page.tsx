@@ -5,7 +5,7 @@ import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
 import LazyReviewsCarousel from "@/app/components/LazyReviewsCarousel";
 import PressSection from "@/app/components/PressSection";
 import ContactSection from "@/app/components/ContactSection";
-import { HOME_LANGUAGE_ALTERNATES, WHATSAPP_HREF } from "@/lib/site";
+import { HOME_LANGUAGE_ALTERNATES, SITE_URL, WHATSAPP_HREF } from "@/lib/site";
 import { serviceAreas } from "@/lib/cities";
 import type { GoogleReview } from "@/lib/google-reviews";
 
@@ -38,13 +38,35 @@ const RU_CITY_NAMES: Record<string, string> = {
   elad: "Эльад",
 };
 
+const RU_TITLE =
+  "Электрик в Центре Израиля | Х.И. Электросервис — Профессиональный инженер-электрик";
+const RU_DESCRIPTION =
+  "Иехуда Хахамов — практический инженер-электрик с главной лицензией. Аварийный вызов 24/7, устранение коротких замыканий, замена щитков. Петах-Тиква, Рамат-Ган, Герцлия и весь Центральный округ.";
+
 export const metadata: Metadata = {
-  title: "Электрик в Центре Израиля | Х.И. Электросервис — Профессиональный инженер-электрик",
-  description:
-    "Иехуда Хахамов — практический инженер-электрик с главной лицензией. Аварийный вызов 24/7, устранение коротких замыканий, замена щитков. Петах-Тиква, Рамат-Ган, Герцлия и весь Центральный округ.",
+  title: {
+    absolute: RU_TITLE,
+  },
+  description: RU_DESCRIPTION,
   alternates: {
     canonical: "/ru",
     languages: HOME_LANGUAGE_ALTERNATES,
+  },
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: "Х.И. Электросервис",
+    title: RU_TITLE,
+    description: RU_DESCRIPTION,
+    url: `${SITE_URL}/ru`,
+    images: [
+      {
+        url: "/og/site-og.png",
+        width: 1200,
+        height: 630,
+        alt: "ח.י שירותי חשמל — יהודה חכמוב",
+      },
+    ],
   },
 };
 
@@ -152,24 +174,6 @@ const RU_REVIEWS: GoogleReview[] = [
     stars: 5,
   },
 ];
-
-function Stars({ count = 5 }: { count?: number }) {
-  return (
-    <div className="flex gap-0.5" role="img" aria-label={`Рейтинг: ${count} звёзд`}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <svg
-          key={i}
-          className={`w-4 h-4 ${i < count ? "text-amber-400" : "text-slate-200"}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          aria-hidden="true"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-    </div>
-  );
-}
 
 /* ═══════════════════════════════════════════════════════════
    PAGE
@@ -340,11 +344,9 @@ export default function RussianPage() {
             >
               Клиенты рекомендуют
             </h2>
-            <div className="inline-flex flex-wrap items-center justify-center gap-2 mt-2">
-              <Stars count={5} />
-              <span className="text-slate-600 text-sm font-medium">5.0 ·</span>
-              <span className="text-slate-400 text-sm">589 отзывов в Google</span>
-            </div>
+            <p className="mt-2 text-slate-500 text-sm">
+              Сотни отзывов и рекомендаций клиентов
+            </p>
           </div>
           <LazyReviewsCarousel reviews={RU_REVIEWS} />
         </div>

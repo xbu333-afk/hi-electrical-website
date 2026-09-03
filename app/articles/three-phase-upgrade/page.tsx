@@ -4,7 +4,7 @@ import ArticleDateline from "@/app/components/ArticleDateline";
 import ArticleFaqList from "@/app/components/ArticleFaqList";
 import ArticleVideoCta from "@/app/components/ArticleVideoCta";
 import { buildArticleJsonLd, getArticle, type ArticleFaq } from "@/lib/articles";
-import { articleOgImageUrl } from "@/lib/og";
+import { articleOgImageUrl, buildOpenGraph } from "@/lib/og";
 import { jsonLdScriptProps } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 
@@ -25,10 +25,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/articles/${SLUG}`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "הגדלת חיבור לתלת-פאזי: מתי זה הכרחי ואיך עושים את זה נכון?",
     description:
       "סימני האזהרה שהחיבור שלכם קטן מדי, התהליך המלא מול חברת החשמל, ומי מורשה לחתום על העבודה — מדריך מאת הנדסאי חשמל בעל רישיון ראשי.",
+    url: `${SITE_URL}/articles/${SLUG}`,
     type: "article",
     images: [
       {
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
         alt: article.title,
       },
     ],
-  },
+  }),
 };
 
 /**

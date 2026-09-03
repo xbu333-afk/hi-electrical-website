@@ -1,7 +1,9 @@
 import {
-  neighborhoodsForCity,
-  scenariosForCity,
-} from "@/lib/local-seo-data";
+  formatCityAreasPhrase,
+  getCityLocalData,
+  hasCityAreasCoverage,
+} from "@/lib/city-local-data";
+import { scenariosForCity } from "@/lib/local-seo-data";
 
 type LocalSeoContentProps = {
   cityName: string;
@@ -19,16 +21,15 @@ export default function LocalSeoContent({
   cityName,
   citySlug,
 }: LocalSeoContentProps) {
-  const neighborhoods = neighborhoodsForCity(citySlug);
+  const local = getCityLocalData(citySlug);
   const [scenarioA, scenarioB] = scenariosForCity(citySlug);
   const titleId = `seo-title-${citySlug}`;
 
-  const neighborhoodPhrase =
-    neighborhoods.length >= 2
-      ? neighborhoods.slice(0, -1).join(", ") +
-        " ו" +
-        neighborhoods[neighborhoods.length - 1]
-      : neighborhoods[0] ?? null;
+  const showAreas = hasCityAreasCoverage(citySlug);
+  const areasPhrase = showAreas
+    ? formatCityAreasPhrase(local.areas ?? [])
+    : null;
+  const isWholeCity = !showAreas;
 
   return (
     <section
@@ -49,16 +50,22 @@ export default function LocalSeoContent({
         <div className="mt-5 space-y-4 text-base leading-[1.9] text-slate-700">
           <p>
             ח.י שירותי חשמל מספקת שירותי חשמל מוסמכים ב{cityName}
-            {neighborhoodPhrase ? (
+            {areasPhrase ? (
               <>
                 {" "}
                 ובשכונות ואזורים כמו{" "}
                 <span className="font-semibold text-slate-800">
-                  {neighborhoodPhrase}
+                  {areasPhrase}
                 </span>
               </>
             ) : null}
-            . העבודה מבוצעת על ידי הנדסאי חשמל מוסמך בעל רישיון ראשי — עם אבחון
+            .{" "}
+            {isWholeCity ? (
+              <>
+                שירות בכל {cityName} והסביבה.{" "}
+              </>
+            ) : null}
+            העבודה מבוצעת על ידי הנדסאי חשמל מוסמך בעל רישיון ראשי — עם אבחון
             מדויק בשטח, התאמה לתקנים הישראליים, והסבר ברור ללקוח לפני ביצוע
             התיקון או השדרוג.
           </p>

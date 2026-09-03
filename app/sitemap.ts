@@ -79,14 +79,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   );
 
-  // --- Tier 5: Tools & utility pages (incl. /reviews, /get-quote) ---
+  // --- Tier 5: Tools & utility pages (incl. /reviews; /get-quote excluded — noindex) ---
   const toolPages: MetadataRoute.Sitemap = [
     "/pricing",
     "/faq",
     "/calculator",
     "/device-calculator",
     "/reviews",
-    "/get-quote",
   ].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: now,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buildOpenGraph } from "@/lib/og";
 import { EMAIL, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -9,11 +10,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/business`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "שירותי חשמל לעסקים ומוסדות | ח.י שירותי חשמל",
     description:
       "פרויקטים מוניציפליים, לוחות תעשייתיים, ריטיינר ורישוי עסקים — הנדסאי חשמל ברישיון ראשי.",
-  },
+    url: `${SITE_URL}/business`,
+  }),
 };
 
 export default function BusinessPage() {

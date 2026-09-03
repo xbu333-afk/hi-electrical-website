@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
+import { buildOpenGraph } from "@/lib/og";
 import { SITE_URL } from "@/lib/site";
 import DeviceCalculator from "./DeviceCalculator";
 
 export const metadata: Metadata = {
   title:
-    "מחשבון צריכת חשמל לפי מכשיר 2026 | כמה עולה להפעיל מזגן? | ח.י שירותי חשמל",
+    "מחשבון צריכת חשמל לפי מכשיר 2026 | כמה עולה להפעיל מזגן?",
   description:
     "המחשבון המדויק שיגלה לכם כמה עולה להפעיל דוד, מכונת כביסה, תנור או מזגן. בדקו את צריכת החשמל הביתית שלכם וחסכו מאות שקלים בחודש.",
   alternates: {
     canonical: `${SITE_URL}/device-calculator`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "מחשבון צריכת חשמל לפי מכשיר | ח.י שירותי חשמל",
     description:
       "בחרו מכשיר, הזינו זמן שימוש וגלו כמה עולה דוד, מזגן, תנור ועוד.",
-  },
+    url: `${SITE_URL}/device-calculator`,
+  }),
 };
 
 export default function DeviceCalculatorPage() {

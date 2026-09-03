@@ -10,6 +10,7 @@ import TrustStatement from "@/app/components/TrustStatement";
 import LocalSeoContent from "@/app/components/LocalSeoContent";
 import { serviceAreas } from "@/lib/cities";
 import { getCityContent } from "@/lib/city-content";
+import { buildOpenGraph } from "@/lib/og";
 import { WHATSAPP_BASE } from "@/lib/site";
 
 function getCityName(slug: string): string {
@@ -29,7 +30,7 @@ export async function generateMetadata(
   const { city } = await props.params;
   const name = getCityName(city);
   return {
-    title: `חשמלאי ב${name} - ח.י שירותי חשמל`,
+    title: `חשמלאי ב${name}`,
     description: `חשמלאי מוסמך ב${name} עם ניסיון של מעל עשור. שירות מקצועי, תיקון קצרים, התקנת תאורה, לוחות חשמל, בית חכם וביצוע מקצועי. יצאת צדיק.`,
     keywords: [
       `חשמלאי ב${name}`,
@@ -42,10 +43,11 @@ export async function generateMetadata(
       "בית חכם",
     ],
     alternates: { canonical: `/cities/${city}` },
-    openGraph: {
+    openGraph: buildOpenGraph({
       title: `חשמלאי ב${name} - ח.י שירותי חשמל`,
       description: `שירותי חשמל מקצועיים ב${name}: תיקון קצרים, לוחות חשמל, תאורה ועוד. מומלץ ב'יצאת צדיק'.`,
-    },
+      url: `/cities/${city}`,
+    }),
   };
 }
 

@@ -4,7 +4,7 @@ import ArticleDateline from "@/app/components/ArticleDateline";
 import ArticleFaqList from "@/app/components/ArticleFaqList";
 import ArticleVideoCta from "@/app/components/ArticleVideoCta";
 import { buildArticleJsonLd, getArticle, type ArticleFaq } from "@/lib/articles";
-import { articleOgImageUrl } from "@/lib/og";
+import { articleOgImageUrl, buildOpenGraph } from "@/lib/og";
 import { jsonLdScriptProps } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 
@@ -13,7 +13,7 @@ const article = getArticle(SLUG);
 
 export const metadata: Metadata = {
   title:
-    "מדריך רישיונות חשמל: מה ההבדל בין עוזר, מוסמך, הנדסאי ובודק? | ח.י שירותי חשמל",
+    "מדריך רישיונות חשמל: מה ההבדל בין עוזר, מוסמך, הנדסאי ובודק?",
   description:
     "לא כל חשמלאי מורשה לבצע כל עבודה. מדריך מקיף לסוגי הרישיונות בישראל: מי רשאי לחתום על לוח תלת-פאזי, איפה זה מופיע ברישיון, וממה כדאי להיזהר.",
   keywords: [
@@ -27,10 +27,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/articles/${SLUG}`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "מדריך רישיונות חשמל בישראל",
     description:
       "עוזר, מעשי, מוסמך, ראשי, הנדסאי ובודק — מה מותר למי ואיך בודקים.",
+    url: `${SITE_URL}/articles/${SLUG}`,
     type: "article",
     images: [
       {
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
         alt: article.title,
       },
     ],
-  },
+  }),
 };
 
 /**

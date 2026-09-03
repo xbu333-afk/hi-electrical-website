@@ -28,10 +28,6 @@ import {
   jsonLdScriptProps,
 } from "@/lib/schema";
 import { serviceAreas } from "@/lib/cities";
-import {
-  GOOGLE_AVERAGE_RATING,
-  GOOGLE_REVIEW_TOTAL,
-} from "@/lib/google-reviews";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -69,6 +65,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "he_IL",
     siteName: "ח.י שירותי חשמל",
+    images: [
+      {
+        url: "/og/site-og.png",
+        width: 1200,
+        height: 630,
+        alt: "ח.י שירותי חשמל — יהודה חכמוב",
+      },
+    ],
   },
 };
 
@@ -238,13 +242,6 @@ const siteJsonLd = {
         contactType: "customer service",
         areaServed: "IL",
         availableLanguage: ["Hebrew", "Russian", "English"],
-      },
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: GOOGLE_AVERAGE_RATING,
-        reviewCount: GOOGLE_REVIEW_TOTAL,
-        bestRating: 5,
-        worstRating: 1,
       },
       openingHoursSpecification: [
         {

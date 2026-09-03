@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buildOpenGraph } from "@/lib/og";
 import {
   PHONE,
   PHONE_DISPLAY,
@@ -24,11 +25,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/about`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "אודות יהודה חכמוב — הנדסאי חשמל ומכונות, מרצה ומומחה לבתי משפט",
     description:
       "הסמכה כפולה בהנדסת חשמל ומכונות, הוראה אקדמית, חוות דעת מומחה לבתי משפט ולימודי משפטים — ההסמכות שמאחורי ח.י שירותי חשמל.",
-  },
+    url: `${SITE_URL}/about`,
+  }),
 };
 
 /* ─── ארבעת עמודי הסמכות (E-E-A-T) ─────────────────────────── */

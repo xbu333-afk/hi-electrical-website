@@ -1,7 +1,4 @@
-import {
-  GOOGLE_AVERAGE_RATING,
-  GOOGLE_REVIEW_TOTAL,
-} from "@/lib/google-reviews";
+import { BUSINESS_ID } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 import { allTestimonials } from "@/lib/testimonials-data";
 
@@ -262,7 +259,7 @@ export function interleaveReviewsByLength(
   return [...withoutFeatured.slice(0, 4), ...othersPinned, ...withoutFeatured.slice(4)];
 }
 
-export function buildReviewsJsonLd(reviews: readonly SiteReview[]) {
+export function buildReviewsJsonLd() {
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -274,35 +271,8 @@ export function buildReviewsJsonLd(reviews: readonly SiteReview[]) {
         description:
           "המלצות של לקוחות על שירותי חשמל של יהודה חכמוב — ח.י שירותי חשמל.",
         isPartOf: { "@id": `${SITE_URL}/#website` },
-        about: { "@id": `${SITE_URL}/#localbusiness` },
-        mainEntity: { "@id": `${SITE_URL}/#localbusiness` },
-      },
-      {
-        "@type": "LocalBusiness",
-        "@id": `${SITE_URL}/#localbusiness`,
-        name: "ח.י שירותי חשמל",
-        url: SITE_URL,
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: GOOGLE_AVERAGE_RATING,
-          reviewCount: GOOGLE_REVIEW_TOTAL,
-          bestRating: 5,
-          worstRating: 1,
-        },
-        review: reviews.map((review) => ({
-          "@type": "Review",
-          author: {
-            "@type": "Person",
-            name: review.name,
-          },
-          reviewBody: review.text,
-          reviewRating: {
-            "@type": "Rating",
-            ratingValue: review.rating,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        })),
+        about: { "@id": BUSINESS_ID },
+        mainEntity: { "@id": BUSINESS_ID },
       },
     ],
   };

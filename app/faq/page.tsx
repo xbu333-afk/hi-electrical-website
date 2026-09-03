@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buildOpenGraph } from "@/lib/og";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
 import {
   FAQ_CATEGORIES,
@@ -22,11 +23,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/faq`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "שאלות ותשובות בחשמל – ח.י שירותי חשמל",
     description:
       "תשובות מקצועיות לקצרים סמויים, זליגות זרם, תלת-פאזי, איזון עומסים, רישוי וחוות דעת מומחה.",
-  },
+    url: `${SITE_URL}/faq`,
+  }),
 };
 
 const FAQ_URL = `${SITE_URL}/faq`;

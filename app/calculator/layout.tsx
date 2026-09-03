@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { buildOpenGraph } from "@/lib/og";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -8,11 +9,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/calculator`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "מחשבון חשמל – ח.י שירותי חשמל",
     description:
       "חשבו כמה אתם אמורים לשלם לחברת החשמל לפי קריאת המונה.",
-  },
+    url: `${SITE_URL}/calculator`,
+  }),
 };
 
 export default function CalculatorLayout({

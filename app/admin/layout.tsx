@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PwaRegister from "./PwaRegister";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: false },
   manifest: "/manifest-admin.json",
   appleWebApp: {
     capable: true,

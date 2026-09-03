@@ -1,3 +1,8 @@
+import {
+  getCityCoverageText,
+  hasCityAreasCoverage,
+} from "@/lib/city-local-data";
+
 export type CityContent = {
   name: string;
   neighborhoods: string;
@@ -6,7 +11,10 @@ export type CityContent = {
   highlightAreas: string;
 };
 
-/** שכונות ייחודיות — ניתן להרחיב לכל עיר */
+/**
+ * שכונות ייחודיות — נשמר זמנית עד שלב ניקוי נפרד.
+ * התצוגה בעמודי ערים עוברת דרך city-local-data בלבד.
+ */
 const NEIGHBORHOODS: Record<string, string> = {
   "petah-tikva":
     "תושבי שכונות אם המושבות, כפר גנים, קריית מטלון, הדר גנים, נווה גן, רמת ורבר, שיפר, נווה עוז, שעריה ועוד",
@@ -22,14 +30,28 @@ function neighborhoodsFor(slug: string, name: string): string {
   return NEIGHBORHOODS[slug] ?? `תושבי ${name} והסביבה`;
 }
 
+/** שמירת ה-API הישן זמנית — לא בשימוש בתצוגה. */
+export const LEGACY_CITY_NEIGHBORHOOD_STRINGS = NEIGHBORHOODS;
+export const legacyNeighborhoodsFor = neighborhoodsFor;
+
 export function getCityContent(slug: string, name: string): CityContent {
-  const neighborhoods = neighborhoodsFor(slug, name);
+  const coverageText = getCityCoverageText(slug, name);
+  const useAreas = hasCityAreasCoverage(slug);
+
+  // שדה neighborhoods נגזר מהמקור החדש בלבד (לא מ-NEIGHBORHOODS הישן).
+  const neighborhoods = useAreas
+    ? `תושבי ${coverageText}`
+    : coverageText;
+
+  const introFirst = useAreas
+    ? `ברוכים הבאים לח.י שירותי חשמל – חשמלאי מוסמך ב${name} עם ניסיון של למעלה מעשור. אנו נותנים מענה מקצועי, מהיר ואמין ל${neighborhoods}.`
+    : `ברוכים הבאים לח.י שירותי חשמל – חשמלאי מוסמך ב${name} עם ניסיון של למעלה מעשור. אנו נותנים מענה מקצועי, מהיר ואמין. ${coverageText}.`;
 
   return {
     name,
     neighborhoods,
     intro: [
-      `ברוכים הבאים לח.י שירותי חשמל – חשמלאי מוסמך ב${name} עם ניסיון של למעלה מעשור. אנו נותנים מענה מקצועי, מהיר ואמין ל${neighborhoods}.`,
+      introFirst,
       `השירותים שלנו כוללים: מענה בשעות חירום לפי היכולת והזמינות (לא כולל שבתות וחגים), תיקון קצרים, התקנת גופי תאורה, לוחות חשמל, בית חכם ועוד – עם ביצוע מקצועי ובמחירים הוגנים.`,
     ],
     about: [
@@ -37,6 +59,6 @@ export function getCityContent(slug: string, name: string): CityContent {
       `אנו גאים להיות חלק מהתוכנית "יצאת צדיק" עם חיים אתגר – בזכות השירות האיכותי שלנו, המחירים ההוגנים והאמינות המקצועית שלנו.`,
       `אנחנו זמינים ללקוחותינו גם בשעות חירום (למעט שבתות וחגים), ומספקים שירות אמין, מהיר ומקצועי, על ידי חשמלאים מוסמכים בלבד.`,
     ],
-    highlightAreas: `שירות מקצועי ב${name} – ${neighborhoods} | חשמלאי מוסמך | מומלץ ביצאת צדיק | מענה בחירום לפי זמינות | שקיפות מלאה | אחריות על העבודה`,
+    highlightAreas: `שירות מקצועי ב${name} – ${coverageText} | חשמלאי מוסמך | מומלץ ביצאת צדיק | מענה בחירום לפי זמינות | שקיפות מלאה | אחריות על העבודה`,
   };
 }

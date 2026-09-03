@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PricingTable from "@/app/components/PricingTable";
+import { buildOpenGraph } from "@/lib/og";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -10,11 +11,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/pricing`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "מחירון עבודות חשמל 2026 | ח.י שירותי חשמל",
     description:
       "מחירון שקוף לעבודות חשמל נפוצות — ביקור, תיקון קצר, שקעים, לוחות ועוד.",
-  },
+    url: `${SITE_URL}/pricing`,
+  }),
 };
 
 export default function PricingPage() {

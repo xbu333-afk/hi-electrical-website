@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buildOpenGraph } from "@/lib/og";
 import { PHONE, PHONE_DISPLAY, SITE_URL, WHATSAPP_HREF } from "@/lib/site";
 import { serviceAreas } from "@/lib/cities";
 import {
@@ -30,11 +31,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/services`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "שירותי חשמל מקצועיים – ח.י שירותי חשמל",
     description:
       "איתור תקלות, לוחות חשמל, בית חכם, הארקה ועוד — שירות מקצועי לבית ולעסק.",
-  },
+    url: `${SITE_URL}/services`,
+  }),
 };
 
 /**

@@ -3,14 +3,11 @@ import Link from "next/link";
 import ReviewsBrowser from "./ReviewsBrowser";
 import WriteReviewForm from "./WriteReviewForm";
 import {
-  GOOGLE_AVERAGE_RATING,
-  GOOGLE_REVIEW_TOTAL,
-} from "@/lib/google-reviews";
-import {
   buildReviewsJsonLd,
   getReviewServiceOptions,
 } from "@/lib/reviews";
 import { getPublishedReviews } from "@/lib/reviews-db";
+import { buildOpenGraph } from "@/lib/og";
 import { jsonLdScriptProps } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 
@@ -21,12 +18,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/reviews`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "המלצות מהרשת | ח.י שירותי חשמל",
     description:
       "המלצות לקוחות על חשמלאי מוסמך במרכז ובשרון — סנן לפי סוג שירות.",
     url: `${SITE_URL}/reviews`,
-  },
+  }),
 };
 
 export const dynamic = "force-dynamic";
@@ -34,7 +31,7 @@ export const dynamic = "force-dynamic";
 export default async function ReviewsPage() {
   const reviews = await getPublishedReviews();
   const services = getReviewServiceOptions(reviews);
-  const jsonLd = buildReviewsJsonLd(reviews);
+  const jsonLd = buildReviewsJsonLd();
 
   return (
     <>
@@ -74,11 +71,7 @@ export default async function ReviewsPage() {
             </p>
 
             <div className="mt-6 inline-flex flex-wrap items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-950">
-              <span aria-hidden="true">★</span>
-              <span>
-                {GOOGLE_AVERAGE_RATING.toFixed(1)} מתוך 5 · {GOOGLE_REVIEW_TOTAL}{" "}
-                המלצות ברשת
-              </span>
+              <span>מאות המלצות ומשובי לקוחות</span>
             </div>
           </div>
         </header>

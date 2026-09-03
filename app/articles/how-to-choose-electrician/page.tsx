@@ -4,7 +4,7 @@ import ArticleDateline from "@/app/components/ArticleDateline";
 import ArticleFaqList from "@/app/components/ArticleFaqList";
 import ArticleVideoCta from "@/app/components/ArticleVideoCta";
 import { buildArticleJsonLd, getArticle, type ArticleFaq } from "@/lib/articles";
-import { articleOgImageUrl } from "@/lib/og";
+import { articleOgImageUrl, buildOpenGraph } from "@/lib/og";
 import { jsonLdScriptProps } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 
@@ -26,10 +26,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/articles/${SLUG}`,
   },
-  openGraph: {
+  openGraph: buildOpenGraph({
     title: "איך לבחור חשמלאי מוסמך ומומלץ?",
     description:
       "מדריך מלא: רישיון, יצאת צדיק, מידרג, חירום 24 שעות וחשמלאי דודים.",
+    url: `${SITE_URL}/articles/${SLUG}`,
     type: "article",
     images: [
       {
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
         alt: article.title,
       },
     ],
-  },
+  }),
 };
 
 /**

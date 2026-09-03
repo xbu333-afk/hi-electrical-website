@@ -28,9 +28,6 @@ function getInitials(name: string): string {
   return name.slice(0, 2);
 }
 
-export const GOOGLE_AVERAGE_RATING = 5;
-export const GOOGLE_REVIEW_TOTAL = 589;
-
 export const GOOGLE_REVIEWS: GoogleReview[] = allTestimonials.map(
   ({ name, text, rating }, index) => ({
     name,
