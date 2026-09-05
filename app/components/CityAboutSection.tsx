@@ -38,7 +38,7 @@ const AUTHORITY_HIGHLIGHTS = [
 ] as const;
 
 export default function CityAboutSection({ content }: CityAboutSectionProps) {
-  const { name, intro, about, highlightAreas } = content;
+  const { name, intro, about, highlightAreas, areas } = content;
 
   return (
     <section
@@ -68,7 +68,33 @@ export default function CityAboutSection({ content }: CityAboutSectionProps) {
           {about.map((paragraph) => (
             <p key={paragraph.slice(0, 24)}>{paragraph}</p>
           ))}
+          <p>
+            <Link
+              href="/about"
+              className="rounded text-sm font-semibold text-emerald-700 underline underline-offset-4 transition-colors hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            >
+              עוד על יהודה חכמוב והניסיון המקצועי
+            </Link>
+          </p>
         </div>
+
+        {areas && areas.length > 0 ? (
+          <div className="mt-8">
+            <h3 className="text-base font-bold text-slate-900">
+              אזורי שירות ב{name}
+            </h3>
+            <ul className="mt-3 flex flex-wrap gap-2 list-none">
+              {areas.map((area) => (
+                <li
+                  key={area}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700"
+                >
+                  {area}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div
           className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2"

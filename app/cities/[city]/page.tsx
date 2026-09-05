@@ -87,7 +87,10 @@ export default async function CityPage(props: PageProps<"/cities/[city]">) {
         whatsappHref={waHref}
       />
 
-      <LocalSeoContent cityName={cityName} citySlug={city} />
+      {/* PREVIEW: LocalSeo מוסתר זמנית — הקובץ LocalSeoContent.tsx נשאר ללא מחיקה */}
+      {false && (
+        <LocalSeoContent cityName={cityName} citySlug={city} />
+      )}
 
       <div className="bg-white border-t border-gray-100 py-6 text-center">
         <Link

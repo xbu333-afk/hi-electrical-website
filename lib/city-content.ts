@@ -1,4 +1,5 @@
 import {
+  getCityLocalData,
   getCityCoverageText,
   hasCityAreasCoverage,
 } from "@/lib/city-local-data";
@@ -9,6 +10,7 @@ export type CityContent = {
   intro: string[];
   about: string[];
   highlightAreas: string;
+  areas?: readonly string[];
 };
 
 /**
@@ -37,28 +39,26 @@ export const legacyNeighborhoodsFor = neighborhoodsFor;
 export function getCityContent(slug: string, name: string): CityContent {
   const coverageText = getCityCoverageText(slug, name);
   const useAreas = hasCityAreasCoverage(slug);
+  const areas = getCityLocalData(slug).areas;
 
   // שדה neighborhoods נגזר מהמקור החדש בלבד (לא מ-NEIGHBORHOODS הישן).
   const neighborhoods = useAreas
     ? `תושבי ${coverageText}`
     : coverageText;
 
-  const introFirst = useAreas
-    ? `ברוכים הבאים לח.י שירותי חשמל – חשמלאי מוסמך ב${name} עם ניסיון של למעלה מעשור. אנו נותנים מענה מקצועי, מהיר ואמין ל${neighborhoods}.`
-    : `ברוכים הבאים לח.י שירותי חשמל – חשמלאי מוסמך ב${name} עם ניסיון של למעלה מעשור. אנו נותנים מענה מקצועי, מהיר ואמין. ${coverageText}.`;
-
   return {
     name,
     neighborhoods,
+    areas: useAreas ? areas : undefined,
     intro: [
-      introFirst,
+      `ברוכים הבאים לח.י שירותי חשמל – חשמלאי מוסמך ב${name} עם ניסיון של למעלה מעשור. אנו נותנים מענה מקצועי, מהיר ואמין. שירות בכל ${name} והסביבה.`,
       `השירותים שלנו כוללים: מענה בשעות חירום לפי היכולת והזמינות (לא כולל שבתות וחגים), תיקון קצרים, התקנת גופי תאורה, לוחות חשמל, בית חכם ועוד – עם ביצוע מקצועי ובמחירים הוגנים.`,
     ],
     about: [
-      `ח.י שירותי חשמל הוא עסק מוביל המתמחה במתן פתרונות חשמל מקצועיים, אמינים ובטיחותיים לתושבים ולבעלי עסקים ב${name} והאזור.`,
+      `ח.י שירותי חשמל הוא עסק מוביל המתמחה במתן פתרונות חשמל מקצועיים, אמינים ובטיחותיים לתושבים ולבעלי עסקים ב${name} והאזור. עבודות החשמל מבוצעות על ידי יהודה חכמוב, הנדסאי חשמל ובעל רישיון חשמלאי ראשי.`,
       `אנו גאים להיות חלק מהתוכנית "יצאת צדיק" עם חיים אתגר – בזכות השירות האיכותי שלנו, המחירים ההוגנים והאמינות המקצועית שלנו.`,
       `אנחנו זמינים ללקוחותינו גם בשעות חירום (למעט שבתות וחגים), ומספקים שירות אמין, מהיר ומקצועי, על ידי חשמלאים מוסמכים בלבד.`,
     ],
-    highlightAreas: `שירות מקצועי ב${name} – ${coverageText} | חשמלאי מוסמך | מומלץ ביצאת צדיק | מענה בחירום לפי זמינות | שקיפות מלאה | אחריות על העבודה`,
+    highlightAreas: `שירות מקצועי ב${name} | חשמלאי מוסמך | מומלץ ביצאת צדיק | מענה בחירום לפי זמינות | שקיפות מלאה | אחריות על העבודה`,
   };
 }

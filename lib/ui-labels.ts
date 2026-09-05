@@ -50,7 +50,7 @@ export const UI_LABELS: Record<UiLocale, UiLabels> = {
     contactServiceAreas: "אזורי שירות ←",
     contactArticles: "מאמרים ←",
     heroBrandPrimary: "ח.י",
-    heroBrandSecondary: "שרותי חשמל",
+    heroBrandSecondary: "שירותי חשמל",
     heroHangingSign: "יצאת צדיק",
     heroHangingSignAria: "יצאת צדיק",
     cityTaglinePrefix: "חשמלאי מוסמך",
