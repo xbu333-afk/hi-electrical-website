@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "extract-hero-poster": "node scripts/extract-hero-poster.mjs",
-    "convert-images": "node scripts/convert-images-to-webp.mjs"
+    "convert-images": "node scripts/convert-images-to-webp.mjs",
+    "generate:article-og": "node scripts/generate-article-og.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.9",
