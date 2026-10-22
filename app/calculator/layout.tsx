@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/calculator`,
   },
   openGraph: buildOpenGraph({
-    title: "מחשבון חשמל – ח.י שירותי חשמל",
+    title: "מחשבון חשמל – ח.י שירותי חשמל יצאת צדיק",
     description:
       "חשבו כמה אתם אמורים לשלם לחברת החשמל לפי קריאת המונה.",
     url: `${SITE_URL}/calculator`,

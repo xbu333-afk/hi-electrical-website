@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/business`,
   },
   openGraph: buildOpenGraph({
-    title: "שירותי חשמל לעסקים ומוסדות | ח.י שירותי חשמל",
+    title: "שירותי חשמל לעסקים ומוסדות | ח.י שירותי חשמל יצאת צדיק",
     description:
       "פרויקטים מוניציפליים, לוחות תעשייתיים, ריטיינר ורישוי עסקים — הנדסאי חשמל ברישיון ראשי.",
     url: `${SITE_URL}/business`,

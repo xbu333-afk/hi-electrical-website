@@ -65,16 +65,15 @@ export default function Navbar() {
           <Link
             href="/"
             className="flex items-center gap-2.5 min-w-0 group rounded-lg"
-            aria-label="ח.י שירותי חשמל — יש על מי לסמוך"
+            aria-label="ח.י שירותי חשמל יצאת צדיק — יש על מי לסמוך"
           >
             <Image
               src="/images/yatza-tzadik-logo.webp"
-              alt=""
+              alt="לוגו יצאת צדיק"
               width={96}
               height={101}
               sizes="48px"
               className="object-contain shrink-0 w-12 h-12"
-              aria-hidden="true"
             />
             <span className="flex flex-col items-start leading-tight min-w-0">
               <span className="text-slate-900 font-extrabold text-[15px] tracking-tight whitespace-nowrap">

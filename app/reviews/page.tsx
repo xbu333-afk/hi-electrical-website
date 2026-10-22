@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/reviews`,
   },
   openGraph: buildOpenGraph({
-    title: "המלצות מהרשת | ח.י שירותי חשמל",
+    title: "המלצות מהרשת | ח.י שירותי חשמל יצאת צדיק",
     description:
       "המלצות לקוחות על חשמלאי מוסמך במרכז ובשרון — סנן לפי סוג שירות.",
     url: `${SITE_URL}/reviews`,

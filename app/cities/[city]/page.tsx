@@ -44,7 +44,7 @@ export async function generateMetadata(
     ],
     alternates: { canonical: `/cities/${city}` },
     openGraph: buildOpenGraph({
-      title: `חשמלאי ב${name} - ח.י שירותי חשמל`,
+      title: `חשמלאי ב${name} - ח.י שירותי חשמל יצאת צדיק`,
       description: `שירותי חשמל מקצועיים ב${name}: תיקון קצרים, לוחות חשמל, תאורה ועוד. מומלץ ב'יצאת צדיק'.`,
       url: `/cities/${city}`,
     }),

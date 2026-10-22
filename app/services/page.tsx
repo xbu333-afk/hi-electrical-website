@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/services`,
   },
   openGraph: buildOpenGraph({
-    title: "שירותי חשמל מקצועיים – ח.י שירותי חשמל",
+    title: "שירותי חשמל מקצועיים – ח.י שירותי חשמל יצאת צדיק",
     description:
       "איתור תקלות, לוחות חשמל, בית חכם, הארקה ועוד — שירות מקצועי לבית ולעסק.",
     url: `${SITE_URL}/services`,

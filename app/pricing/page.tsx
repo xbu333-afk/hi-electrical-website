@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/pricing`,
   },
   openGraph: buildOpenGraph({
-    title: "מחירון עבודות חשמל 2026 | ח.י שירותי חשמל",
+    title: "מחירון עבודות חשמל 2026 | ח.י שירותי חשמל יצאת צדיק",
     description:
       "מחירון שקוף לעבודות חשמל נפוצות — ביקור, תיקון קצר, שקעים, לוחות ועוד.",
     url: `${SITE_URL}/pricing`,

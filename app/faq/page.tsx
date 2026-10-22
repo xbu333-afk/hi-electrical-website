@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/faq`,
   },
   openGraph: buildOpenGraph({
-    title: "שאלות ותשובות בחשמל – ח.י שירותי חשמל",
+    title: "שאלות ותשובות בחשמל – ח.י שירותי חשמל יצאת צדיק",
     description:
       "תשובות מקצועיות לקצרים סמויים, זליגות זרם, תלת-פאזי, איזון עומסים, רישוי וחוות דעת מומחה.",
     url: `${SITE_URL}/faq`,

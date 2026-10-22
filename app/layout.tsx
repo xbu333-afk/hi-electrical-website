@@ -47,7 +47,7 @@ const gveretLevin = localFont({
 export const metadata: Metadata = {
   title: {
     default: "יהודה חכמוב | הנדסאי חשמל מוסמך - חשמלאי יצאת צדיק",
-    template: "%s | ח.י שירותי חשמל",
+    template: "%s | ח.י שירותי חשמל יצאת צדיק",
   },
   description:
     "יהודה חכמוב — הנדסאי חשמל, בעל רישיון ראשי וחשמלאי מוסמך. חשמלאי יצאת צדיק עם חיים אתגר. זמין 24 שעות לחירום. חשמלאי מומלץ ומדורג.",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "he_IL",
-    siteName: "ח.י שירותי חשמל",
+    siteName: "ח.י שירותי חשמל יצאת צדיק",
     images: [
       {
         url: "/og/site-og.png",
@@ -180,8 +180,8 @@ const siteJsonLd = {
     {
       "@type": ["Electrician", "ProfessionalService"],
       "@id": BUSINESS_ID,
-      name: "ח.י שירותי חשמל",
-      alternateName: "H.I Electrical Services",
+      name: "ח.י שירותי חשמל יצאת צדיק",
+      alternateName: ["ח.י שירותי חשמל", "H.I Electrical Services"],
       url: SITE_URL,
       telephone: PHONE,
       email: EMAIL,
@@ -366,7 +366,7 @@ const siteJsonLd = {
       "@type": "WebSite",
       "@id": WEBSITE_ID,
       url: SITE_URL,
-      name: "ח.י שירותי חשמל",
+      name: "ח.י שירותי חשמל יצאת צדיק",
       alternateName: "יהודה חכמוב — הנדסאי חשמל",
       inLanguage: "he-IL",
       publisher: { "@id": BUSINESS_ID },

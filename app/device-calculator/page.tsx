@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/device-calculator`,
   },
   openGraph: buildOpenGraph({
-    title: "מחשבון צריכת חשמל לפי מכשיר | ח.י שירותי חשמל",
+    title: "מחשבון צריכת חשמל לפי מכשיר | ח.י שירותי חשמל יצאת צדיק",
     description:
       "בחרו מכשיר, הזינו זמן שימוש וגלו כמה עולה דוד, מזגן, תנור ועוד.",
     url: `${SITE_URL}/device-calculator`,

@@ -27,7 +27,7 @@ export default function Footer() {
                 aria-hidden="true"
               />
               <div className="text-slate-900 font-extrabold text-sm tracking-tight leading-tight">
-                ח.י שירותי חשמל
+                ח.י שירותי חשמל יצאת צדיק
               </div>
             </div>
             <p className="text-slate-500 text-sm leading-relaxed">
@@ -99,7 +99,7 @@ export default function Footer() {
         </div>
 
         <div className="pt-6 border-t border-gray-100 text-xs text-slate-400 text-center">
-          &copy; {year} ח.י שירותי חשמל — יהודה חכמוב. כל הזכויות שמורות.
+          &copy; {year} ח.י שירותי חשמל יצאת צדיק — יהודה חכמוב. כל הזכויות שמורות.
         </div>
       </div>
     </footer>

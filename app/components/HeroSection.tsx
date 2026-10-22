@@ -17,8 +17,9 @@ export default function HeroSection({
   locale = "he",
 }: HeroSectionProps) {
   const labels = getUiLabels(locale);
-  const brandClassName =
-    "relative z-10 flex items-center justify-center gap-2 text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none text-center";
+  const brandRowClassName =
+    "relative z-10 flex items-center justify-center gap-2 text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none text-center w-full";
+  const brandHeadingClassName = `${brandRowClassName} flex-col`;
   const brandInner = (
     <>
       <span>
@@ -37,6 +38,31 @@ export default function HeroSection({
         aria-hidden="true"
       />
     </>
+  );
+
+  const hangingSign = (
+    <div className="hero-hanging-sign mt-2 relative z-10">
+      <svg
+        className="hero-hanging-wires"
+        viewBox="0 0 120 22"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M60 0 L18 20"
+          stroke="currentColor"
+          strokeWidth="0.85"
+          strokeLinecap="round"
+        />
+        <path
+          d="M60 0 L102 20"
+          stroke="currentColor"
+          strokeWidth="0.85"
+          strokeLinecap="round"
+        />
+      </svg>
+      <span className="hero-sticker">{labels.heroHangingSign}</span>
+    </div>
   );
 
   return (
@@ -66,41 +92,16 @@ export default function HeroSection({
 
           <div className="relative w-full flex flex-col items-center">
             {cityName ? (
-              <p id="city-brand" className={brandClassName}>
-                {brandInner}
+              <p id="city-brand" className={brandHeadingClassName}>
+                <span className={brandRowClassName}>{brandInner}</span>
+                {hangingSign}
               </p>
             ) : (
-              <h1 id="hero-brand" className={brandClassName}>
-                {brandInner}
+              <h1 id="hero-brand" className={brandHeadingClassName}>
+                <span className={brandRowClassName}>{brandInner}</span>
+                {hangingSign}
               </h1>
             )}
-
-            <div
-              className="hero-hanging-sign mt-2 relative z-10"
-              role="img"
-              aria-label={labels.heroHangingSignAria}
-            >
-              <svg
-                className="hero-hanging-wires"
-                viewBox="0 0 120 22"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M60 0 L18 20"
-                  stroke="currentColor"
-                  strokeWidth="0.85"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M60 0 L102 20"
-                  stroke="currentColor"
-                  strokeWidth="0.85"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className="hero-sticker">{labels.heroHangingSign}</span>
-            </div>
           </div>
         </div>
       </div>

@@ -12,7 +12,7 @@ export function articleOgImageUrl(slug: string): string {
 const DEFAULT_OG = {
   type: "website",
   locale: "he_IL",
-  siteName: "ח.י שירותי חשמל",
+  siteName: "ח.י שירותי חשמל יצאת צדיק",
 } as const;
 
 /** תמונת שיתוף כללית לאתר — לא מחליפה תמונות ייעודיות של מאמרים */
