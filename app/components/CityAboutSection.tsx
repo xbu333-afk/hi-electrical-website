@@ -3,6 +3,11 @@ import type { CityContent } from "@/lib/city-content";
 
 type CityAboutSectionProps = {
   content: CityContent;
+  /**
+   * בעמודי ערים "להעמקה" מוצג בנפרד (CityFurtherReading) אחרי ההמלצות.
+   * ברירת מחדל: true, כדי ששימושים אחרים לא ישתנו.
+   */
+  showFurtherReading?: boolean;
 };
 
 /**
@@ -37,7 +42,10 @@ const AUTHORITY_HIGHLIGHTS = [
   },
 ] as const;
 
-export default function CityAboutSection({ content }: CityAboutSectionProps) {
+export default function CityAboutSection({
+  content,
+  showFurtherReading = true,
+}: CityAboutSectionProps) {
   const { name, intro, about, highlightAreas, areas } = content;
 
   return (
@@ -141,31 +149,52 @@ export default function CityAboutSection({ content }: CityAboutSectionProps) {
           </p>
         </div>
 
-        <nav aria-labelledby="city-further-reading" className="mt-8">
-          <h3
-            id="city-further-reading"
-            className="mb-3 text-base font-bold text-slate-900"
-          >
-            להעמקה
-          </h3>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2 list-none">
-            {FURTHER_READING.map(({ href, label }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className="rounded text-sm font-semibold text-emerald-700 underline underline-offset-4 transition-colors hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-                >
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {showFurtherReading ? <FurtherReadingBlock /> : null}
+      </div>
+    </section>
+  );
+}
 
-        <p className="text-slate-500 text-xs leading-relaxed mt-6 pt-6 border-t border-gray-200 text-center">
-          כל השירותים מבוצעים על ידי חשמלאי מוסמך בלבד, תוך עמידה בתקנים
-          ישראליים מחמירים והתאמה אישית לצרכי הלקוח.
-        </p>
+/** קישורי "להעמקה" + הערת הסמכה — משותף ל-CityAboutSection ול-CityFurtherReading */
+function FurtherReadingBlock({ headingLevel = 3 }: { headingLevel?: 2 | 3 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
+  return (
+    <>
+          <nav aria-labelledby="city-further-reading" className="mt-8">
+            <Heading
+              id="city-further-reading"
+              className="mb-3 text-base font-bold text-slate-900"
+            >
+              להעמקה
+            </Heading>
+            <ul className="flex flex-wrap gap-x-6 gap-y-2 list-none">
+              {FURTHER_READING.map(({ href, label }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="rounded text-sm font-semibold text-emerald-700 underline underline-offset-4 transition-colors hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <p className="text-slate-500 text-xs leading-relaxed mt-6 pt-6 border-t border-gray-200 text-center">
+            כל השירותים מבוצעים על ידי חשמלאי מוסמך בלבד, תוך עמידה בתקנים
+            ישראליים מחמירים והתאמה אישית לצרכי הלקוח.
+          </p>
+    </>
+  );
+}
+
+/** "להעמקה" כאזור נפרד — בעמודי ערים מוצג אחרי ההמלצות והשאלות הנפוצות. */
+export function CityFurtherReading() {
+  return (
+    <section className="bg-white pb-12 pt-4 md:pb-16 md:pt-8 border-t border-gray-100">
+      <div className="max-w-3xl mx-auto px-6">
+        <FurtherReadingBlock headingLevel={2} />
       </div>
     </section>
   );

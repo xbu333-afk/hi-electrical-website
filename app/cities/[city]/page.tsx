@@ -3,7 +3,9 @@ import Link from "next/link";
 import HeroSection from "@/app/components/HeroSection";
 import CredentialsSection from "@/app/components/CredentialsSection";
 import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
-import CityAboutSection from "@/app/components/CityAboutSection";
+import CityAboutSection, {
+  CityFurtherReading,
+} from "@/app/components/CityAboutSection";
 import ReviewsSection from "@/app/components/ReviewsSection";
 import CityFaqSection from "@/app/components/CityFaqSection";
 import CityWorkExamplesSection from "@/app/components/CityWorkExamplesSection";
@@ -79,7 +81,7 @@ export default async function CityPage(props: PageProps<"/cities/[city]">) {
         </div>
       </div>
 
-      <CityAboutSection content={content} />
+      <CityAboutSection content={content} showFurtherReading={false} />
 
       <ReviewsSection rotationKey={city} />
 
@@ -88,6 +90,8 @@ export default async function CityPage(props: PageProps<"/cities/[city]">) {
       ) : null}
 
       <CityFaqSection cityName={cityName} citySlug={city} areas={content.areas} />
+
+      <CityFurtherReading />
 
       <TrustStatement />
 
