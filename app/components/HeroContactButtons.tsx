@@ -30,7 +30,6 @@ export default function HeroContactButtons({
           href={`tel:${PHONE}`}
           data-analytics-location="hero-call"
           className="flex-1 inline-flex items-center justify-center gap-2 min-h-[52px] bg-white border border-gray-200 hover:border-emerald-400 hover:bg-emerald-50 text-slate-800 font-bold text-sm rounded-2xl shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-          aria-label={labels.callAria(PHONE_DISPLAY)}
         >
           <svg
             className="w-4 h-4 text-emerald-700 shrink-0"
@@ -49,6 +48,7 @@ export default function HeroContactButtons({
           <span className="text-shine text-shine--fast font-bold">
             {labels.call}
           </span>
+          <span className="sr-only">{`: ${PHONE_DISPLAY}`}</span>
         </a>
         <a
           href={whatsappHref}
@@ -56,10 +56,10 @@ export default function HeroContactButtons({
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 inline-flex items-center justify-center gap-2 min-h-[52px] bg-white border border-gray-200 hover:border-emerald-400 hover:bg-emerald-50 text-slate-800 font-bold text-sm rounded-2xl shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-          aria-label={labels.whatsappAria}
         >
           <WhatsAppIcon className="w-5 h-5 text-emerald-700 shrink-0" />
           WhatsApp
+          <span className="sr-only"> (נפתח בחלון חדש)</span>
         </a>
       </div>
       <HeroNightSosLink locale={locale} />

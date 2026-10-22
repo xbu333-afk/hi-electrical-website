@@ -5,11 +5,13 @@ import CredentialsSection from "@/app/components/CredentialsSection";
 import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
 import CityAboutSection from "@/app/components/CityAboutSection";
 import ReviewsSection from "@/app/components/ReviewsSection";
+import CityWorkExamplesSection from "@/app/components/CityWorkExamplesSection";
 import ContactSection from "@/app/components/ContactSection";
 import TrustStatement from "@/app/components/TrustStatement";
 import LocalSeoContent from "@/app/components/LocalSeoContent";
 import { serviceAreas } from "@/lib/cities";
 import { getCityContent } from "@/lib/city-content";
+import { getCityWorkExamples } from "@/lib/city-work-examples";
 import { buildOpenGraph } from "@/lib/og";
 import { WHATSAPP_BASE } from "@/lib/site";
 
@@ -55,6 +57,7 @@ export default async function CityPage(props: PageProps<"/cities/[city]">) {
   const { city } = await props.params;
   const cityName = getCityName(city);
   const content = getCityContent(city, cityName);
+  const workExamples = getCityWorkExamples(city);
 
   const waHref = `${WHATSAPP_BASE}?text=${encodeURIComponent(
     `שלום יהודה, אני צריך חשמלאי ב${cityName}. אשמח לקבל פרטים.`
@@ -77,7 +80,11 @@ export default async function CityPage(props: PageProps<"/cities/[city]">) {
 
       <CityAboutSection content={content} />
 
-      <ReviewsSection />
+      <ReviewsSection rotationKey={city} />
+
+      {workExamples ? (
+        <CityWorkExamplesSection cityName={cityName} examples={workExamples} />
+      ) : null}
 
       <TrustStatement />
 

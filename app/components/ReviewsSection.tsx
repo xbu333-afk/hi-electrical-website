@@ -3,7 +3,30 @@ import LazyReviewsCarousel from "@/app/components/LazyReviewsCarousel";
 import { GOOGLE_REVIEWS } from "@/lib/google-reviews";
 import { RATING, REVIEWS_TEXT } from "@/lib/site";
 
-export default function ReviewsSection() {
+type ReviewsSectionProps = {
+  /**
+   * מפתח קבוע (למשל slug של עיר) שקובע מאיזו המלצה מתחילה הקרוסלה.
+   * כל עיר מציגה סדר אחר, אבל קבוע — כדי שהעמוד לא ישתנה בין טעינות.
+   */
+  rotationKey?: string;
+};
+
+function rotationOffset(key: string, length: number): number {
+  if (length === 0) return 0;
+  let hash = 0;
+  for (const char of key) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+  return hash % length;
+}
+
+export default function ReviewsSection({ rotationKey }: ReviewsSectionProps = {}) {
+  const offset = rotationKey ? rotationOffset(rotationKey, GOOGLE_REVIEWS.length) : 0;
+  const reviews =
+    offset === 0
+      ? GOOGLE_REVIEWS
+      : [...GOOGLE_REVIEWS.slice(offset), ...GOOGLE_REVIEWS.slice(0, offset)];
+
   return (
     <section
       id="testimonials"
@@ -26,7 +49,7 @@ export default function ReviewsSection() {
           </p>
         </div>
 
-        <LazyReviewsCarousel reviews={GOOGLE_REVIEWS} />
+        <LazyReviewsCarousel reviews={reviews} />
 
         <div className="mt-8 flex justify-center">
           <Link
