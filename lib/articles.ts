@@ -41,6 +41,16 @@ export type ArticleFaq = {
  */
 export const ARTICLES: readonly Article[] = [
   {
+    slug: "electrical-inspection-before-buying",
+    title: "בדיקת חשמל לפני קניית דירה: מה בודקים, כמה זה עולה ולמה זה חוסך כסף",
+    excerpt:
+      "קונים דירה יד שנייה? מערכת החשמל היא אחד הדברים היקרים לתקן ואחד הקשים לראות בביקור. מה כוללת בדיקת חשמל לפני קנייה, אילו סימני אזהרה לחפש, מה לשאול את המוכר, וכמה זה עולה.",
+    category: "מדריך צרכנות חכמה",
+    readTime: "7 דק׳",
+    date: "אוקטובר 2026",
+    datePublished: "2026-10-22",
+  },
+  {
     slug: "load-balancing",
     title: "איזון עומסים וחלוקת פאזות: למה תלת-פאזי לבדו לא מפסיק את הקפיצות",
     excerpt:
