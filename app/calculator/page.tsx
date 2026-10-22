@@ -172,7 +172,7 @@ export default function ElectricityCalculator() {
           >
             ח.י שירותי חשמל
           </Link>{" "}
-          – בניהולו של הנדסאי חשמל וחשמלאי מוסמך, עם מענה לחירום גם בלילה, לפי זמינות, לאיתור תקלות ו
+          – בניהולו של הנדסאי חשמל וחשמלאי מוסמך, עם מענה לחירום 24 שעות, לפי זמינות, לאיתור תקלות ו
           <Link
             href="/services"
             className="font-bold text-white hover:text-emerald-300 underline underline-offset-4"

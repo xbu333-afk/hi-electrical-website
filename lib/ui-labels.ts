@@ -54,7 +54,7 @@ export const UI_LABELS: Record<UiLocale, UiLabels> = {
     heroHangingSign: "יצאת צדיק",
     heroHangingSignAria: "יצאת צדיק",
     cityTaglinePrefix: "חשמלאי מוסמך",
-    cityTaglineSuffix: "— מענה גם בחירום",
+    cityTaglineSuffix: "— חירום 24 שעות",
   },
   ru: {
     call: "Звонок",

@@ -8,7 +8,7 @@ import { PHONE, PHONE_DISPLAY } from "@/lib/site";
 export const metadata: Metadata = {
   title: "אזורי שירות | חשמלאי מוסמך יהודה חכמוב",
   description:
-    "יהודה חכמוב — חשמלאי מוסמך ומומלץ. שירות חשמל מקצועי בפתח תקווה, כפר סבא, רעננה, רמת גן, הרצליה ועוד יישובים. מענה לקריאות חירום גם בלילה, לפי זמינות (למעט שבתות וחגים).",
+    "יהודה חכמוב — חשמלאי מוסמך ומומלץ. שירות חשמל מקצועי בפתח תקווה, כפר סבא, רעננה, רמת גן, הרצליה ועוד יישובים. חשמלאי 24 שעות לחירום, לפי זמינות (למעט שבתות וחגים).",
   keywords: ["חשמלאי מוסמך", "חשמלאי מומלץ", "חשמלאי יצאת צדיק", "חשמלאי 24 שעות"],
   alternates: { canonical: "/cities" },
 };
@@ -38,7 +38,7 @@ export default function CitiesPage() {
             </div>
             <p className="text-slate-500 text-sm md:text-base max-w-xs leading-relaxed md:text-left">
               חשמלאי יצאת צדיק מוסמך, הנדסאי חשמל עם רישיון ראשי.
-              <NightOnlyText> מענה לחירום גם בלילה, לפי זמינות.</NightOnlyText>
+              <NightOnlyText> חירום 24 שעות, לפי זמינות (למעט שבתות וחגים).</NightOnlyText>
             </p>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function CitiesPage() {
                 <Link
                   href={`/cities/${slug}`}
                   className="group flex flex-col items-center gap-2 bg-white/80 backdrop-blur-xl border border-gray-200 hover:border-emerald-400 hover:bg-emerald-50 rounded-2xl p-4 text-center shadow-sm transition-all"
-                  aria-label={`חשמלאי מוסמך ב${name} — מענה גם בחירום`}
+                  aria-label={`חשמלאי מוסמך ב${name} — חירום 24 שעות`}
                 >
                   <span
                     className="w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-emerald-100 border border-gray-100 group-hover:border-emerald-200 flex items-center justify-center text-slate-500 group-hover:text-emerald-700 transition-colors"
@@ -151,7 +151,7 @@ export default function CitiesPage() {
               { icon: "🏅", text: "חשמלאי יצאת צדיק" },
               { icon: "🎓", text: "הנדסאי חשמל מוסמך" },
               { icon: "📋", text: "בעל רישיון ראשי" },
-              { icon: "🕐", text: "מענה לחירום גם בלילה" },
+              { icon: "🕐", text: "חירום 24 שעות, לפי זמינות" },
               { icon: "💰", text: "מחיר הוגן ושקוף" },
             ].map(({ icon, text }) => (
               <div
