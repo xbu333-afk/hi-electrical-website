@@ -23,8 +23,8 @@ const CREDENTIALS = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    label: "זמינות 24/7 למקרי חירום",
-    sub: "חשמלאי 24 שעות",
+    label: "מענה לחירום גם בלילה",
+    sub: "לפי זמינות",
   },
 ];
 
