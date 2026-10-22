@@ -41,6 +41,16 @@ export type ArticleFaq = {
  */
 export const ARTICLES: readonly Article[] = [
   {
+    slug: "water-heater-not-heating",
+    title: "דוד חשמל לא מחמם: מה לבדוק לבד, מה התקלות הנפוצות ומתי צריך חשמלאי",
+    excerpt:
+      "אין מים חמים? לפני שמזמינים טכנאי, יש כמה בדיקות פשוטות ובטוחות שאפשר לעשות לבד. מדריך לתקלות הנפוצות בדוד חשמלי, איך מבדילים בין תקלה חשמלית לתקלה במים, ומתי חייבים חשמלאי.",
+    category: "איתור תקלות",
+    readTime: "7 דק׳",
+    date: "אוקטובר 2026",
+    datePublished: "2026-10-22",
+  },
+  {
     slug: "electrical-inspection-before-buying",
     title: "בדיקת חשמל לפני קניית דירה: מה בודקים, כמה זה עולה ולמה זה חוסך כסף",
     excerpt:

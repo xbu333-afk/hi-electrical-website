@@ -65,7 +65,6 @@ export default function Navbar() {
           <Link
             href="/"
             className="flex items-center gap-2.5 min-w-0 group rounded-lg"
-            aria-label="ח.י שירותי חשמל יצאת צדיק — יש על מי לסמוך"
           >
             <Image
               src="/images/yatza-tzadik-logo.webp"
