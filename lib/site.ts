@@ -3,6 +3,8 @@ export const PHONE = "+972585555161";
 export const PHONE_DISPLAY = "058-5555161";
 export const EMAIL = "XBU333@gmail.com";
 export const SITE_URL = "https://www.hiservice.org";
+export const RATING = "5.0";
+export const REVIEWS_TEXT = "מעל 300 ביקורות לקוחות";
 export const WHATSAPP_BASE = "https://wa.me/972585555161";
 
 export const WHATSAPP_HREF = `${WHATSAPP_BASE}?text=${encodeURIComponent(

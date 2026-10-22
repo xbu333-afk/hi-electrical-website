@@ -254,7 +254,7 @@ export const FAQ_CATEGORIES: readonly FaqCategory[] = [
         id: "customer-reviews",
         question: "איפה אפשר לקרוא המלצות של לקוחות?",
         answer: [
-          "ניתן לקרוא מאות המלצות של לקוחות מרוצים ב",
+          "ניתן לקרוא מעל 300 המלצות (דירוג 5.0) של לקוחות מרוצים ב",
           { text: "עמוד ההמלצות", href: "/reviews" },
           " שלנו.",
         ],

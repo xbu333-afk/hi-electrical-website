@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LazyReviewsCarousel from "@/app/components/LazyReviewsCarousel";
 import { GOOGLE_REVIEWS } from "@/lib/google-reviews";
+import { RATING, REVIEWS_TEXT } from "@/lib/site";
 
 export default function ReviewsSection() {
   return (
@@ -21,7 +22,7 @@ export default function ReviewsSection() {
             לקוחות ממליצים
           </h2>
           <p className="mt-2 text-slate-500 text-sm">
-            מאות המלצות ומשובי לקוחות
+            ★ {RATING} · {REVIEWS_TEXT}
           </p>
         </div>
 

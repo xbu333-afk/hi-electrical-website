@@ -9,7 +9,7 @@ import {
 import { getPublishedReviews } from "@/lib/reviews-db";
 import { buildOpenGraph } from "@/lib/og";
 import { jsonLdScriptProps } from "@/lib/schema";
-import { SITE_URL } from "@/lib/site";
+import { RATING, REVIEWS_TEXT, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "המלצות מהרשת",
@@ -71,7 +71,9 @@ export default async function ReviewsPage() {
             </p>
 
             <div className="mt-6 inline-flex flex-wrap items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-950">
-              <span>מאות המלצות ומשובי לקוחות</span>
+              <span>
+                ★ {RATING} · {REVIEWS_TEXT}
+              </span>
             </div>
           </div>
         </header>
