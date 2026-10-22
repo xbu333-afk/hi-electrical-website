@@ -41,7 +41,7 @@ export default function HeroSection({
   );
 
   const hangingSign = (
-    <div className="hero-hanging-sign mt-2 relative z-10">
+    <span className="hero-hanging-sign mt-2 relative z-10">
       <svg
         className="hero-hanging-wires"
         viewBox="0 0 120 22"
@@ -62,7 +62,7 @@ export default function HeroSection({
         />
       </svg>
       <span className="hero-sticker">{labels.heroHangingSign}</span>
-    </div>
+    </span>
   );
 
   return (
