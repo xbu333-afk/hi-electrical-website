@@ -34,12 +34,24 @@ export const metadata: Metadata = {
 };
 
 /* ─── ארבעת עמודי הסמכות (E-E-A-T) ─────────────────────────── */
-const AUTHORITY_PILLARS = [
+type AuthorityPillar = {
+  id: string;
+  badge: string;
+  title: string;
+  lead: string;
+  body: string;
+  points: readonly string[];
+  licenseUrl?: string;
+};
+
+const AUTHORITY_PILLARS: AuthorityPillar[] = [
   {
     id: "engineer",
     badge: "הסמכה כפולה",
     title: "הנדסאי חשמל ומכונות מוסמך",
-    lead: "רישיון חשמלאי מוסמך וראשי בתוקף, מטעם משרד העבודה.",
+    lead: "רישיון חשמלאי ראשי מס' 986473, בתוקף, מטעם משרד העבודה.",
+    licenseUrl:
+      "https://data.labor.gov.il/Electricians/GetLicenseList.aspx",
     body: "ההכשרה שלי אינה מסתכמת ברישיון חשמלאי. אני הנדסאי חשמל והנדסאי מכונות — שתי הסמכות הנדסיות מלאות שנלמדו לעומק לאורך שנים. השילוב הזה הוא מה שמאפשר לי לגשת ללוח חשמל תעשייתי, לקו ייצור או למערכת מורכבת בבית פרטי ולהבין לא רק את הזרם, אלא גם את המכניקה, העומסים והאינטגרציה בין המערכות. זו ההבחנה שבין מי שמחליף רכיב לבין מי שמבין למה הרכיב נשרף מלכתחילה.",
     points: [
       "רישיון חשמלאי מוסמך וראשי בתוקף",
@@ -84,7 +96,7 @@ const AUTHORITY_PILLARS = [
       "אחריות מקצועית וכיסוי ביטוחי",
     ],
   },
-] as const;
+];
 
 /* ─── סיקור תקשורתי לאימות חיצוני ──────────────────────────── */
 const MEDIA_ITEMS = [
@@ -176,6 +188,20 @@ export default function AboutPage() {
             item: `${SITE_URL}/about`,
           },
         ],
+      },
+      {
+        "@type": "EducationalOccupationalCredential",
+        "@id": `${SITE_URL}/about#electrician-license`,
+        name: "רישיון חשמלאי ראשי",
+        alternateName: "Licensed Chief Electrician (Israel)",
+        credentialCategory: "Professional License",
+        identifier: "986473",
+        recognizedBy: {
+          "@type": "GovernmentOrganization",
+          name: "משרד העבודה",
+        },
+        url: "https://data.labor.gov.il/Electricians/GetLicenseList.aspx",
+        about: { "@id": `${SITE_URL}/#yehuda-hahamov` },
       },
     ],
   };
@@ -279,7 +305,7 @@ export default function AboutPage() {
 
             <div className="space-y-6">
               {AUTHORITY_PILLARS.map(
-                ({ id, badge, title, lead, body, points }, index) => (
+                ({ id, badge, title, lead, body, points, licenseUrl }, index) => (
                   <section
                     key={id}
                     id={id}
@@ -306,9 +332,23 @@ export default function AboutPage() {
                       </div>
                     </div>
 
-                    <p className="text-slate-900 font-semibold leading-relaxed mb-4">
+                    <p
+                      className={`text-slate-900 font-semibold leading-relaxed ${licenseUrl ? "mb-2" : "mb-4"}`}
+                    >
                       {lead}
                     </p>
+                    {licenseUrl ? (
+                      <p className="mb-4">
+                        <a
+                          href={licenseUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-emerald-700 hover:text-emerald-800 hover:underline"
+                        >
+                          לבדיקת הרישיון במאגר החשמלאים הממשלתי
+                        </a>
+                      </p>
+                    ) : null}
                     <p className="text-slate-600 leading-[1.9] mb-6">{body}</p>
 
                     <ul
