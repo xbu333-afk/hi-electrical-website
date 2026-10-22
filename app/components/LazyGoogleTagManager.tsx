@@ -11,7 +11,6 @@ import {
 } from "@/lib/gtm-loader";
 
 const GTM_ID = "GTM-NCBBQJT";
-const GTM_GATEWAY_SCRIPT_URL = "https://www.hiservice.org/metrics/";
 
 export default function LazyGoogleTagManager() {
   const [shouldLoad, setShouldLoad] = useState(false);
@@ -43,7 +42,7 @@ export default function LazyGoogleTagManager() {
     <>
       <AnalyticsClickTracker />
       {shouldLoad ? (
-        <GoogleTagManager gtmId={GTM_ID} gtmScriptUrl={GTM_GATEWAY_SCRIPT_URL} />
+        <GoogleTagManager gtmId={GTM_ID} />
       ) : null}
     </>
   );
