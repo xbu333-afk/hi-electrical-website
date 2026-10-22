@@ -131,9 +131,9 @@ export default function PricingPage() {
           </div>
           <div className="flex-1 bg-white p-6 rounded-xl border border-amber-100/50 shadow-sm">
             <p className="text-slate-600 leading-relaxed m-0 text-sm">
-              לקוחות יקרים, אנו מתגאים להיות בעלי תו האיכות{" "}
+              לקוחות יקרים, אנו גאים שנבדקנו ונמצאנו צדיקים בתוכנית{" "}
               <Link href="/" className="font-bold text-emerald-700 hover:underline">
-                חשמלאי יצאת צדיק
+                יצאת צדיק
               </Link>
               . המשמעות היא שאצלנו לא תמצאו &quot;מחירי פיתיון&quot; נמוכים
               שבשטח תופחים לאלפי שקלים. כל ביקור מלווה בשקיפות, הסבר בגובה

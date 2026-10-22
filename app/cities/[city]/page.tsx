@@ -5,6 +5,7 @@ import CredentialsSection from "@/app/components/CredentialsSection";
 import YatzaTzadikVideo from "@/app/components/LazyYatzaTzadikVideo";
 import CityAboutSection from "@/app/components/CityAboutSection";
 import ReviewsSection from "@/app/components/ReviewsSection";
+import CityFaqSection from "@/app/components/CityFaqSection";
 import CityWorkExamplesSection from "@/app/components/CityWorkExamplesSection";
 import ContactSection from "@/app/components/ContactSection";
 import TrustStatement from "@/app/components/TrustStatement";
@@ -85,6 +86,8 @@ export default async function CityPage(props: PageProps<"/cities/[city]">) {
       {workExamples ? (
         <CityWorkExamplesSection cityName={cityName} examples={workExamples} />
       ) : null}
+
+      <CityFaqSection cityName={cityName} citySlug={city} areas={content.areas} />
 
       <TrustStatement />
 
