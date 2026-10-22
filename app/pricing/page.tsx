@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ArticleFaqList from "@/app/components/ArticleFaqList";
 import PricingTable from "@/app/components/PricingTable";
+import type { ArticleFaq } from "@/lib/articles";
+import { businessRef, jsonLdScriptProps, websiteRef } from "@/lib/schema";
 import { buildOpenGraph } from "@/lib/og";
 import { PHONE, PHONE_DISPLAY, SITE_URL } from "@/lib/site";
 
@@ -19,9 +22,65 @@ export const metadata: Metadata = {
   }),
 };
 
+/**
+ * מקור אמת יחיד לשאלות ולתשובות: אותו מערך מזין את התצוגה בעמוד
+ * ואת ה-FAQPage ב-JSON-LD, כדי שהסכימה לא תסתור את מה שהמשתמש רואה.
+ */
+const PRICING_FAQ: readonly ArticleFaq[] = [
+  {
+    question: "כמה עולה ביקור חשמלאי?",
+    answer:
+      "ביקור חשמלאי עולה אצלנו 350–400 ₪. אם מתבצעת עבודה במקום, מחיר הביקור מתקזז ממחיר העבודה.",
+  },
+  {
+    question: "למה יש הבדלים גדולים במחיר בין חשמלאים?",
+    answer:
+      "ההבדל נובע בדרך כלל מארבעה דברים: דרגת הרישיון של החשמלאי, איכות הרכיבים שהוא מתקין, האם הוא מבצע בדיקות במכשור מכויל בסוף העבודה, והאם הוא נותן תיעוד ואחריות. מחיר נמוך מאוד חוסך בדרך כלל באחד מהם.",
+  },
+  {
+    question: "למה המחיר כתוב \"החל מ\" ולא מחיר קבוע?",
+    answer:
+      "כי אותה עבודה יכולה להיות פשוטה או מורכבת, לפי מה שמוצאים בשטח. החלפת שקע במקום נגיש שונה מהחלפת שקע שהחיווט שלו שרוף בתוך הקיר. לפני כל עבודה מקבלים הצעת מחיר סופית לאישור.",
+  },
+  {
+    question: "האם המחיר כולל חלקים?",
+    answer:
+      "בחלק מהעבודות כן, וזה מצוין ליד כל שורה במחירון. למשל, בהחלפת שקע או מפסק המחיר כולל שקע או מפסק סטנדרטי. רכיבים מיוחדים, כמו טיימר חכם או מותג מסוים, מתומחרים בנפרד ובאישורכם.",
+  },
+  {
+    question: "איך יודעים שהמחיר הוגן?",
+    answer:
+      "מחיר הוגן הוא מחיר שמפורט מראש, כולל מה בדיוק יבוצע, ולא \"משתנה\" באמצע העבודה. כדאי לבקש הצעה בכתב, לשאול אילו בדיקות יבוצעו בסוף, ולבדוק את רישיון החשמלאי במאגר של משרד העבודה. הסבר מלא נמצא במדריך איך לבחור חשמלאי.",
+  },
+];
+
+const PRICING_URL = `${SITE_URL}/pricing`;
+
+const pricingFaqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "@id": `${PRICING_URL}#faq`,
+  url: PRICING_URL,
+  name: "שאלות נפוצות על מחירי חשמלאים",
+  inLanguage: "he-IL",
+  isPartOf: websiteRef,
+  about: businessRef,
+  publisher: businessRef,
+  mainEntity: PRICING_FAQ.map((item, index) => ({
+    "@type": "Question",
+    "@id": `${PRICING_URL}#faq-${index + 1}`,
+    name: item.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.answer,
+    },
+  })),
+};
+
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 py-12 md:py-20 px-6">
+      <script {...jsonLdScriptProps(pricingFaqJsonLd)} />
       <div className="max-w-5xl mx-auto">
         <header className="mb-12 text-center md:text-right">
           <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-1.5 rounded-full font-bold mb-6 text-sm">
@@ -83,6 +142,26 @@ export default function PricingPage() {
             </p>
           </div>
         </div>
+
+        <section
+          aria-labelledby="pricing-faq"
+          className="mt-12 rounded-2xl border border-slate-200 bg-white p-6 md:p-8"
+        >
+          <h2 id="pricing-faq" className="text-2xl font-bold text-slate-900 md:text-3xl">
+            שאלות נפוצות על מחירי חשמלאים
+          </h2>
+          <ArticleFaqList items={PRICING_FAQ} />
+          <p className="mt-6 text-slate-600">
+            עוד על בחירת חשמלאי ועל מה לבדוק לפני שמזמינים, במדריך{" "}
+            <Link
+              href="/articles/how-to-choose-electrician"
+              className="font-bold text-emerald-700 hover:underline"
+            >
+              איך לבחור חשמלאי
+            </Link>
+            .
+          </p>
+        </section>
 
         <div className="mt-12 text-center">
           <a

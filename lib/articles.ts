@@ -79,6 +79,7 @@ export const ARTICLES: readonly Article[] = [
     readTime: "10 דק׳",
     date: "אוגוסט 2026",
     datePublished: "2026-08-27",
+    dateModified: "2026-10-22",
   },
   {
     slug: "fault-loop-impedance",
