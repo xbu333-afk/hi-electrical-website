@@ -41,7 +41,10 @@ export function isIosUserAgent(ua: string | null | undefined): boolean {
 
 export interface DeviceRisk {
   score: number;
+  /** Hebrew — for Pushover and the owner. */
   reasons: string[];
+  /** English, same order — for the report sent to Google. */
+  reasonsEn: string[];
   /** Earlier paid clicks from this device in the last year (excluding this one). */
   priorPaidClicks: number;
   /** Earlier paid clicks from this device in the last 7 days. */
@@ -151,6 +154,11 @@ export async function computeEntryRisk(opts: {
 }): Promise<DeviceRisk> {
   const now = opts.now ?? new Date();
   const reasons: string[] = [];
+  const reasonsEn: string[] = [];
+  const add = (he: string, en: string) => {
+    reasons.push(he);
+    reasonsEn.push(en);
+  };
   let score = 0;
 
   const useFingerprint = !isIosUserAgent(opts.userAgent);
@@ -197,30 +205,42 @@ export async function computeEntryRisk(opts: {
     const firstDate = new Date(first.created_at).toLocaleDateString("he-IL", {
       timeZone: "Asia/Jerusalem",
     });
-    reasons.push(
-      `קליק ממומן מס' ${priorPaidClicks + 1} מאותו מכשיר (הראשון ב-${firstDate}) — אמור היה להיות מוחרג`
+    const firstIso = new Date(first.created_at).toISOString().slice(0, 10);
+    add(
+      `קליק ממומן מס' ${priorPaidClicks + 1} מאותו מכשיר (הראשון ב-${firstDate}) — אמור היה להיות מוחרג`,
+      `Paid click #${priorPaidClicks + 1} from the same device (first paid click on ${firstIso}). This device is in our "all visitors" exclusion audience and should not have been served the ad again`
     );
 
     if (minutesSinceLastClick !== null && minutesSinceLastClick <= QUICK_RETURN_MINUTES) {
       score += 15;
-      reasons.push(`חזר ולחץ שוב על המודעה אחרי ${minutesSinceLastClick} דק'`);
+      add(
+        `חזר ולחץ שוב על המודעה אחרי ${minutesSinceLastClick} דק'`,
+        `Clicked the ad again only ${minutesSinceLastClick} minute(s) after the previous paid click`
+      );
     }
 
     // Matched only through the server cookie / fingerprint / soft hint →
     // the visitor cleared the normal cookie or used incognito.
     if (opts.visitorId && !prior.some((r) => r.visitor_id === opts.visitorId)) {
       score += 10;
-      reasons.push(
-        softOnly.length > 0 && hard.length === 0
-          ? `אותו סוג מכשיר מאותה כתובת IP תוך ${minutesSinceLastClick ?? "?"} דק' — כנראה עבר לגלישה בסתר`
-          : "מחק עוגיות / גלישה בסתר — זוהה לפי עוגייה שנייה או טביעת מכשיר"
-      );
+      if (softOnly.length > 0 && hard.length === 0) {
+        add(
+          `אותו סוג מכשיר מאותה כתובת IP תוך ${minutesSinceLastClick ?? "?"} דק' — כנראה עבר לגלישה בסתר`,
+          `Same device profile from the same IP address within ${minutesSinceLastClick ?? "?"} minute(s) with a new cookie — consistent with switching to a private/incognito window to click again`
+        );
+      } else {
+        add(
+          "מחק עוגיות / גלישה בסתר — זוהה לפי עוגייה שנייה או טביעת מכשיר",
+          "Cookies cleared / private browsing — device re-identified by a second first-party cookie or device fingerprint"
+        );
+      }
     }
 
     const ips = new Set(prior.map((r) => r.ip_address).filter(Boolean));
     if (!ips.has(opts.ip)) {
-      reasons.push(
-        `כתובת IP חדשה (${ips.size + 1} כתובות שונות לאותו מכשיר)`
+      add(
+        `כתובת IP חדשה (${ips.size + 1} כתובות שונות לאותו מכשיר)`,
+        `New IP address — ${ips.size + 1} different IP addresses used by the same device`
       );
     }
   }
@@ -228,20 +248,27 @@ export async function computeEntryRisk(opts: {
   // ── Independent hard signals ──────────────────────────────────────────────
   if (opts.isAutomation) {
     score += 50;
-    reasons.push("דפדפן אוטומטי (בוט)");
+    add("דפדפן אוטומטי (בוט)", "Automated browser detected (navigator.webdriver = true)");
   }
   if (opts.country && opts.country !== "IL") {
     score += 40;
-    reasons.push(`קליק מחוץ לישראל (${opts.country})`);
+    add(
+      `קליק מחוץ לישראל (${opts.country})`,
+      `Click from outside Israel (${opts.country}) although the campaign targets Israel only`
+    );
   }
   if (opts.isDesktopOnMobileCampaign) {
     score += 30;
-    reasons.push("מחשב בקמפיין לנייד בלבד");
+    add(
+      "מחשב בקמפיין לנייד בלבד",
+      "Desktop click on a mobile-only campaign"
+    );
   }
 
   return {
     score: Math.min(score, 100),
     reasons,
+    reasonsEn,
     priorPaidClicks,
     priorPaidClicks7d,
     minutesSinceLastClick,
@@ -265,11 +292,12 @@ export async function saveFraudScore(
     .update({
       fraud_score: risk.score,
       fraud_reasons: risk.reasons,
+      fraud_reasons_en: risk.reasonsEn,
       is_automation: extra.isAutomation,
       device_cookie: extra.deviceCookie,
       device_fingerprint_v2: extra.fingerprintV2,
       device_hint: extra.deviceHint,
     })
     .eq("id", id);
-  if (error) logSupabaseError("saveFraudScore (run migrations 013/015/016?)", error);
+  if (error) logSupabaseError("saveFraudScore (run migrations 013/015/016/017?)", error);
 }

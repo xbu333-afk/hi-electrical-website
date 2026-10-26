@@ -13,7 +13,7 @@ const CLAIM_WINDOW_DAYS = 60;
 const PAGE_SIZE = 1000;
 
 const COLS =
-  "id, created_at, gclid, ip_address, country, city, keyword, page_path, user_agent, visitor_id, device_fingerprint, duration, clicked_action, touch_count, scroll_pct, first_interaction_ms, low_engagement, is_automation, fraud_score, fraud_reasons, loc_physical_ms, device_cookie";
+  "id, created_at, gclid, ip_address, country, city, keyword, page_path, user_agent, visitor_id, device_fingerprint, duration, clicked_action, touch_count, scroll_pct, first_interaction_ms, low_engagement, is_automation, fraud_score, fraud_reasons, fraud_reasons_en, loc_physical_ms, device_cookie";
 
 type Row = {
   id: number;
@@ -36,6 +36,7 @@ type Row = {
   is_automation: boolean | null;
   fraud_score: number | null;
   fraud_reasons: string[] | null;
+  fraud_reasons_en: string[] | null;
   loc_physical_ms: string | null;
   device_cookie: string | null;
 };
@@ -114,6 +115,7 @@ export async function GET(request: NextRequest) {
     "Tapped call/WhatsApp",
     "Automated browser",
     "Risk score (0-100)",
+    "Reasons (English)",
     "Reasons (Hebrew)",
   ]
     .map(csvCell)
@@ -141,6 +143,10 @@ export async function GET(request: NextRequest) {
       r.clicked_action ? "yes" : "no",
       r.is_automation ? "yes" : "no",
       score,
+      (r.fraud_reasons_en ?? []).join(" | ") +
+        (r.low_engagement
+          ? " | Visit lasted under 10 seconds with zero screen touches"
+          : ""),
       (r.fraud_reasons ?? []).join(" | ") +
         (r.low_engagement ? " | ביקור של פחות מ-10 שניות בלי שום נגיעה" : ""),
     ]
