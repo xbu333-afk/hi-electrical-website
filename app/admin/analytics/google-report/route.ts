@@ -2,7 +2,6 @@ import { type NextRequest } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import {
   FRAUD_ALERT_THRESHOLD,
-  finalFraudScore,
 } from "@/lib/fraud-score";
 import { summarizeUserAgent } from "@/lib/user-agent";
 
@@ -14,7 +13,7 @@ const CLAIM_WINDOW_DAYS = 60;
 const PAGE_SIZE = 1000;
 
 const COLS =
-  "id, created_at, gclid, ip_address, country, city, keyword, page_path, user_agent, visitor_id, device_fingerprint, duration, clicked_action, touch_count, scroll_pct, first_interaction_ms, low_engagement, is_automation, fraud_score, fraud_reasons, loc_physical_ms";
+  "id, created_at, gclid, ip_address, country, city, keyword, page_path, user_agent, visitor_id, device_fingerprint, duration, clicked_action, touch_count, scroll_pct, first_interaction_ms, low_engagement, is_automation, fraud_score, fraud_reasons, loc_physical_ms, device_cookie";
 
 type Row = {
   id: number;
@@ -38,6 +37,7 @@ type Row = {
   fraud_score: number | null;
   fraud_reasons: string[] | null;
   loc_physical_ms: string | null;
+  device_cookie: string | null;
 };
 
 function csvCell(val: string | number | null | undefined): string {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       return new Response(
-        `Supabase error — did you run migration 013_engagement_fraud_score.sql? ${error.message}`,
+        `Supabase error — did you run migrations 013 and 015? ${error.message}`,
         { status: 500 }
       );
     }
@@ -88,8 +88,10 @@ export async function GET(request: NextRequest) {
   }
 
   const flagged = rows
-    .map((r) => ({ r, score: finalFraudScore(r) }))
-    .filter(({ r, score }) => score >= minScore && !r.clicked_action);
+    .map((r) => ({ r, score: r.fraud_score ?? 0 }))
+    // Owner's rule: every repeat paid click is suspicious — even if they tapped
+    // "call" (a tap is not a call). So no exemption for clicked_action.
+    .filter(({ score }) => score >= minScore);
 
   const header = [
     "Click time (UTC)",
@@ -108,7 +110,8 @@ export async function GET(request: NextRequest) {
     "Touches",
     "Max scroll %",
     "ms to first interaction",
-    "Called / WhatsApp",
+    "Second device cookie (server)",
+    "Tapped call/WhatsApp",
     "Automated browser",
     "Risk score (0-100)",
     "Reasons (Hebrew)",
@@ -134,6 +137,7 @@ export async function GET(request: NextRequest) {
       r.touch_count ?? "",
       r.scroll_pct ?? "",
       r.first_interaction_ms === null ? "none" : r.first_interaction_ms,
+      r.device_cookie,
       r.clicked_action ? "yes" : "no",
       r.is_automation ? "yes" : "no",
       score,

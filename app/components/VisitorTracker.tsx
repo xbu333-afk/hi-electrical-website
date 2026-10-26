@@ -85,6 +85,7 @@ export default function VisitorTracker() {
       if (!anchor) return;
       const href = anchor.getAttribute("href") ?? "";
       if (!href.startsWith("tel:") && !href.startsWith("https://wa.me")) return;
+
       if (clickedRef.current) return;
 
       clickedRef.current = true;

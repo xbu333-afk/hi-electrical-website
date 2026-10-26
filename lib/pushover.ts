@@ -18,6 +18,9 @@ interface PushoverParams {
   message: string;
   priority?: PushoverPriority;
   sound?: string;
+  /** Optional supplementary link shown as a button in the notification. */
+  url?: string;
+  url_title?: string;
 }
 
 export async function sendPushover(params: PushoverParams): Promise<void> {
@@ -38,6 +41,8 @@ export async function sendPushover(params: PushoverParams): Promise<void> {
   };
 
   if (params.sound) body.sound = params.sound;
+  if (params.url) body.url = params.url;
+  if (params.url_title) body.url_title = params.url_title;
 
   // Emergency priority requires retry + expire
   if (params.priority === 2) {
@@ -115,14 +120,17 @@ export function buildMessageLines(opts: {
   );
 }
 
-/** Sent immediately when a visitor clicks tel: or WhatsApp. */
+/**
+ * Sent immediately when a visitor taps tel: or WhatsApp.
+ * A tap is NOT proof of a call (fraudsters tap it too) — wording reflects that.
+ */
 export function buildClickNotification(opts: {
   pagePath: string;
   ip: string;
   source: "mumooman" | "organic";
 }) {
   return {
-    title: "📞 הלקוח יצר קשר!",
+    title: "📞 לחץ על חיוג / וואטסאפ",
     message: lines(
       `עמוד: ${formatPageLabel(opts.pagePath)}`,
       `מקור: ${opts.source === "mumooman" ? "ממומן (גוגל אדס)" : "אורגני"}`,
@@ -361,11 +369,11 @@ export function buildVisitorNotification(opts: {
   const riskLines: string[] =
     isPaid && risk
       ? [
-          risk.contactedBefore
-            ? "✅ המכשיר הזה כבר פנה אליך בעבר"
-            : `🔁 קליקים ממומנים מהמכשיר ב-7 ימים: ${risk.priorPaidClicks + 1} | פנה: לא`,
-          `🧮 ציון חשד: ${risk.score}/100`,
-          ...risk.reasons.filter((r) => !r.startsWith("המכשיר הזה כבר")).map((r) => `• ${r}`),
+          risk.priorPaidClicks === 0
+            ? "🆕 קליק ממומן ראשון מהמכשיר הזה"
+            : `🔁 קליק ממומן מס' ${risk.priorPaidClicks + 1} מהמכשיר הזה (${risk.priorPaidClicks7d + 1} השבוע)`,
+          ...(risk.score > 0 ? [`🧮 ציון חשד: ${risk.score}/100`] : []),
+          ...risk.reasons.map((r) => `• ${r}`),
         ]
       : [];
 
@@ -398,14 +406,19 @@ export function buildVisitorNotification(opts: {
   }
 
   if (isSuspect && risk) {
-    const estCost = (risk.priorPaidClicks + 1) * AVG_CPC_ILS;
+    const estCost = risk.priorPaidClicks * AVG_CPC_ILS;
     return {
-      title: `🛡️ חשוד (${risk.score}/100) — ${risk.reasons[0] ?? "קליק חוזר"}`,
+      title:
+        risk.priorPaidClicks > 0
+          ? `🛡️ קליק חוזר ממכשיר שאמור להיות מוחרג (מס' ${risk.priorPaidClicks + 1})`
+          : `🛡️ חשוד (${risk.score}/100) — ${risk.reasons[0] ?? ""}`,
       message: buildMessageLines({
         ...base,
         extraLines: [
           ...riskLines,
-          `💸 עלות משוערת של הקליקים מהמכשיר השבוע: ~${estCost} ₪`,
+          risk.priorPaidClicks > 0
+            ? `💸 עלות משוערת של הקליקים החוזרים מהמכשיר: ~${estCost} ₪`
+            : null,
           isEmergencyPage ? "⚠️ נכנס לעמוד חירום" : null,
         ],
       }),

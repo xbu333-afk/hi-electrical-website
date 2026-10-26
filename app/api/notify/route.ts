@@ -1,4 +1,4 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { extractClientIp } from "@/lib/client-ip";
 import {
   insertVisitorLog,
@@ -70,6 +70,20 @@ type NotifyPayload =
       log_id?: number;
       gclid?: string | null;
     };
+
+/** Second device identifier: server-set HttpOnly first-party cookie. */
+const DEVICE_COOKIE = "hi_dev";
+const DEVICE_COOKIE_MAX_AGE = 60 * 60 * 24 * 400; // ~13 months (browser max)
+const DEVICE_COOKIE_RE = /^[A-Za-z0-9-]{8,80}$/;
+
+function readDeviceCookie(req: NextRequest): {
+  value: string;
+  existed: boolean;
+} {
+  const raw = req.cookies.get(DEVICE_COOKIE)?.value?.trim();
+  if (raw && DEVICE_COOKIE_RE.test(raw)) return { value: raw, existed: true };
+  return { value: crypto.randomUUID(), existed: false };
+}
 
 function clampInt(v: unknown, min: number, max: number): number | undefined {
   if (typeof v !== "number" || !Number.isFinite(v)) return undefined;
@@ -206,6 +220,7 @@ export async function POST(req: NextRequest) {
     const browserLanguage = body.browser_language?.trim() || null;
     const deviceFingerprint = body.device_fingerprint?.trim() || null;
     const isAutomation = body.automation === true;
+    const deviceCookie = readDeviceCookie(req);
     const valueTrack = normalizeValueTrackPayload(body);
 
     // ── FILTER: Google system crawlers (AdsBot-Google / Googlebot only) ──────
@@ -237,6 +252,8 @@ export async function POST(req: NextRequest) {
       try {
         risk = await computeEntryRisk({
           visitorId: body.visitor_id ?? null,
+          deviceCookie: deviceCookie.value,
+          deviceCookieExisted: deviceCookie.existed,
           fingerprint: deviceFingerprint,
           userAgent,
           ip,
@@ -278,7 +295,9 @@ export async function POST(req: NextRequest) {
         gclid = null;
         risk = null;
       }
-      if (risk) await saveFraudScore(inserted.id, risk, isAutomation);
+      if (risk) {
+        await saveFraudScore(inserted.id, risk, isAutomation, deviceCookie.value);
+      }
     } catch (e) {
       console.error("[notify:enter DB] insert failed:", {
         message: e instanceof Error ? e.message : String(e),
@@ -396,7 +415,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return Response.json({ ok: true, log_id });
+    const res = NextResponse.json({ ok: true, log_id });
+    // (Re)set the server cookie on every entry so it never expires for an
+    // active visitor. HttpOnly + set by our own server → iOS Safari keeps it
+    // for the full lifetime (JS-set cookies are capped at 7 days there).
+    res.cookies.set(DEVICE_COOKIE, deviceCookie.value, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: DEVICE_COOKIE_MAX_AGE,
+    });
+    return res;
   } catch (err) {
     console.error("[notify] unhandled error:", err);
     return Response.json({ ok: false }, { status: 500 });

@@ -2,11 +2,20 @@ import { getSupabaseAdmin } from "./supabase";
 import { logSupabaseError } from "./visitor-logs";
 
 /**
- * Device-based risk score for a paid click.
+ * Repeat-click detection for paid clicks.
  *
- * Identity = cookie (visitor_id) first, hardware fingerprint second.
- * Shared IPs are deliberately NOT used to identify a person — in Israel many
- * unrelated mobile users share the same carrier IP (CGNAT).
+ * Business rule (owner's policy): every visitor is excluded from the ads after
+ * the first visit. Customers save the number. So ANY second paid click from the
+ * same device is suspicious — whether or not they tapped "call" (a tap is not a
+ * call, and fraudsters tap it to look real).
+ *
+ * "Same device" = any of:
+ *   1. visitor_id     — JS cookie + localStorage
+ *   2. device_cookie  — server-set HttpOnly first-party cookie (survives iOS
+ *                       Safari's 7-day cap on JS cookies)
+ *   3. device_fingerprint — hardware fingerprint; NOT on iPhones (collides
+ *                       between different iPhones)
+ * A shared IP is never used to identify a person (Israeli carriers share IPs).
  */
 
 /** Approximate average CPC (₪) — used only for the "estimated cost" line in alerts. */
@@ -15,11 +24,8 @@ export const AVG_CPC_ILS = 16;
 /** Score at/above this → suspicious alert + included in the Google report. */
 export const FRAUD_ALERT_THRESHOLD = 40;
 
-/** Extra points added at exit when the visit had no real engagement. */
-export const LOW_ENGAGEMENT_POINTS = 15;
-
-const HISTORY_DAYS = 7;
-const CONTACT_LOOKBACK_DAYS = 365;
+/** Same as the "exclude all visitors" audience membership (~1 year). */
+const LOOKBACK_DAYS = 365;
 const QUICK_RETURN_MINUTES = 30;
 
 const SAFE_ID = /^[A-Za-z0-9-]{8,80}$/;
@@ -32,45 +38,64 @@ export function isIosUserAgent(ua: string | null | undefined): boolean {
 export interface DeviceRisk {
   score: number;
   reasons: string[];
-  /** Paid clicks from this device in the last 7 days, excluding the current one. */
+  /** Earlier paid clicks from this device in the last year (excluding this one). */
   priorPaidClicks: number;
-  /** True when this device ever called / WhatsApp'd — treated as a real customer. */
-  contactedBefore: boolean;
+  /** Earlier paid clicks from this device in the last 7 days. */
+  priorPaidClicks7d: number;
   minutesSinceLastClick: number | null;
+  firstClickAt: string | null;
 }
 
 type HistoryRow = {
-  id: number;
   visitor_id: string | null;
+  device_cookie?: string | null;
   device_fingerprint: string | null;
   ip_address: string | null;
   created_at: string;
-  clicked_action: boolean | null;
-  source: string | null;
-  gclid: string | null;
 };
 
-function israelHour(date: Date): number {
-  return Number(
-    date.toLocaleString("en-US", {
-      timeZone: "Asia/Jerusalem",
-      hour: "numeric",
-      hour12: false,
-    })
-  ) % 24;
-}
-
-function deviceFilter(
-  visitorId: string | null,
-  fingerprint: string | null,
-  useFingerprint: boolean
-): string | null {
+function deviceFilter(ids: {
+  visitorId: string | null;
+  deviceCookie: string | null;
+  fingerprint: string | null;
+  useFingerprint: boolean;
+}): string | null {
   const parts: string[] = [];
-  if (visitorId && SAFE_ID.test(visitorId)) parts.push(`visitor_id.eq.${visitorId}`);
-  if (useFingerprint && fingerprint && SAFE_ID.test(fingerprint)) {
-    parts.push(`device_fingerprint.eq.${fingerprint}`);
+  if (ids.visitorId && SAFE_ID.test(ids.visitorId)) {
+    parts.push(`visitor_id.eq.${ids.visitorId}`);
+  }
+  if (ids.deviceCookie && SAFE_ID.test(ids.deviceCookie)) {
+    parts.push(`device_cookie.eq.${ids.deviceCookie}`);
+  }
+  if (ids.useFingerprint && ids.fingerprint && SAFE_ID.test(ids.fingerprint)) {
+    parts.push(`device_fingerprint.eq.${ids.fingerprint}`);
   }
   return parts.length ? parts.join(",") : null;
+}
+
+async function fetchPriorPaidClicks(
+  filter: string,
+  sinceIso: string
+): Promise<HistoryRow[] | null> {
+  const admin = getSupabaseAdmin();
+  const query = (cols: string) =>
+    admin
+      .from("visitor_logs")
+      .select(cols)
+      .or(filter)
+      .eq("source", "mumooman")
+      .not("gclid", "is", null)
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+  const res = await query(
+    "visitor_id, device_cookie, device_fingerprint, ip_address, created_at"
+  );
+  if (!res.error) return (res.data ?? []) as unknown as HistoryRow[];
+
+  logSupabaseError("computeEntryRisk history", res.error);
+  return null;
 }
 
 /**
@@ -79,6 +104,9 @@ function deviceFilter(
  */
 export async function computeEntryRisk(opts: {
   visitorId: string | null;
+  deviceCookie: string | null;
+  /** False when the server cookie was just created on this request. */
+  deviceCookieExisted: boolean;
   fingerprint: string | null;
   userAgent: string | null;
   ip: string;
@@ -92,52 +120,62 @@ export async function computeEntryRisk(opts: {
   let score = 0;
 
   const useFingerprint = !isIosUserAgent(opts.userAgent);
-  const filter = deviceFilter(opts.visitorId, opts.fingerprint, useFingerprint);
+  const filter = deviceFilter({
+    visitorId: opts.visitorId,
+    // A brand-new server cookie can't match anything — skip it.
+    deviceCookie: opts.deviceCookieExisted ? opts.deviceCookie : null,
+    fingerprint: opts.fingerprint,
+    useFingerprint,
+  });
 
   let prior: HistoryRow[] = [];
-  let contactedBefore = false;
-
   if (filter) {
-    const admin = getSupabaseAdmin();
-    const since7d = new Date(now.getTime() - HISTORY_DAYS * 86_400_000).toISOString();
-    const since365d = new Date(
-      now.getTime() - CONTACT_LOOKBACK_DAYS * 86_400_000
-    ).toISOString();
-
-    const [histRes, contactRes] = await Promise.all([
-      admin
-        .from("visitor_logs")
-        .select(
-          "id, visitor_id, device_fingerprint, ip_address, created_at, clicked_action, source, gclid"
-        )
-        .or(filter)
-        .eq("source", "mumooman")
-        .not("gclid", "is", null)
-        .gte("created_at", since7d)
-        .order("created_at", { ascending: false })
-        .limit(50),
-      admin
-        .from("visitor_logs")
-        .select("id", { count: "exact", head: true })
-        .or(filter)
-        .eq("clicked_action", true)
-        .gte("created_at", since365d),
-    ]);
-
-    if (histRes.error) logSupabaseError("computeEntryRisk history", histRes.error);
-    else prior = (histRes.data ?? []) as HistoryRow[];
-
-    if (contactRes.error) logSupabaseError("computeEntryRisk contact", contactRes.error);
-    else contactedBefore = (contactRes.count ?? 0) > 0;
+    const since = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000).toISOString();
+    prior = (await fetchPriorPaidClicks(filter, since)) ?? [];
   }
 
   const priorPaidClicks = prior.length;
+  const weekAgo = now.getTime() - 7 * 86_400_000;
+  const priorPaidClicks7d = prior.filter(
+    (r) => new Date(r.created_at).getTime() >= weekAgo
+  ).length;
   const last = prior[0];
+  const first = prior[prior.length - 1];
   const minutesSinceLastClick = last
     ? Math.round((now.getTime() - new Date(last.created_at).getTime()) / 60_000)
     : null;
 
-  // Hard signals — count even for past customers.
+  // ── Core rule: a second paid click from the same device ──────────────────
+  if (priorPaidClicks > 0) {
+    score += 50 + 15 * Math.min(priorPaidClicks - 1, 3);
+    const firstDate = new Date(first.created_at).toLocaleDateString("he-IL", {
+      timeZone: "Asia/Jerusalem",
+    });
+    reasons.push(
+      `קליק ממומן מס' ${priorPaidClicks + 1} מאותו מכשיר (הראשון ב-${firstDate}) — אמור היה להיות מוחרג`
+    );
+
+    if (minutesSinceLastClick !== null && minutesSinceLastClick <= QUICK_RETURN_MINUTES) {
+      score += 15;
+      reasons.push(`חזר ולחץ שוב על המודעה אחרי ${minutesSinceLastClick} דק'`);
+    }
+
+    // Matched only through the server cookie or the fingerprint → the visitor
+    // cleared the normal cookie / used incognito.
+    if (opts.visitorId && !prior.some((r) => r.visitor_id === opts.visitorId)) {
+      score += 10;
+      reasons.push("מחק עוגיות / גלישה בסתר — זוהה לפי עוגייה שנייה או טביעת מכשיר");
+    }
+
+    const ips = new Set(prior.map((r) => r.ip_address).filter(Boolean));
+    if (!ips.has(opts.ip)) {
+      reasons.push(
+        `כתובת IP חדשה (${ips.size + 1} כתובות שונות לאותו מכשיר)`
+      );
+    }
+  }
+
+  // ── Independent hard signals ──────────────────────────────────────────────
   if (opts.isAutomation) {
     score += 50;
     reasons.push("דפדפן אוטומטי (בוט)");
@@ -151,78 +189,22 @@ export async function computeEntryRisk(opts: {
     reasons.push("מחשב בקמפיין לנייד בלבד");
   }
 
-  if (contactedBefore) {
-    reasons.push("המכשיר הזה כבר התקשר/שלח וואטסאפ בעבר — כנראה לקוח");
-    return {
-      score: Math.min(score, 100),
-      reasons,
-      priorPaidClicks,
-      contactedBefore,
-      minutesSinceLastClick,
-    };
-  }
-
-  if (priorPaidClicks > 0) {
-    score += 20 * Math.min(priorPaidClicks, 4);
-    reasons.push(
-      `קליק ממומן מס' ${priorPaidClicks + 1} מאותו מכשיר ב-${HISTORY_DAYS} ימים, בלי שום פנייה`
-    );
-  }
-
-  if (minutesSinceLastClick !== null && minutesSinceLastClick <= QUICK_RETURN_MINUTES) {
-    score += 15;
-    reasons.push(`חזר ולחץ שוב על המודעה אחרי ${minutesSinceLastClick} דק'`);
-  }
-
-  if (
-    useFingerprint &&
-    opts.fingerprint &&
-    prior.some(
-      (r) => r.device_fingerprint === opts.fingerprint && r.visitor_id !== opts.visitorId
-    )
-  ) {
-    score += 15;
-    reasons.push("אותו מכשיר עם עוגייה חדשה (גלישה בסתר / מחיקת עוגיות)");
-  }
-
-  const ips = new Set(prior.map((r) => r.ip_address).filter(Boolean));
-  ips.add(opts.ip);
-  if (priorPaidClicks > 0 && ips.size >= 3) {
-    score += 10;
-    reasons.push(`${ips.size} כתובות IP שונות לאותו מכשיר`);
-  }
-
-  if (priorPaidClicks > 0) {
-    const hour = israelHour(now);
-    if (hour >= 0 && hour < 5) {
-      score += 10;
-      reasons.push("קליקים חוזרים בשעות הלילה");
-    }
-  }
-
   return {
     score: Math.min(score, 100),
     reasons,
     priorPaidClicks,
-    contactedBefore,
+    priorPaidClicks7d,
     minutesSinceLastClick,
+    firstClickAt: first?.created_at ?? null,
   };
 }
 
-/** Final score used in reports: entry score + low-engagement penalty. */
-export function finalFraudScore(row: {
-  fraud_score: number | null;
-  low_engagement: boolean | null;
-}): number {
-  const base = row.fraud_score ?? 0;
-  return Math.min(base + (row.low_engagement ? LOW_ENGAGEMENT_POINTS : 0), 100);
-}
-
-/** Persist the score on the row. Silently ignores a missing-column error (migration 013 not run). */
+/** Persist the score on the row. Logs (doesn't throw) if a migration is missing. */
 export async function saveFraudScore(
   id: number,
   risk: DeviceRisk,
-  isAutomation: boolean
+  isAutomation: boolean,
+  deviceCookie: string | null
 ): Promise<void> {
   const { error } = await getSupabaseAdmin()
     .from("visitor_logs")
@@ -230,7 +212,8 @@ export async function saveFraudScore(
       fraud_score: risk.score,
       fraud_reasons: risk.reasons,
       is_automation: isAutomation,
+      device_cookie: deviceCookie,
     })
     .eq("id", id);
-  if (error) logSupabaseError("saveFraudScore (run migration 013?)", error);
+  if (error) logSupabaseError("saveFraudScore (run migrations 013 + 015?)", error);
 }
