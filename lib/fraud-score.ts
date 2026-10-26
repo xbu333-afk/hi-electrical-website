@@ -13,8 +13,9 @@ import { logSupabaseError } from "./visitor-logs";
  *   1. visitor_id     — JS cookie + localStorage
  *   2. device_cookie  — server-set HttpOnly first-party cookie (survives iOS
  *                       Safari's 7-day cap on JS cookies)
- *   3. device_fingerprint / device_fingerprint_v2 — hardware fingerprints;
- *                       NOT on iPhones (collide between different iPhones)
+ *   3. device_fingerprint_v2 — rich hardware fingerprint; NOT on iPhones
+ *                       (collide between different iPhones). The old v1
+ *                       device_fingerprint is stored but never matched on.
  *   4. device_hint + same IP within 60 minutes — "soft" match that also works
  *                       on iPhones (catches switching to an incognito tab)
  * A shared IP is never used to identify a person (Israeli carriers share IPs).
@@ -78,9 +79,9 @@ function deviceFilter(ids: {
   if (ids.deviceCookie && SAFE_ID.test(ids.deviceCookie)) {
     parts.push(`device_cookie.eq.${ids.deviceCookie}`);
   }
-  if (ids.useFingerprint && ids.fingerprint && SAFE_ID.test(ids.fingerprint)) {
-    parts.push(`device_fingerprint.eq.${ids.fingerprint}`);
-  }
+  // The original (v1) fingerprint is NOT used for matching: on common Android
+  // models it collides between unrelated phones (seen in production: one v1
+  // hash shared by phones in 7 different cities). Only the richer v2 is used.
   if (ids.useFingerprint && ids.fingerprintV2 && SAFE_ID.test(ids.fingerprintV2)) {
     parts.push(`device_fingerprint_v2.eq.${ids.fingerprintV2}`);
   }
