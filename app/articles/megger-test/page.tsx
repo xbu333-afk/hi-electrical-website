@@ -184,7 +184,7 @@ export default function MeggerTestArticle() {
           <p className="mt-3 leading-relaxed text-slate-800">
             ברוב המקרים הבדיקה מאפשרת לשים את האצבע על התקלה בצורה מדויקת. עם
             זאת, תקלה שבאה והולכת לא תמיד פעילה ברגע הבדיקה, ואז ייתכן שלא נאתר
-            אותה מיד. עלות הבדיקה היא 450 ₪ + מע&quot;מ.
+            אותה מיד. עלות הבדיקה היא החל מ-450 ₪ + מע&quot;מ.
           </p>
         </section>
 
@@ -379,7 +379,7 @@ export default function MeggerTestArticle() {
               כמה עולה בדיקת מגר
             </h2>
             <p>
-              עלות בדיקת מגר היא <strong>450 ₪ + מע&quot;מ</strong>. המחיר כולל:
+              עלות בדיקת מגר היא <strong>החל מ-450 ₪ + מע&quot;מ</strong>. המחיר כולל:
             </p>
             <ul>
               <li>בדיקה מקיפה של הלוח ושל כל המעגלים.</li>
