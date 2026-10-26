@@ -4,6 +4,11 @@ import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { extractValueTrackParams } from "@/lib/valuetrack";
 import { generateDeviceFingerprint } from "@/app/components/device-fingerprint";
+import {
+  collectExtraDeviceSignals,
+  idbGet,
+  idbSet,
+} from "@/app/components/device-signals";
 
 const VISITOR_ID_KEY = "hi_elec_vid";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year in seconds
@@ -30,27 +35,25 @@ function writeCookie(name: string, value: string): void {
   }
 }
 
-function getOrCreateVisitorId(): string {
-  // Cookie is the primary persistent store (survives mobile browser eviction of localStorage)
-  const fromCookie = readCookie(VISITOR_ID_KEY);
-  if (fromCookie) {
-    // Refresh cookie TTL on every visit
-    writeCookie(VISITOR_ID_KEY, fromCookie);
-    try { localStorage.setItem(VISITOR_ID_KEY, fromCookie); } catch { /* ignore */ }
-    return fromCookie;
-  }
-  // Fallback: localStorage (may have been set before cookie logic was added)
-  try {
-    const fromStorage = localStorage.getItem(VISITOR_ID_KEY);
-    if (fromStorage) {
-      writeCookie(VISITOR_ID_KEY, fromStorage);
-      return fromStorage;
-    }
-  } catch { /* ignore */ }
-  // Generate fresh ID
-  const id = crypto.randomUUID();
+function persistVisitorId(id: string): void {
   writeCookie(VISITOR_ID_KEY, id);
   try { localStorage.setItem(VISITOR_ID_KEY, id); } catch { /* ignore */ }
+  void idbSet(VISITOR_ID_KEY, id);
+}
+
+/**
+ * Visitor ID lives in three places: cookie, localStorage and IndexedDB.
+ * Whichever survives restores the others (e.g. "clear cookies" only).
+ */
+async function resolveVisitorId(): Promise<string> {
+  let id: string | null = readCookie(VISITOR_ID_KEY);
+  if (!id) {
+    try { id = localStorage.getItem(VISITOR_ID_KEY); } catch { /* ignore */ }
+  }
+  if (!id) id = await idbGet(VISITOR_ID_KEY);
+  if (!id) id = crypto.randomUUID();
+  // Refresh TTL / restore missing copies on every visit
+  persistVisitorId(id);
   return id;
 }
 
@@ -203,7 +206,6 @@ export default function VisitorTracker() {
 
   // ── Enter (once) + navigate (route changes) ───────────────────────────────
   useEffect(() => {
-    const visitorId = getOrCreateVisitorId();
     const source = detectSource(searchParams);
 
     // First page of session → enter + Pushover
@@ -227,8 +229,12 @@ export default function VisitorTracker() {
         }
       }
 
-      generateDeviceFingerprint()
-        .then((deviceFingerprint) =>
+      Promise.all([
+        resolveVisitorId(),
+        generateDeviceFingerprint(),
+        collectExtraDeviceSignals(),
+      ])
+        .then(([visitorId, deviceFingerprint, extra]) =>
           fetch("/api/notify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -240,6 +246,8 @@ export default function VisitorTracker() {
               gclid,
               browser_language: browserLanguage,
               device_fingerprint: deviceFingerprint,
+              device_fingerprint_v2: extra.device_fingerprint_v2,
+              device_hint: extra.device_hint,
               automation:
                 typeof navigator !== "undefined" &&
                 (navigator as Navigator & { webdriver?: boolean }).webdriver === true,

@@ -13,8 +13,10 @@ import { logSupabaseError } from "./visitor-logs";
  *   1. visitor_id     — JS cookie + localStorage
  *   2. device_cookie  — server-set HttpOnly first-party cookie (survives iOS
  *                       Safari's 7-day cap on JS cookies)
- *   3. device_fingerprint — hardware fingerprint; NOT on iPhones (collides
- *                       between different iPhones)
+ *   3. device_fingerprint / device_fingerprint_v2 — hardware fingerprints;
+ *                       NOT on iPhones (collide between different iPhones)
+ *   4. device_hint + same IP within 60 minutes — "soft" match that also works
+ *                       on iPhones (catches switching to an incognito tab)
  * A shared IP is never used to identify a person (Israeli carriers share IPs).
  */
 
@@ -27,6 +29,8 @@ export const FRAUD_ALERT_THRESHOLD = 40;
 /** Same as the "exclude all visitors" audience membership (~1 year). */
 const LOOKBACK_DAYS = 365;
 const QUICK_RETURN_MINUTES = 30;
+/** device_hint + same IP inside this window counts as the same device. */
+const SOFT_MATCH_MINUTES = 60;
 
 const SAFE_ID = /^[A-Za-z0-9-]{8,80}$/;
 
@@ -47,7 +51,10 @@ export interface DeviceRisk {
 }
 
 type HistoryRow = {
+  id: number;
   visitor_id: string | null;
+  device_fingerprint_v2?: string | null;
+  device_hint?: string | null;
   device_cookie?: string | null;
   device_fingerprint: string | null;
   ip_address: string | null;
@@ -58,6 +65,7 @@ function deviceFilter(ids: {
   visitorId: string | null;
   deviceCookie: string | null;
   fingerprint: string | null;
+  fingerprintV2: string | null;
   useFingerprint: boolean;
 }): string | null {
   const parts: string[] = [];
@@ -70,32 +78,56 @@ function deviceFilter(ids: {
   if (ids.useFingerprint && ids.fingerprint && SAFE_ID.test(ids.fingerprint)) {
     parts.push(`device_fingerprint.eq.${ids.fingerprint}`);
   }
+  if (ids.useFingerprint && ids.fingerprintV2 && SAFE_ID.test(ids.fingerprintV2)) {
+    parts.push(`device_fingerprint_v2.eq.${ids.fingerprintV2}`);
+  }
   return parts.length ? parts.join(",") : null;
 }
+
+const HISTORY_COLS =
+  "id, visitor_id, device_cookie, device_fingerprint, device_fingerprint_v2, device_hint, ip_address, created_at";
 
 async function fetchPriorPaidClicks(
   filter: string,
   sinceIso: string
-): Promise<HistoryRow[] | null> {
-  const admin = getSupabaseAdmin();
-  const query = (cols: string) =>
-    admin
-      .from("visitor_logs")
-      .select(cols)
-      .or(filter)
-      .eq("source", "mumooman")
-      .not("gclid", "is", null)
-      .gte("created_at", sinceIso)
-      .order("created_at", { ascending: false })
-      .limit(100);
+): Promise<HistoryRow[]> {
+  const res = await getSupabaseAdmin()
+    .from("visitor_logs")
+    .select(HISTORY_COLS)
+    .or(filter)
+    .eq("source", "mumooman")
+    .not("gclid", "is", null)
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (res.error) {
+    logSupabaseError("computeEntryRisk history", res.error);
+    return [];
+  }
+  return (res.data ?? []) as unknown as HistoryRow[];
+}
 
-  const res = await query(
-    "visitor_id, device_cookie, device_fingerprint, ip_address, created_at"
-  );
-  if (!res.error) return (res.data ?? []) as unknown as HistoryRow[];
-
-  logSupabaseError("computeEntryRisk history", res.error);
-  return null;
+/** Same lite device hint from the same IP within the last hour. */
+async function fetchSoftMatches(
+  hint: string,
+  ip: string,
+  sinceIso: string
+): Promise<HistoryRow[]> {
+  const res = await getSupabaseAdmin()
+    .from("visitor_logs")
+    .select(HISTORY_COLS)
+    .eq("device_hint", hint)
+    .eq("ip_address", ip)
+    .eq("source", "mumooman")
+    .not("gclid", "is", null)
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (res.error) {
+    logSupabaseError("computeEntryRisk soft match", res.error);
+    return [];
+  }
+  return (res.data ?? []) as unknown as HistoryRow[];
 }
 
 /**
@@ -108,6 +140,8 @@ export async function computeEntryRisk(opts: {
   /** False when the server cookie was just created on this request. */
   deviceCookieExisted: boolean;
   fingerprint: string | null;
+  fingerprintV2?: string | null;
+  deviceHint?: string | null;
   userAgent: string | null;
   ip: string;
   country: string | null;
@@ -125,14 +159,26 @@ export async function computeEntryRisk(opts: {
     // A brand-new server cookie can't match anything — skip it.
     deviceCookie: opts.deviceCookieExisted ? opts.deviceCookie : null,
     fingerprint: opts.fingerprint,
+    fingerprintV2: opts.fingerprintV2 ?? null,
     useFingerprint,
   });
 
-  let prior: HistoryRow[] = [];
-  if (filter) {
-    const since = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000).toISOString();
-    prior = (await fetchPriorPaidClicks(filter, since)) ?? [];
-  }
+  const since = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000).toISOString();
+  const softSince = new Date(now.getTime() - SOFT_MATCH_MINUTES * 60_000).toISOString();
+  const [hard, soft] = await Promise.all([
+    filter ? fetchPriorPaidClicks(filter, since) : Promise.resolve([] as HistoryRow[]),
+    opts.deviceHint && SAFE_ID.test(opts.deviceHint) && opts.ip && opts.ip !== "unknown"
+      ? fetchSoftMatches(opts.deviceHint, opts.ip, softSince)
+      : Promise.resolve([] as HistoryRow[]),
+  ]);
+
+  const byId = new Map<number, HistoryRow>();
+  for (const r of [...hard, ...soft]) byId.set(r.id, r);
+  const hardIds = new Set(hard.map((r) => r.id));
+  const softOnly = soft.filter((r) => !hardIds.has(r.id));
+  const prior = [...byId.values()].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   const priorPaidClicks = prior.length;
   const weekAgo = now.getTime() - 7 * 86_400_000;
@@ -160,11 +206,15 @@ export async function computeEntryRisk(opts: {
       reasons.push(`חזר ולחץ שוב על המודעה אחרי ${minutesSinceLastClick} דק'`);
     }
 
-    // Matched only through the server cookie or the fingerprint → the visitor
-    // cleared the normal cookie / used incognito.
+    // Matched only through the server cookie / fingerprint / soft hint →
+    // the visitor cleared the normal cookie or used incognito.
     if (opts.visitorId && !prior.some((r) => r.visitor_id === opts.visitorId)) {
       score += 10;
-      reasons.push("מחק עוגיות / גלישה בסתר — זוהה לפי עוגייה שנייה או טביעת מכשיר");
+      reasons.push(
+        softOnly.length > 0 && hard.length === 0
+          ? `אותו סוג מכשיר מאותה כתובת IP תוך ${minutesSinceLastClick ?? "?"} דק' — כנראה עבר לגלישה בסתר`
+          : "מחק עוגיות / גלישה בסתר — זוהה לפי עוגייה שנייה או טביעת מכשיר"
+      );
     }
 
     const ips = new Set(prior.map((r) => r.ip_address).filter(Boolean));
@@ -203,17 +253,23 @@ export async function computeEntryRisk(opts: {
 export async function saveFraudScore(
   id: number,
   risk: DeviceRisk,
-  isAutomation: boolean,
-  deviceCookie: string | null
+  extra: {
+    isAutomation: boolean;
+    deviceCookie: string | null;
+    fingerprintV2: string | null;
+    deviceHint: string | null;
+  }
 ): Promise<void> {
   const { error } = await getSupabaseAdmin()
     .from("visitor_logs")
     .update({
       fraud_score: risk.score,
       fraud_reasons: risk.reasons,
-      is_automation: isAutomation,
-      device_cookie: deviceCookie,
+      is_automation: extra.isAutomation,
+      device_cookie: extra.deviceCookie,
+      device_fingerprint_v2: extra.fingerprintV2,
+      device_hint: extra.deviceHint,
     })
     .eq("id", id);
-  if (error) logSupabaseError("saveFraudScore (run migrations 013 + 015?)", error);
+  if (error) logSupabaseError("saveFraudScore (run migrations 013/015/016?)", error);
 }

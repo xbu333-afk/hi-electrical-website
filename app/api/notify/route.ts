@@ -42,6 +42,8 @@ type EnterPayload = {
   gclid?: string | null;
   browser_language?: string | null;
   device_fingerprint?: string | null;
+  device_fingerprint_v2?: string | null;
+  device_hint?: string | null;
   /** navigator.webdriver === true */
   automation?: boolean;
 } & Partial<ValueTrackParams>;
@@ -219,6 +221,13 @@ export async function POST(req: NextRequest) {
     let source: "mumooman" | "organic" = gclid ? "mumooman" : "organic";
     const browserLanguage = body.browser_language?.trim() || null;
     const deviceFingerprint = body.device_fingerprint?.trim() || null;
+    const HEX32 = /^[0-9a-f]{32}$/;
+    const fingerprintV2 =
+      body.device_fingerprint_v2 && HEX32.test(body.device_fingerprint_v2)
+        ? body.device_fingerprint_v2
+        : null;
+    const deviceHint =
+      body.device_hint && HEX32.test(body.device_hint) ? body.device_hint : null;
     const isAutomation = body.automation === true;
     const deviceCookie = readDeviceCookie(req);
     const valueTrack = normalizeValueTrackPayload(body);
@@ -255,6 +264,8 @@ export async function POST(req: NextRequest) {
           deviceCookie: deviceCookie.value,
           deviceCookieExisted: deviceCookie.existed,
           fingerprint: deviceFingerprint,
+          fingerprintV2,
+          deviceHint,
           userAgent,
           ip,
           country,
@@ -296,7 +307,12 @@ export async function POST(req: NextRequest) {
         risk = null;
       }
       if (risk) {
-        await saveFraudScore(inserted.id, risk, isAutomation, deviceCookie.value);
+        await saveFraudScore(inserted.id, risk, {
+          isAutomation,
+          deviceCookie: deviceCookie.value,
+          fingerprintV2,
+          deviceHint,
+        });
       }
     } catch (e) {
       console.error("[notify:enter DB] insert failed:", {
