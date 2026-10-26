@@ -17,6 +17,7 @@ import {
   buildDesktopFraudNotification,
 } from "@/lib/pushover";
 import { isDesktopPaidClick, isPaidAdClick } from "@/lib/fraud-detection";
+import { lookupIpIntel } from "@/lib/ip-intel";
 import {
   computeEntryRisk,
   saveFraudScore,
@@ -259,7 +260,9 @@ export async function POST(req: NextRequest) {
     let risk: DeviceRisk | null = null;
     if (isPaidAdClick({ source, gclid })) {
       try {
+        const ipIntel = await lookupIpIntel(ip);
         risk = await computeEntryRisk({
+          ipIntel,
           visitorId: body.visitor_id ?? null,
           deviceCookie: deviceCookie.value,
           deviceCookieExisted: deviceCookie.existed,

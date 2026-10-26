@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import { recordAdClickHit } from "@/lib/ad-click-hits";
 
 const ALLOWED_EMAIL = "xbu333@gmail.com";
 
@@ -42,12 +43,25 @@ function handleTagGateway(request: NextRequest) {
   return NextResponse.rewrite(destination, { request: { headers: reqHeaders } });
 }
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
   // Never let this proxy touch fraud-detection/API routes, even if the
   // matcher below is broadened later.
   if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
+  // Public ad landing (?gclid=…): record the click server-side, before any
+  // JavaScript runs, then let the page render untouched. Logging happens in
+  // the background (waitUntil) so the visitor never waits for it.
+  if (
+    !pathname.startsWith("/admin") &&
+    !pathname.startsWith(GTG_PATH_PREFIX)
+  ) {
+    if (request.nextUrl.searchParams.has("gclid")) {
+      event.waitUntil(recordAdClickHit(request));
+    }
     return NextResponse.next();
   }
 
@@ -100,5 +114,13 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/metrics/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/metrics/:path*",
+    // Ad landings only: any page request that carries ?gclid=
+    {
+      source: "/((?!api|_next/static|_next/image|favicon.ico|admin|metrics).*)",
+      has: [{ type: "query", key: "gclid" }],
+    },
+  ],
 };

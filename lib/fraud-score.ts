@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "./supabase";
 import { logSupabaseError } from "./visitor-logs";
+import { flagsLabelHe, type IpIntel } from "./ip-intel";
 
 /**
  * Repeat-click detection for paid clicks.
@@ -52,6 +53,8 @@ export interface DeviceRisk {
   priorPaidClicks7d: number;
   minutesSinceLastClick: number | null;
   firstClickAt: string | null;
+  /** Network lookup (proxycheck.io) — null when unavailable. */
+  ipIntel: IpIntel | null;
 }
 
 type HistoryRow = {
@@ -151,6 +154,7 @@ export async function computeEntryRisk(opts: {
   country: string | null;
   isDesktopOnMobileCampaign: boolean;
   isAutomation: boolean;
+  ipIntel?: IpIntel | null;
   now?: Date;
 }): Promise<DeviceRisk> {
   const now = opts.now ?? new Date();
@@ -247,6 +251,15 @@ export async function computeEntryRisk(opts: {
   }
 
   // ── Independent hard signals ──────────────────────────────────────────────
+  const intel = opts.ipIntel ?? null;
+  if (intel && intel.flags.length > 0) {
+    score += 40;
+    const who = intel.provider ? ` (${intel.provider})` : "";
+    add(
+      `חיבור דרך ${flagsLabelHe(intel.flags)}${who} — מסתיר את המיקום והזהות האמיתיים`,
+      `Connection flagged as ${intel.flags.join(", ")}${who} by an independent IP-intelligence service (proxycheck.io)${intel.risk !== null ? `, risk score ${intel.risk}/100` : ""}`
+    );
+  }
   if (opts.isAutomation) {
     score += 50;
     add("דפדפן אוטומטי (בוט)", "Automated browser detected (navigator.webdriver = true)");
@@ -274,6 +287,7 @@ export async function computeEntryRisk(opts: {
     priorPaidClicks7d,
     minutesSinceLastClick,
     firstClickAt: first?.created_at ?? null,
+    ipIntel: intel,
   };
 }
 
@@ -298,7 +312,16 @@ export async function saveFraudScore(
       device_cookie: extra.deviceCookie,
       device_fingerprint_v2: extra.fingerprintV2,
       device_hint: extra.deviceHint,
+      ...(risk.ipIntel
+        ? {
+            ip_provider: risk.ipIntel.provider,
+            ip_asn: risk.ipIntel.asn,
+            ip_type: risk.ipIntel.type,
+            ip_flags: risk.ipIntel.flags,
+            ip_risk: risk.ipIntel.risk,
+          }
+        : {}),
     })
     .eq("id", id);
-  if (error) logSupabaseError("saveFraudScore (run migrations 013/015/016/017?)", error);
+  if (error) logSupabaseError("saveFraudScore (run migrations 013/015/016/017/018?)", error);
 }

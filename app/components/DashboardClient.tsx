@@ -385,6 +385,15 @@ export function DashboardClient({
               🛡️ דוח לגוגל (60 יום)
             </a>
             <a
+              href="/admin/analytics/google-report?format=html"
+              target="_blank"
+              rel="noopener"
+              className="flex items-center gap-2 text-sm bg-white border border-red-200 hover:bg-red-50 text-red-800 px-4 py-2 rounded-lg shadow-sm transition whitespace-nowrap"
+              title="סיכום מסודר באנגלית להדפסה / שמירה כ-PDF ולצירוף לבקשה בגוגל"
+            >
+              📄 סיכום לגוגל (PDF)
+            </a>
+            <a
               href="/admin/auth/signout"
               className="text-sm bg-white border border-gray-200 hover:bg-gray-50 text-slate-700 px-4 py-2 rounded-lg shadow-sm transition"
             >

@@ -1,5 +1,6 @@
 import { formatPageLabel } from "./page-labels";
 import type { VisitorHistory } from "./visitor-logs";
+import { describeIntelHe, flagsLabelHe } from "./ip-intel";
 import {
   AVG_CPC_ILS,
   FRAUD_ALERT_THRESHOLD,
@@ -372,6 +373,13 @@ export function buildVisitorNotification(opts: {
           risk.priorPaidClicks === 0
             ? "🆕 קליק ממומן ראשון מהמכשיר הזה"
             : `🔁 קליק ממומן מס' ${risk.priorPaidClicks + 1} מהמכשיר הזה (${risk.priorPaidClicks7d + 1} השבוע)`,
+          ...(risk.ipIntel
+            ? [
+                `📡 רשת: ${describeIntelHe(risk.ipIntel)}${
+                  risk.ipIntel.flags.length ? ` ⚠️ ${flagsLabelHe(risk.ipIntel.flags)}` : ""
+                }`,
+              ]
+            : []),
           ...(risk.score > 0 ? [`🧮 ציון חשד: ${risk.score}/100`] : []),
           ...risk.reasons.map((r) => `• ${r}`),
         ]
