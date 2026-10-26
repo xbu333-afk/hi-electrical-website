@@ -11,6 +11,17 @@ import { isGoogleSystemBot } from "./user-agent";
  * page's JavaScript), the "visitor" never executed the page — typical of bots
  * and scripted clicks. That is strong evidence for Google's invalid-click team.
  */
+/**
+ * Link-preview fetchers (someone pasted the link into WhatsApp/Facebook/…)
+ * and known crawlers. They request the page but never run it — recording them
+ * would create false "browser never ran" evidence, and because GCLIDs are
+ * unique they would also hide the real visitor's server hit.
+ */
+export const PREVIEW_OR_CRAWLER_UA =
+  /^WhatsApp\/|facebookexternalhit|Facebot|TelegramBot|Slackbot|Twitterbot|LinkedInBot|Discordbot|SkypeUriPreview|Pinterestbot|redditbot|Applebot|bingbot|YandexBot|Baiduspider|DuckDuckBot|Embedly|Iframely|vkShare|bot\/|crawler|spider|preview/i;
+// Note: in-app browsers of real people (Viber, Snapchat, Pinterest app…) are
+// deliberately NOT listed — only fetchers that never render the page.
+
 export async function recordAdClickHit(request: NextRequest): Promise<void> {
   try {
     const gclid = request.nextUrl.searchParams.get("gclid")?.trim();
@@ -18,6 +29,7 @@ export async function recordAdClickHit(request: NextRequest): Promise<void> {
 
     const userAgent = request.headers.get("user-agent") ?? null;
     if (isGoogleSystemBot(userAgent)) return;
+    if (userAgent && PREVIEW_OR_CRAWLER_UA.test(userAgent)) return;
 
     // Skip Next.js prefetch / RSC requests — only real page loads count.
     if (

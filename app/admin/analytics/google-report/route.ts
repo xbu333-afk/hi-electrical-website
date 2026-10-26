@@ -2,6 +2,7 @@ import { type NextRequest } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { AVG_CPC_ILS, FRAUD_ALERT_THRESHOLD } from "@/lib/fraud-score";
 import { summarizeUserAgent } from "@/lib/user-agent";
+import { PREVIEW_OR_CRAWLER_UA } from "@/lib/ad-click-hits";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -187,7 +188,13 @@ export async function GET(request: NextRequest) {
       .range(from, to)
   );
   // Table may not exist yet (migration 018) — report still works without it.
-  const noJs = hits.error ? [] : hits.rows.filter((h) => !seen.has(h.gclid));
+  const noJs = hits.error
+    ? []
+    : hits.rows.filter(
+        (h) =>
+          !seen.has(h.gclid) &&
+          !(h.user_agent && PREVIEW_OR_CRAWLER_UA.test(h.user_agent))
+      );
 
   const items: ReportItem[] = [];
 
