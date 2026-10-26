@@ -7,6 +7,8 @@ import { generateDeviceFingerprint } from "@/app/components/device-fingerprint";
 
 const VISITOR_ID_KEY = "hi_elec_vid";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year in seconds
+const HEARTBEAT_MS = 15_000;
+const HEARTBEAT_MAX_MS = 10 * 60_000; // stop pinging after 10 minutes
 
 function readCookie(name: string): string | null {
   try {
@@ -66,6 +68,10 @@ export default function VisitorTracker() {
   const clickedRef = useRef<boolean>(false);
   const sessionInitRef = useRef<boolean>(false);
   const prevPathRef = useRef<string | null>(null);
+  // Engagement signals (anti-fraud evidence)
+  const touchCountRef = useRef<number>(0);
+  const maxScrollPctRef = useRef<number>(0);
+  const firstInteractionRef = useRef<number | null>(null);
 
   const pathnameRef = useRef(pathname);
   const sourceRef = useRef<"mumooman" | "organic">("organic");
@@ -100,35 +106,98 @@ export default function VisitorTracker() {
     return () => document.removeEventListener("click", handleClick, true);
   }, []);
 
-  // ── Session exit (attached once) ──────────────────────────────────────────
+  // ── Engagement tracking (attached once) ───────────────────────────────────
   useEffect(() => {
-    function sendExit() {
-      const duration = Math.round(
-        (Date.now() - sessionStartRef.current) / 1000
-      );
-      const payload = JSON.stringify({
-        event: "exit",
-        log_id: logIdRef.current,
-        duration,
-        clicked_action: clickedRef.current,
-      });
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(
-          "/api/notify",
-          new Blob([payload], { type: "application/json" })
-        );
-      } else {
-        fetch("/api/notify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: payload,
-          keepalive: true,
-        }).catch(() => {});
+    function markInteraction() {
+      if (firstInteractionRef.current === null) {
+        firstInteractionRef.current = Date.now() - sessionStartRef.current;
       }
     }
+    function onPointerDown() {
+      touchCountRef.current = Math.min(touchCountRef.current + 1, 999);
+      markInteraction();
+    }
+    function onScroll() {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      const pct =
+        scrollable > 0
+          ? Math.round((window.scrollY / scrollable) * 100)
+          : 100;
+      if (pct > maxScrollPctRef.current) {
+        maxScrollPctRef.current = Math.min(pct, 100);
+      }
+      if (window.scrollY > 0) markInteraction();
+    }
+
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+    window.addEventListener("keydown", markInteraction, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", markInteraction);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  // ── Duration + engagement reporting (attached once) ───────────────────────
+  // Mobile browsers (especially iOS Safari) rarely fire beforeunload, so we
+  // also report when the tab is hidden (switching to the dialer / WhatsApp,
+  // locking the screen) and send a periodic heartbeat while it's visible.
+  useEffect(() => {
+    function report(event: "exit" | "ping") {
+      if (!logIdRef.current) return;
+      const payload = JSON.stringify({
+        event,
+        log_id: logIdRef.current,
+        duration: Math.round((Date.now() - sessionStartRef.current) / 1000),
+        clicked_action: clickedRef.current,
+        touch_count: touchCountRef.current,
+        scroll_pct: maxScrollPctRef.current,
+        first_interaction_ms: firstInteractionRef.current,
+      });
+      try {
+        if (
+          navigator.sendBeacon &&
+          navigator.sendBeacon(
+            "/api/notify",
+            new Blob([payload], { type: "application/json" })
+          )
+        ) {
+          return;
+        }
+      } catch {
+        /* fall through to fetch */
+      }
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    }
+
+    const sendExit = () => report("exit");
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") report("exit");
+    };
+    const heartbeat = window.setInterval(() => {
+      if (Date.now() - sessionStartRef.current > HEARTBEAT_MAX_MS) {
+        window.clearInterval(heartbeat);
+        return;
+      }
+      if (document.visibilityState === "visible") report("ping");
+    }, HEARTBEAT_MS);
 
     window.addEventListener("beforeunload", sendExit);
-    return () => window.removeEventListener("beforeunload", sendExit);
+    window.addEventListener("pagehide", sendExit);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.clearInterval(heartbeat);
+      window.removeEventListener("beforeunload", sendExit);
+      window.removeEventListener("pagehide", sendExit);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   // ── Enter (once) + navigate (route changes) ───────────────────────────────
@@ -170,6 +239,9 @@ export default function VisitorTracker() {
               gclid,
               browser_language: browserLanguage,
               device_fingerprint: deviceFingerprint,
+              automation:
+                typeof navigator !== "undefined" &&
+                (navigator as Navigator & { webdriver?: boolean }).webdriver === true,
               ...valueTrack,
             }),
           })

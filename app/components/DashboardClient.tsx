@@ -378,6 +378,13 @@ export function DashboardClient({
               📋 ייצוא כל הכניסות (CSV)
             </button>
             <a
+              href="/admin/analytics/google-report"
+              className="flex items-center gap-2 text-sm bg-red-50 border border-red-200 hover:bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-sm transition whitespace-nowrap"
+              title="קליקים ממומנים מ-60 הימים האחרונים עם ציון חשד גבוה, בלי פנייה — מוכן לטופס של גוגל"
+            >
+              🛡️ דוח לגוגל (60 יום)
+            </a>
+            <a
               href="/admin/auth/signout"
               className="text-sm bg-white border border-gray-200 hover:bg-gray-50 text-slate-700 px-4 py-2 rounded-lg shadow-sm transition"
             >

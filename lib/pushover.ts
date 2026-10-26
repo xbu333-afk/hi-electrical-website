@@ -1,5 +1,10 @@
 import { formatPageLabel } from "./page-labels";
 import type { VisitorHistory } from "./visitor-logs";
+import {
+  AVG_CPC_ILS,
+  FRAUD_ALERT_THRESHOLD,
+  type DeviceRisk,
+} from "./fraud-score";
 import { summarizeUserAgent } from "./user-agent";
 import {
   formatAdsNetwork,
@@ -86,7 +91,7 @@ export function buildMessageLines(opts: {
     ? `🎯 חיפש: ${opts.keyword} | רשת: ${formatAdsNetwork(opts.network ?? null)} | התאמה: ${formatMatchType(opts.match_type ?? null)}`
     : null;
   const historyLine =
-    `📊 היסטוריית מבקר: היום: ${opts.history.today_count} | ` +
+    `📊 כניסות מה-IP (בסלולר משותף לרבים): היום: ${opts.history.today_count} | ` +
     `השבוע: ${opts.history.week_count} | ` +
     `סה"כ: ${opts.history.total_count}`;
   const gclidLine = opts.gclid ? `🎟️ מזהה גוגל (GCLID): ${opts.gclid}` : null;
@@ -331,8 +336,11 @@ export function buildVisitorNotification(opts: {
   keyword?: string | null;
   network?: string | null;
   match_type?: string | null;
+  /** Device-based risk (paid clicks only). */
+  risk?: DeviceRisk | null;
 }) {
   const {
+    risk,
     source,
     pagePath,
     ip,
@@ -348,7 +356,18 @@ export function buildVisitorNotification(opts: {
     match_type,
   } = opts;
   const isPaid = source === "mumooman";
-  const isSuspect = isPaid && history.today_count > 2;
+  // Suspicion is decided by the DEVICE (cookie + fingerprint), never by a shared IP.
+  const isSuspect = isPaid && !!risk && risk.score >= FRAUD_ALERT_THRESHOLD;
+  const riskLines: string[] =
+    isPaid && risk
+      ? [
+          risk.contactedBefore
+            ? "✅ המכשיר הזה כבר פנה אליך בעבר"
+            : `🔁 קליקים ממומנים מהמכשיר ב-7 ימים: ${risk.priorPaidClicks + 1} | פנה: לא`,
+          `🧮 ציון חשד: ${risk.score}/100`,
+          ...risk.reasons.filter((r) => !r.startsWith("המכשיר הזה כבר")).map((r) => `• ${r}`),
+        ]
+      : [];
 
   const base = {
     pagePath,
@@ -363,27 +382,31 @@ export function buildVisitorNotification(opts: {
     keyword,
     network,
     match_type,
+    extraLines: riskLines,
   };
 
-  if (isEmergencyPage) {
+  if (isEmergencyPage && !isSuspect) {
     return {
       title: "🚨 דחוף — עמוד חירום!",
       message: buildMessageLines({
         ...base,
-        extraLines: ["⚠️ דורש תשומת לב מיידית"],
+        extraLines: ["⚠️ דורש תשומת לב מיידית", ...riskLines],
       }),
       priority: 1 as PushoverPriority,
       sound: "siren",
     };
   }
 
-  if (isSuspect) {
+  if (isSuspect && risk) {
+    const estCost = (risk.priorPaidClicks + 1) * AVG_CPC_ILS;
     return {
-      title: "🛡️ חשוד — יותר מ-2 כניסות היום",
+      title: `🛡️ חשוד (${risk.score}/100) — ${risk.reasons[0] ?? "קליק חוזר"}`,
       message: buildMessageLines({
         ...base,
         extraLines: [
-          `🕵️ אותו מבקר כנס ${history.today_count} פעמים היום`,
+          ...riskLines,
+          `💸 עלות משוערת של הקליקים מהמכשיר השבוע: ~${estCost} ₪`,
+          isEmergencyPage ? "⚠️ נכנס לעמוד חירום" : null,
         ],
       }),
       priority: 1 as PushoverPriority,

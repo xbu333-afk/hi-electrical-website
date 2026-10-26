@@ -17,6 +17,11 @@ import {
   buildDesktopFraudNotification,
 } from "@/lib/pushover";
 import { isDesktopPaidClick, isPaidAdClick } from "@/lib/fraud-detection";
+import {
+  computeEntryRisk,
+  saveFraudScore,
+  type DeviceRisk,
+} from "@/lib/fraud-score";
 import { isGoogleSystemBot } from "@/lib/user-agent";
 import {
   normalizeValueTrackPayload,
@@ -37,17 +42,27 @@ type EnterPayload = {
   gclid?: string | null;
   browser_language?: string | null;
   device_fingerprint?: string | null;
+  /** navigator.webdriver === true */
+  automation?: boolean;
 } & Partial<ValueTrackParams>;
+
+type ExitFields = {
+  log_id?: number;
+  duration?: number;
+  clicked_action?: boolean;
+  touch_count?: number;
+  scroll_pct?: number;
+  first_interaction_ms?: number | null;
+};
+/** "exit" = tab hidden / page closed; "ping" = periodic heartbeat. Same handling. */
+type ExitPayload = { event: "exit" } & ExitFields;
+type PingPayload = { event: "ping" } & ExitFields;
 
 type NotifyPayload =
   | EnterPayload
   | { event: "navigate"; log_id: number; page_path: string }
-  | {
-      event: "exit";
-      log_id?: number;
-      duration?: number;
-      clicked_action?: boolean;
-    }
+  | ExitPayload
+  | PingPayload
   | {
       event: "click";
       page_path: string;
@@ -55,6 +70,11 @@ type NotifyPayload =
       log_id?: number;
       gclid?: string | null;
     };
+
+function clampInt(v: unknown, min: number, max: number): number | undefined {
+  if (typeof v !== "number" || !Number.isFinite(v)) return undefined;
+  return Math.min(max, Math.max(min, Math.round(v)));
+}
 
 function getIp(req: NextRequest): string {
   return extractClientIp(req.headers);
@@ -102,13 +122,32 @@ export async function POST(req: NextRequest) {
     const body: NotifyPayload = await req.json();
     const ip = getIp(req);
 
-    // ── EXIT ────────────────────────────────────────────────────────────────
-    if (body.event === "exit") {
+    // ── EXIT / PING — duration + engagement ─────────────────────────────────
+    if (body.event === "exit" || body.event === "ping") {
       if (body.log_id) {
         try {
+          const duration = clampInt(body.duration, 0, 86_400);
+          const touchCount = clampInt(body.touch_count, 0, 999);
+          const scrollPct = clampInt(body.scroll_pct, 0, 100);
+          const firstInteraction =
+            body.first_interaction_ms === null
+              ? null
+              : clampInt(body.first_interaction_ms, 0, 86_400_000);
+          const clicked = body.clicked_action === true;
+
           await updateVisitorLog(body.log_id, {
-            duration: body.duration,
-            clicked_action: body.clicked_action,
+            duration,
+            // Never downgrade a recorded contact back to false.
+            ...(clicked ? { clicked_action: true } : {}),
+            ...(touchCount !== undefined
+              ? {
+                  touch_count: touchCount,
+                  scroll_pct: scrollPct ?? 0,
+                  first_interaction_ms: firstInteraction ?? null,
+                  low_engagement:
+                    !clicked && (duration ?? 0) < 10 && touchCount === 0,
+                }
+              : {}),
           });
         } catch (e) {
           console.error("[notify:exit]", e);
@@ -166,6 +205,7 @@ export async function POST(req: NextRequest) {
     let source: "mumooman" | "organic" = gclid ? "mumooman" : "organic";
     const browserLanguage = body.browser_language?.trim() || null;
     const deviceFingerprint = body.device_fingerprint?.trim() || null;
+    const isAutomation = body.automation === true;
     const valueTrack = normalizeValueTrackPayload(body);
 
     // ── FILTER: Google system crawlers (AdsBot-Google / Googlebot only) ──────
@@ -187,6 +227,29 @@ export async function POST(req: NextRequest) {
         }
       } catch (e) {
         console.error("[notify:enter] isGclidAlreadyLogged failed:", e);
+      }
+    }
+
+    // 0) Device-based risk score (paid clicks only) — computed before insert so
+    //    the history doesn't include this visit. Fail-open on errors.
+    let risk: DeviceRisk | null = null;
+    if (isPaidAdClick({ source, gclid })) {
+      try {
+        risk = await computeEntryRisk({
+          visitorId: body.visitor_id ?? null,
+          fingerprint: deviceFingerprint,
+          userAgent,
+          ip,
+          country,
+          isDesktopOnMobileCampaign: isDesktopPaidClick({
+            vt_device: valueTrack.vt_device,
+            device,
+            user_agent: userAgent,
+          }),
+          isAutomation,
+        });
+      } catch (e) {
+        console.error("[notify:enter] computeEntryRisk failed:", e);
       }
     }
 
@@ -213,7 +276,9 @@ export async function POST(req: NextRequest) {
       if (inserted.gclidDeduped) {
         source = "organic";
         gclid = null;
+        risk = null;
       }
+      if (risk) await saveFraudScore(inserted.id, risk, isAutomation);
     } catch (e) {
       console.error("[notify:enter DB] insert failed:", {
         message: e instanceof Error ? e.message : String(e),
@@ -277,6 +342,7 @@ export async function POST(req: NextRequest) {
           keyword: valueTrack.keyword,
           network: valueTrack.network,
           match_type: valueTrack.match_type,
+          risk,
         })
       );
     } catch (e) {

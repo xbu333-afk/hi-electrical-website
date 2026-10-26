@@ -212,16 +212,43 @@ export async function insertVisitorLog(
   return { id: data.id, gclidDeduped: false };
 }
 
+/** Engagement fields added in migration 013. */
+export interface EngagementUpdate {
+  touch_count?: number;
+  scroll_pct?: number;
+  first_interaction_ms?: number | null;
+  low_engagement?: boolean;
+}
+
 export async function updateVisitorLog(
   id: number,
-  updates: Partial<Pick<VisitorLogEntry, "duration" | "clicked_action">>
+  updates: Partial<Pick<VisitorLogEntry, "duration" | "clicked_action">> &
+    EngagementUpdate
 ): Promise<void> {
-  const { error } = await getSupabaseAdmin()
+  const admin = getSupabaseAdmin();
+  const stamp = { updated_at: new Date().toISOString() };
+
+  const { error } = await admin
     .from("visitor_logs")
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update({ ...updates, ...stamp })
     .eq("id", id);
 
-  if (error) console.error("[visitor_logs] update error:", error.message);
+  if (!error) return;
+
+  // Migration 013 not run yet → retry with the original columns only.
+  if (isSchemaMismatchError(error)) {
+    const base: Partial<Pick<VisitorLogEntry, "duration" | "clicked_action">> = {};
+    if (updates.duration !== undefined) base.duration = updates.duration;
+    if (updates.clicked_action !== undefined) base.clicked_action = updates.clicked_action;
+    const retry = await admin
+      .from("visitor_logs")
+      .update({ ...base, ...stamp })
+      .eq("id", id);
+    if (retry.error) console.error("[visitor_logs] update error:", retry.error.message);
+    return;
+  }
+
+  console.error("[visitor_logs] update error:", error.message);
 }
 
 /** Append a page to the session's pages_visited list and set page_path to latest. */

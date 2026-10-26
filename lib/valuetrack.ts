@@ -47,7 +47,7 @@ export function extractValueTrackParams(
     adgroup_id: pickParam(searchParams, "adgroup_id", "adgroupid"),
     creative: pickParam(searchParams, "creative"),
     vt_device: pickParam(searchParams, "vt_device", "device"),
-    loc_physical_ms: pickParam(searchParams, "loc_physical_ms"),
+    loc_physical_ms: pickParam(searchParams, "loc_physical_ms", "loc"),
     network: pickParam(searchParams, "network"),
     match_type: pickParam(searchParams, "match_type", "matchtype"),
   };
