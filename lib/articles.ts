@@ -41,6 +41,16 @@ export type ArticleFaq = {
  */
 export const ARTICLES: readonly Article[] = [
   {
+    slug: "megger-test",
+    title: "בדיקת מגר: מה זה, מתי צריך אותה וכמה היא עולה",
+    excerpt:
+      "בדיקת מגר בודקת את הבידוד של החוטים בבית ומאתרת זליגות וקצרים נסתרים שבודק מתח רגיל לא מגלה. מתי צריך אותה, איך היא מתבצעת, מה התוצאות אומרות, מה המגבלות שלה וכמה היא עולה.",
+    category: "בדיקות ותקינה",
+    readTime: "7 דק׳",
+    date: "אוקטובר 2026",
+    datePublished: "2026-10-27",
+  },
+  {
     slug: "water-heater-not-heating",
     title: "דוד חשמל לא מחמם: מה לבדוק לבד, מה התקלות הנפוצות ומתי צריך חשמלאי",
     excerpt:

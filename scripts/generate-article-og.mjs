@@ -159,7 +159,13 @@ function buildHtml({ title, category }) {
 </html>`;
 }
 
-const articles = loadArticles();
+/**
+ * Articles with a hand-made OG image (e.g. a real photo). Never overwrite them.
+ * megger-test: photo of Yehuda performing the test — made separately.
+ */
+const CUSTOM_OG = new Set(["megger-test"]);
+
+const articles = loadArticles().filter((a) => !CUSTOM_OG.has(a.slug));
 fs.mkdirSync(outDir, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });

@@ -285,6 +285,13 @@ export default function GhostTrippingArticle() {
               ערך של מאות קילו-אום מעיד על בידוד שמאבד את תכונותיו — עוד לפני
               שהפחת התחיל לקפוץ.
             </p>
+            <p>
+              הסבר מלא על הבדיקה עצמה, מתי צריך אותה וכמה היא עולה, נמצא במדריך{" "}
+              <Link href="/articles/megger-test" className={LINK}>
+                בדיקת מגר
+              </Link>
+              .
+            </p>
 
             <h3 className={H3}>Sonel MPI 520 — רב-מודד למתקני חשמל</h3>
             <p>
